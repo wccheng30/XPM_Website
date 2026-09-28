@@ -1,0 +1,47 @@
+{
+  "name": "ICoL Chua",
+  "role": "Founder & CEO",
+  "bio": "With over 20 years of experience in HR training and development, Icol Chua has dedicated his career to empowering organizations with comprehensive HR solutions. His expertise spans across recruitment, training, and organizational development.",
+  "stats": [
+    {
+      "label": "Years Experience",
+      "value": "20+"
+    },
+    {
+      "label": "Companies Served",
+      "value": "500+"
+    },
+    {
+      "label": "Professionals Trained",
+      "value": "1000+"
+    }
+
+  ],
+  "achievements": [
+    {
+      "title": "Strategic HR Planning",
+      "text": "Expert in developing comprehensive HR strategies that align with organizational goals",
+      "icon": "fas fa-chess"
+    },
+    {
+      "title": "Leadership Development",
+      "text": "Specialized in cultivating leadership skills and executive coaching",
+      "icon": "fas fa-crown"
+    },
+    {
+      "title": "Organizational Transformation",
+      "text": "Guiding organizations through change management and cultural transformation",
+      "icon": "fas fa-sync-alt"
+    },
+    {
+      "title": "Talent Management",
+      "text": "Comprehensive talent acquisition, development, and retention strategies",
+      "icon": "fas fa-users"
+    }
+  ],
+  "story": [
+    "iCoL Chua has a personality that empowers optimised employment and HR management. With over 20 years in the industry, iCoL possesses exemplary experience in employee welfare, recruitment, payroll, training, and employment-optimised management.",
+    "She maintains strong rapport with local authorities such as KWSP, PERKESO, LHDN, JTK and others allowing her to handle HR matters efficiently and in line with client expectations.",
+    "As a certified trainer, iCoL brings deep expertise in topics such as Employee Resolution, Conflict Management, Profile Regulation, and other critical HR areas. Through Xpress Points Training & Development division, she continues to lead impactful, certified programs that align with national standards."
+  ]
+}
