@@ -4,6 +4,9 @@ vendor.zip
 
 # Uploads & runtime
 /uploads/
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/cache/
 error_log
 *.log
 

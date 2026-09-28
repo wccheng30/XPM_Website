@@ -1,0 +1,294 @@
+body {
+    background: #fff;
+    color: var(--bs-secondary);
+}
+
+::selection {
+    background-color: var(--bs-primary);
+    color: #fff;
+}
+
+/* Primary COLOR */
+.btn-normal-line,
+[class*="widget_"]:not(.widget_tag) li a:hover, [class*="widget_"]:not(.widget_tag) li a:focus,
+.footer-wrapper .widget-title:after,
+.header-info .info-item .info-icon,
+.grid-text i, .text-theme, .widget-social li a:hover,
+.widget-social li a:focus, .widget-info > i,
+.shopping-cart, .shopping-cart .cart-items .item-name, .theme-content h1,
+.form-caret:after, .form-date:after, .form-location:after,
+.heading-default h6, .heading-default h3:after, .post-content .post-content-inner .post-title,
+.comment-box .icofont-comment, .gallery-item .single-item .gallery-text h3, .info, .client-text blockquote:before,
+.client-text blockquote:after, .fun-fact, .breadcrumbs i, .breadcrumbs a, .about-panel .btn-line,
+.play-icon i, .testimonial-inner .client-text > p span, .amenities .heading-default h3, .personal-info p, .call-item, .call-item a, .text-404 h1 span,
+.text-404 h2, .input__field, .heading-form h3, .room-content .heading h3,
+.room_single_owl .slider-two .left-t:hover, .room_single_owl .slider-two .right-t:hover, .terms h3,
+.terms li:before, .packages-details a, .post-content-bottom .comment-box strong,
+.fact-soon .fun-box .nt-circle, .fact-soon .singlefact h2, .author-body > a,
+.blog-post .post-content-inner > a, .post-quotes:before, .post-quotes:after,
+.pagination-nav .page-numbers.prev, .pagination-nav .page-numbers.next,
+.widget-about a, .widget-links li a:hover, .footer-copyright .copyright-text a,
+.widget-nav-menu ul li:hover, .widget-nav-menu ul li.active, .sidebar .widget-title,
+.sidebar .widget-calender .calender-title li, .days li .active,
+.comment-list article .comment-metadata, .comment-list article .fn,
+.comments-area .comments-title, .breadcrumbs i, .comments-area .comment-reply-title,.sidebar .widget ul li a:hover, .sidebar .widget ul li a:focus, a.more-link, .sidebar .wp-block-search__label  {
+	color: var(--bs-primary);
+}
+
+.wp-block-button.is-style-outline a.wp-block-button__link {
+    color: var(--bs-primary) !important;
+}
+
+/* BG COLOR */
+.sidebar .widget-title:after,
+.feat-grid.active, .feat-grid:hover,
+.fun-box:hover, .fun-box:hover .nt-circle,
+.fun-box.active, .fun-box.active .nt-circle,
+.scrollup, .btn-normal-line:hover, .btn-normal-line:focus,
+.amenities-item:hover,
+.navigation.sticky-menu,
+.header-info .info-item:hover .info-icon,
+.navigation .theme-menu, .nav-right,
+.owl-theme .owl-dots .owl-dot.active span,
+.owl-theme .owl-dots .owl-dot:hover span,
+.mean-container .mean-nav ul li a.mean-expand:hover,
+.mean-container .mean-nav ul li a:hover,
+.btn-bg, .btn-black, .tab-filter a.active, .btn-line-primary:after, .btn-line-secondary:after, .btn-line:hover,.widget_tag_cloud .tagcloud a:after,.wp-block-tag-cloud a:after,
+.checkin-wrapper, .client-text:after, .news-text:after, .cal,
+.fun-box .singlefact:after, .promostional-wrapper .promostional-item, .newsletter:before,
+.acc-head, .subscribe-form .btn-subscribe, .infobox-icon,
+.side-subtotal .btn-subtotal, .balloon-theme, .balloon-theme:before,
+.balloon-theme:after, .price-bedge, .coming_soon,
+.blog-post .post-content-inner .meta-blog li a,
+.pagination-nav .page-numbers.current, .pagination-nav .page-numbers:hover, .pagination-nav .page-numbers:focus,
+.widget-cards .btn-info, .social-box, .sidebar .widget-title:after,
+.search-form button, .subscribe button,
+.custom-control-input:checked~.custom-control-label::before,.contact-form form .wpcf7-submit,
+.wp-block-file .wp-block-file__button, .wp-block-button a, .sidebar .wp-block-search__label:after {
+ 	background-color: var(--bs-primary);
+}
+
+input[type='text']:focus, input[type='email']:focus, input[type='url']:focus,
+input[type='password']:focus, input[type='search']:focus, input[type='number']:focus,
+input[type='tel']:focus, textarea:focus, select:focus, select:focus, textarea.form-control:focus {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);   
+}
+
+.widget-social li a:hover,
+.widget-social li a:focus,
+.call-item:nth-child(2) a {
+    border-bottom-color: var(--bs-primary);
+}
+
+.shopping-cart, .call-bg {
+    border-top-color: var(--bs-primary);
+}
+
+.btn-normal-line:hover, .btn-normal-line:focus,
+.btn-line-primary, .shopping-cart:after, .btn-bg, .btn-line,
+.gallery-item .single-item .gallery-text:before,
+.play-icon:after, .amenities-item,
+.certificate-img, .subscribe-form .btn-subscribe,
+.room_single_owl .slider-two .left-t:hover,
+.room_single_owl .slider-two .right-t:hover,
+.room-aminities .amenities-item,
+.widget-cards .btn-info,
+.custom-control-input:checked~.custom-control-label::before,
+.days li .active, .wp-block-button a {
+    border-color: var(--bs-primary);
+}
+
+.fun-fact:after,
+.amenities:after{
+	background-color: #000;
+}
+
+#page-404, .text-404 h2 {
+    background-color: #fafbfd;
+}
+
+.fact-soon .fun-box .singlefact:hover:after, .fact-soon .fun-box.active .singlefact:after {
+    background-color: #2b2b2b;
+}
+
+/* Secondary Color */
+
+.grid-text, .btn-line-white:hover,
+.heading-default h3, .post-content .post-content-inner .btn-line,
+.news-text .btn-line-primary, .news-text:hover .btn-shape:hover,
+.feat-grid.active .btn-line:hover, .feat-grid:hover .btn-line:hover,
+.singlefact p, .text-404 .btn-line,
+.room-content .heading p strong,
+.post-content .post-content-inner .post-title a:hover,
+.author-body > a:hover,
+.blog-post .post-content-inner > a:hover,
+.widget .tags li a, a.more-link:hover, a.more-link:focus {
+    color: var(--bs-secondary);
+}
+
+.scrollup:hover,
+.menu-right li.cart-wrapper .cart-icon-wrap span,
+.header-top-info, .owl-theme .owl-dots .owl-dot span,
+.mean-container .mean-nav, .btn-black:after, .tab-filter a.active:after,
+.heading-default h3:after, .heading-default h3:before,
+.shopping-cart .badge, .news-info .btn-info, .acc-head.collapsed,
+.side-subtotal .btn-subtotal:hover, .side-subtotal .btn-subtotal:focus,
+.blog-post .post-content-inner .meta-blog li a:hover, 
+.blog-post .post-content-inner .meta-blog li a:focus, .footer-copyright,
+.subscribe button:hover {
+    background-color: var(--bs-secondary);
+}
+
+.btn-line-secondary,
+.widget .tags li a {
+    border-color: var(--bs-secondary);
+}
+
+/*-//-*/
+
+
+/* Color White */
+.subscribe-form-soon .btn-line-white:hover,
+.subscribe-form-soon .btn-line-white:focus,
+.btn-normal-line:hover, .btn-normal-line:focus,
+.btn-shape.btn-black, .scrollup, .scrollup:hover,
+.room-aminities .amenities-item:hover, .room-aminities .amenities-item:hover a,
+.header .theme-menu .menu-right li, .menu-right li .cart-icon-wrap i,
+.feat-grid.active i, .feat-grid:hover i,
+.header-top-info, .header-info .info-item:hover .info-icon,
+.theme-content span, .theme-content p,
+.main-slider .owl-nav .owl-prev, .main-slider .owl-nav .owl-next,
+.tab-filter a.active, .btn-bg, .theme-content .btn-line-primary, .btn-line-primary:hover,.btn-line-primary:focus,
+.btn-line-white, .btn-line-secondary:hover,
+.checkin-wrapper h3, .checkin-wrapper p,
+.fun-box:hover, .fun-box:hover .nt-circle, .fun-box.active,
+.fun-box.active .nt-circle, .shopping-cart .badge, .view-search .form-control,
+.ribbon-container .ribbon, .single-img .price-bedge, .star-rating .rating,
+.feat-grid.active .btn-shape,
+.feat-grid:hover .btn-shape, .feat-grid.active .grid-text,
+.feat-grid:hover .grid-text, .gallery-item .single-item .gallery-text,
+.client-text:hover > p, .client-text:hover > p span, .client-text:hover blockquote:before,
+.client-text:hover blockquote:after, .client-text:hover blockquote,
+.client-text:hover blockquote p, .news-text:hover h3, .news-text:hover p,
+.news-text:hover p:last-child span, .client-text:hover > p span,
+.news-text:hover .btn-line-primary, .cal, .fun-box .singlefact:hover p,
+.fun-box.active .singlefact p, .promostional-wrapper .promostional-item, .newsletter, .footer-wrapper,
+.breadcrumbs .page-title h2, .breadcrumbs li, .breadcrumbs .active,
+.acc-head, .acc-head.collapsed::after,
+.acc-head:hover, .acc-head:focus, .acc-head.collapsed:hover,
+.amenities, .amenities .heading-default h6, .amenities .heading-default p,
+.subscribe-form .btn-subscribe,
+.infobox-icon, .side-form,
+.side-subtotal .btn-subtotal:hover, .side-subtotal .btn-subtotal:focus,
+.corner-ribbon .banget, .balloon, .price-bedge, .text-soon, .fact-soon .singlefact p,
+.social-link a, .social-link a:hover, .social-link a:focus,
+.blog-post .post-content-inner .meta-blog li a,
+.pagination-nav .page-numbers.current, .pagination-nav .page-numbers:hover, .pagination-nav .page-numbers:focus,
+.pagination-nav li.prev a:hover, .pagination-nav li.prev a:focus,
+.pagination-nav li.next a:hover, .pagination-nav li.next a:focus,
+.payment_methods li, .social-box, .footer-copyright,.search-form button,
+.subscribe button, .custom-control-input:checked~.custom-control-label::before {
+    color: #fff;
+}
+
+.view-search .form-control::-moz-placeholder,
+.view-search .form-control:-moz-placeholder,
+.view-search .form-control:-ms-input-placeholder,
+.view-search .form-control::-webkit-input-placeholder {
+    color: #fff;
+}
+
+.fact-soon .fun-box .singlefact:after,
+.fact-soon .fun-box:hover,
+.fact-soon .fun-box:hover .nt-circle,
+.fact-soon .fun-box.active,
+.fact-soon .fun-box.active .nt-circle,
+.btn-line-white:after, .owl-dots .owl-dot,
+.shopping-cart, .shopping-cart:after,
+.btn-bg:after, .feat-grid,
+.feat-grid.active .btn-line:hover,
+.feat-grid:hover .btn-line:hover,
+.client-text:before, .news-text:before,
+.news-text:hover .btn-line-primary:after,
+.fun-box, .fun-box .nt-circle,
+.fun-box .singlefact:hover:after,
+.fun-box.active .singlefact:after, .call-bg,
+.room_single_owl .slider-two .left-t:hover,
+.room_single_owl .slider-two .right-t:hover,
+.blog-post, .pagination-nav, .view-search {
+    background-color: #ffffff;
+}
+
+.btn-bg:hover, .btn-bg:focus, .btn-line-white,
+.btn-line-white:hover, .play-icon:before, .social-link a,
+.feat-grid.active .inner-grid:after,
+.feat-grid.active .inner-grid:before,
+.feat-grid.active .grid-text:before,
+.feat-grid.active .grid-text:after,
+.feat-grid:hover .inner-grid:after,
+.feat-grid:hover .inner-grid:before,
+.feat-grid:hover .grid-text:before,
+.feat-grid:hover .grid-text:after,
+.feat-grid.active .btn-line, .feat-grid:hover .btn-line,
+.news-text:hover .btn-line-primary {
+    border-color: #fff;
+}
+
+.amenities-item a:hover {
+    border-bottom-color: #fff;
+}
+
+
+.wp-block-button a.wp-block-button__link {
+    color: #fff !important;
+}
+
+
+/* BORDER COLOR */
+
+.header-info .info-item .info-icon {
+    border-color: #d4d4d4;
+}
+
+/*-//-*/
+
+
+/* Transition Effect */
+[class*="widget_"] li a:hover, [class*="widget_"] li a:focus,
+.loadspinner i, .info-icon i, .infobox-icon i, .social-link li a,
+.btn-shape:after, .client-text:after, .news-text:after, .singlefact:after,.widget_tag_cloud .tagcloud a:hover:after,
+.wp-block-tag-cloud a:hover:after,
+.tab-filter a.active:after, .header-vivanta .navigation .menubar .menu-wrap > li > a:after,
+.header-vivanta .navigation .menubar .menu-wrap > li > a:before,
+.main-slider .owl-nav .owl-prev, .main-slider .owl-nav .owl-next, .owl-dots .owl-dot,
+.single-slider .content, .post-thumbnail .post-img img, .thumbnail .packages-img img,
+.post-content .post-content-inner .post-title a,
+.grid-text, .feat-grid .inner-grid:after, .feat-grid .inner-grid:before,
+.feat-grid .grid-text:before, .feat-grid .grid-text:after, .gallery-item .single-item img,
+.gallery-item .single-item .gallery-text, .gallery-item .single-item .gallery-text:before,
+.client-text, .news-text, .fun-box, .play-icon:after, .video-overlay, .video-overlay-close,
+.acc-head, .amenities-item, .amenities-item a, .room-aminities .amenities-item a,
+.subscribe-form button, .room_single_owl .slider-two .item, .room_single_owl .slider-two .left-t,
+.room_single_owl .slider-two .right-t, .blog-post, .blog-post .post-thumbnail img,
+.blog-post .post-content-inner .meta-blog li a, .author-body > a, .blog-post .post-content-inner > a,
+.pagination-nav li a, .pagination-nav li.prev a, .pagination-nav li.next a,
+.footer-wrapper .widget-title:after, .widget-links li a, .payment_methods li,
+.widget-nav-menu ul li, .subscribe button, .social-box .info-icon:before,
+input[type=text], input[type=email], input[type=url], input[type=password],
+input[type=search], input[type=number], input[type=tel],
+.navbar-brand, img.navbar-brand, .sticky-menu img.navbar-brand,
+.navigation .menubar .dropdown-menu > li, .navigation .menubar .dropdown-menu li a,
+.navigation .menubar .dropdown-menu .dropdown > a:after, .mobile-menu,
+.mobile-menu .dropdown > span a, .mobile-menu li > a,
+.hamburger-menu div, .hamburger-menu .meat, .hamburger-menu .bottom-bun,
+.header-sidebar-toggle span, .header-sidebar-toggle span:before,
+.header-sidebar-toggle span:after, .mobi-head-top,
+.shopping-cart, .p-menu, .view-search.on form,
+.view-search form, .close-menu:before, .close-menu:after,
+.view-search-remove:before, .view-search-remove:after,
+button, input[type="button"], input[type="reset"], input[type="submit"],
+.bt-primary, .bt-secondary, .bt-effect-2:after, .bt-primary.bt-effect-2:hover:after {
+    -webkit-transition: all .5s cubic-bezier(.645,.045,.355,1);
+    transition: all .5s cubic-bezier(.645,.045,.355,1);
+}
