@@ -13,6 +13,9 @@ require_once '../includes/database.php';
 // Helper function to safely format prices for export
 function formatPriceForExport($price) {
     if (is_numeric($price)) {
+        if ((float)$price == 0) {
+            return 'Free';
+        }
         return 'RM ' . number_format($price, 0);
     } else {
         return $price;

@@ -1,0 +1,214 @@
+/* Job detail page */
+.job-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-6);
+}
+
+.job-hero h1 {
+    font-size: clamp(2rem, 3.5vw + 1rem, 3.2rem);
+}
+
+.job-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.job-hero-meta .tag {
+    padding: 0.4rem 0.8rem;
+    font-size: var(--fs-sm);
+    background: var(--c-white);
+}
+
+.job-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.job-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: start;
+}
+
+.job-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-7);
+}
+
+.job-fact {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: var(--sp-4);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+}
+
+.job-fact-label {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.job-fact-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.925rem;
+    font-weight: 500;
+    color: var(--c-text);
+}
+
+.job-block + .job-block {
+    margin-top: var(--sp-7);
+    padding-top: var(--sp-7);
+    border-top: 1px solid var(--c-border);
+}
+
+.job-block h2 {
+    margin-bottom: var(--sp-4);
+    font-size: var(--fs-xl);
+}
+
+.job-description {
+    font-size: 1.02rem;
+    line-height: 1.8;
+    color: var(--c-text-2);
+}
+
+.requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.requirements li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-4);
+    padding: 0.9rem 1rem;
+    color: var(--c-text-2);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    transition: border-color var(--dur-fast), transform var(--dur) var(--ease-out);
+}
+
+.requirements li:hover {
+    border-color: var(--c-teal-deep);
+    transform: translateX(4px);
+}
+
+.requirement-number {
+    flex-shrink: 0;
+    font-family: var(--font-head);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-text-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.job-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 20px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.job-summary-logo {
+    margin: calc(-1 * clamp(1.25rem, 2.5vw, 1.75rem)) calc(-1 * clamp(1.25rem, 2.5vw, 1.75rem)) var(--sp-5);
+    padding: var(--sp-5);
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.job-summary-logo img {
+    max-height: 120px;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.summary-list {
+    margin: var(--sp-3) 0 var(--sp-5);
+}
+
+.summary-list > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: 0.65rem 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.summary-list dt {
+    color: var(--c-text-3);
+}
+
+.summary-list dd {
+    font-weight: 500;
+    text-align: right;
+    color: var(--c-text);
+}
+
+.contact-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: var(--sp-3);
+    font-size: 0.9rem;
+}
+
+.contact-lines li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--c-text-2);
+    word-break: break-word;
+}
+
+.contact-lines i {
+    width: 1rem;
+    font-size: 0.8rem;
+    color: var(--c-text);
+}
+
+.contact-lines a:hover {
+    color: var(--c-text);
+    text-decoration: underline;
+}
+
+.related-job {
+    gap: var(--sp-2);
+}
+
+.related-job h4 {
+    font-size: 1.05rem;
+}
+
+.related-job-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: var(--sp-4);
+}
+
+@media (max-width: 960px) {
+    .job-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .job-sidebar {
+        position: static;
+    }
+}

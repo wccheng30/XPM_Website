@@ -1,0 +1,407 @@
+/* ==========================================================================
+   Job application (job-application.php)
+   ========================================================================== */
+
+/* ---------- Job summary ---------- */
+.summary-company {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-3);
+}
+
+.summary-company .job-logo-img,
+.summary-company-fallback {
+    width: 48px;
+    height: 48px;
+    flex: none;
+    object-fit: contain;
+    padding: 4px;
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+}
+
+.summary-company-fallback {
+    display: grid;
+    place-items: center;
+    color: var(--c-text-3);
+}
+
+.summary-company-name {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--c-text-2);
+}
+
+.summary-more {
+    margin: var(--sp-4) 0;
+    border-top: 1px solid var(--c-border);
+}
+
+.summary-more summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-3) 0;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.summary-more summary::-webkit-details-marker {
+    display: none;
+}
+
+.summary-more summary i {
+    font-size: 0.7rem;
+    transition: transform var(--dur) var(--ease-out);
+}
+
+.summary-more[open] summary i {
+    transform: rotate(180deg);
+}
+
+.summary-more[open] .job-desc-formatted {
+    animation: xpmFadeUp var(--dur) var(--ease-out) both;
+}
+
+.job-desc-formatted {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: var(--sp-2);
+    font-size: var(--fs-sm);
+    line-height: 1.7;
+    color: var(--c-text-2);
+}
+
+.job-desc-formatted p {
+    margin: 0 0 var(--sp-3);
+    color: var(--c-text);
+    font-weight: 500;
+}
+
+.job-desc-formatted .job-desc-list {
+    list-style: none;
+    display: grid;
+    gap: 0.4rem;
+    margin: 0 0 var(--sp-4);
+    padding: 0;
+}
+
+.job-desc-formatted .job-desc-list li {
+    position: relative;
+    padding-left: 1.1rem;
+}
+
+.job-desc-formatted .job-desc-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--c-teal-deep);
+}
+
+/* ---------- Read-only position ---------- */
+.form .input-wrapper > input[readonly] {
+    color: var(--c-text-2);
+    background: var(--c-surface);
+}
+
+/* ---------- Application type ---------- */
+.application-type-selection {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-5);
+}
+
+.application-type-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    background: var(--c-white);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur) var(--ease-out), transform var(--dur) var(--ease-out), background-color var(--dur-fast);
+}
+
+.application-type-option:hover {
+    border-color: var(--c-teal-deep);
+    transform: translateY(-2px);
+}
+
+.application-type-option:has(input:checked) {
+    border-color: var(--c-teal-deep);
+    background: var(--c-surface);
+    box-shadow: 0 0 0 1px var(--c-teal-deep);
+}
+
+.form .application-type-option input[type="radio"] {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    margin: 0;
+}
+
+.type-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--r-md);
+    background: var(--c-surface-2);
+    color: var(--c-text);
+    transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+
+.application-type-option:has(input:checked) .type-icon {
+    background: var(--c-teal-deep);
+    color: var(--c-white);
+}
+
+.type-text strong {
+    display: block;
+    padding-right: var(--sp-5);
+    font-size: var(--fs-sm);
+    color: var(--c-text);
+}
+
+.type-text small {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.resume-section,
+.detailed-section {
+    animation: xpmFadeUp var(--dur-slow) var(--ease-out) both;
+}
+
+/* ---------- File upload ---------- */
+.file-upload-wrapper {
+    position: relative;
+    padding: var(--sp-6) var(--sp-5);
+    text-align: center;
+    background: var(--c-surface);
+    border: 1.5px dashed var(--c-border-strong);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+
+.file-upload-wrapper:hover,
+.file-upload-wrapper:focus-within {
+    border-color: var(--c-teal-deep);
+    background: var(--c-white);
+}
+
+.file-upload-wrapper > i {
+    display: block;
+    margin-bottom: var(--sp-3);
+    font-size: 1.6rem;
+    color: var(--c-text-3) !important;
+    transition: transform var(--dur) var(--ease-out), color var(--dur-fast);
+}
+
+.file-upload-wrapper:hover > i {
+    transform: translateY(-3px);
+    color: var(--c-text) !important;
+}
+
+.file-upload-wrapper.has-file > i {
+    color: var(--c-text) !important;
+}
+
+.form .file-upload-wrapper input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.file-upload-wrapper.has-file input[type="file"] {
+    z-index: 0;
+    pointer-events: none;
+}
+
+.file-upload-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.file-upload-info span {
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.file-upload-info small {
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.file-selected-info {
+    position: relative;
+    z-index: 2;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    text-align: left;
+    background: var(--c-white);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-md);
+    animation: xpmScaleIn var(--dur) var(--ease-out) both;
+}
+
+.file-selected-info > i {
+    color: var(--c-text);
+}
+
+.file-selected-info span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.file-selected-info small {
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.remove-file-btn {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    color: var(--c-text-2);
+    background: var(--c-surface-2);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.remove-file-btn:hover {
+    color: var(--c-white);
+    background: var(--c-danger);
+}
+
+/* ---------- Detailed application ---------- */
+.detailed-section > .alert {
+    margin-bottom: var(--sp-5);
+}
+
+.sub-section + .sub-section {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--c-border);
+}
+
+.sub-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: var(--sp-4);
+    font-size: var(--fs-base);
+}
+
+.sub-section-title i {
+    font-size: 0.85rem;
+    color: var(--c-text-3);
+}
+
+.entry-card {
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    transition: border-color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.entry-card + .entry-card {
+    margin-top: var(--sp-3);
+}
+
+.entry-card h5 {
+    margin: 0 0 var(--sp-4);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+details.entry-card > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    cursor: pointer;
+}
+
+details.entry-card > summary::-webkit-details-marker {
+    display: none;
+}
+
+details.entry-card > summary h5 {
+    margin: 0;
+    color: var(--c-text-2);
+}
+
+details.entry-card > summary i {
+    font-size: 0.75rem;
+    color: var(--c-text-3);
+    transition: transform var(--dur) var(--ease-out);
+}
+
+details.entry-card:hover {
+    border-color: var(--c-border-strong);
+}
+
+details.entry-card[open] {
+    background: var(--c-white);
+    border-color: var(--c-border-strong);
+}
+
+details.entry-card[open] > summary {
+    margin-bottom: var(--sp-4);
+}
+
+details.entry-card[open] > summary h5 {
+    color: var(--c-text);
+}
+
+details.entry-card[open] > summary i {
+    transform: rotate(45deg);
+}
+
+details.entry-card[open] > summary ~ * {
+    animation: xpmFadeUp var(--dur) var(--ease-out) both;
+}
+
+.entry-card > .form-group:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+    .application-type-selection {
+        grid-template-columns: 1fr;
+    }
+}

@@ -109,25 +109,15 @@ $total_pages = ceil($total_trainers / $per_page);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainers Management - XpressPoint Admin</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Trainers', 'fas fa-chalkboard-teacher'); ?>
     <div class="admin-container">
-        <!-- Header -->
-        <header class="admin-header">
-            <h1>
-                <i class="fas fa-chalkboard-teacher"></i>
-                Trainers Management
-            </h1>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-                <a href="logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
-            </div>
-        </header>
         
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('trainers'); ?>
@@ -333,36 +323,7 @@ $total_pages = ceil($total_trainers / $per_page);
                 setTimeout(() => alert.remove(), 300);
             });
         }, 5000);
-        
-        // Mobile Navigation Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navTabs = document.getElementById('navTabs');
-            
-            if (navToggle && navTabs) {
-                navToggle.addEventListener('click', function() {
-                    navToggle.classList.toggle('active');
-                    navTabs.classList.toggle('active');
-                });
-                
-                // Close navigation when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!navToggle.contains(e.target) && !navTabs.contains(e.target)) {
-                        navToggle.classList.remove('active');
-                        navTabs.classList.remove('active');
-                    }
-                });
-                
-                // Close navigation when clicking on a nav link
-                const navLinks = navTabs.querySelectorAll('.nav-tab');
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        navToggle.classList.remove('active');
-                        navTabs.classList.remove('active');
-                    });
-                });
-            }
-        });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

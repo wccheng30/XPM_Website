@@ -1,0 +1,223 @@
+/* Admin page styles: applications.php */
+         .status-badge {
+             padding: 6px 12px;
+             border-radius: 20px;
+             font-size: 12px;
+             font-weight: 600;
+             text-transform: uppercase;
+             letter-spacing: 0.5px;
+             display: inline-flex;
+             align-items: center;
+             gap: 6px;
+         }
+         
+         /* Pending - Orange */
+         .status-pending {
+             background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+             color: #c2410c;
+             border: 1px solid #f97316;
+         }
+         
+         /* KIV - Yellow */
+         .status-reviewed {
+             background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
+             color: #a16207;
+             border: 1px solid #eab308;
+         }
+         
+         /* Shortlisted - Purple */
+         .status-shortlisted {
+             background: linear-gradient(135deg, #f4f4f5 0%, #e9d5ff 100%);
+             color: var(--text-primary);
+             border: 1px solid var(--text-primary);
+         }
+         
+         /* Rejected - Red */
+         .status-rejected {
+             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+             color: #dc2626;
+             border: 1px solid #ef4444;
+         }
+         
+         /* Blacklisted - Black */
+         .status-blacklisted {
+             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+             color: #ffffff;
+             border: 1px solid #111827;
+         }
+
+        /* Hired - Green */
+        .status-hired {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #15803d;
+            border: 1px solid #22c55e;
+        }
+
+        /* Interview - Blue */
+        .status-interview,
+        .status-interviewed,
+        .status-waiting-for-interview,
+        .status-waiting_for_interview {
+            background: linear-gradient(135deg, #f4f4f5 0%, #d9d9db 100%);
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+        }
+
+         
+         
+         /* Modal improvements */
+         .modal {
+             display: none;
+             position: fixed;
+             z-index: 1000;
+             left: 0;
+             top: 0;
+             width: 100%;
+             height: 100%;
+             background-color: rgba(0,0,0,0.5);
+             backdrop-filter: blur(4px);
+         }
+         
+         .modal-content {
+             background-color: white;
+             margin: 5% auto;
+             padding: 0;
+             border-radius: 12px;
+             width: 90%;
+             max-width: 500px;
+             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+             animation: modalSlideIn 0.3s ease-out;
+         }
+         
+         @keyframes modalSlideIn {
+             from {
+                 opacity: 0;
+                 transform: translateY(-20px);
+             }
+             to {
+                 opacity: 1;
+                 transform: translateY(0);
+             }
+         }
+         
+         .modal-header {
+             padding: 20px 24px;
+             border-bottom: 1px solid #e5e7eb;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+         }
+         
+         .modal-header h3 {
+             margin: 0;
+             color: #1f2937;
+             font-size: 18px;
+             font-weight: 600;
+         }
+         
+         .modal-close {
+             background: none;
+             border: none;
+             font-size: 20px;
+             color: #6b7280;
+             cursor: pointer;
+             padding: 4px;
+             border-radius: 4px;
+             transition: background-color 0.2s;
+         }
+         
+         .modal-close:hover {
+             background-color: #f3f4f6;
+             color: #374151;
+         }
+         
+         .form-group {
+             margin-bottom: 20px;
+         }
+         
+         .form-group label {
+             display: block;
+             margin-bottom: 8px;
+             color: #374151;
+             font-weight: 500;
+             font-size: 14px;
+         }
+         
+         .form-group select {
+             width: 100%;
+             padding: 12px 16px;
+             border: 1px solid #d1d5db;
+             border-radius: 8px;
+             font-size: 14px;
+             color: #374151;
+             background-color: white;
+             transition: border-color 0.2s;
+         }
+         
+         .form-group select:focus {
+             outline: none;
+             border-color: var(--c-teal-deep);
+             box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+         }
+         
+         .form-actions {
+             padding: 20px 24px;
+             border-top: 1px solid #e5e7eb;
+             display: flex;
+             gap: 12px;
+             justify-content: flex-end;
+         }
+         
+         .btn {
+             padding: 10px 20px;
+             border-radius: 8px;
+             font-weight: 500;
+             font-size: 14px;
+             cursor: pointer;
+             transition: all 0.2s;
+             border: none;
+             text-decoration: none;
+             display: inline-flex;
+             align-items: center;
+             gap: 6px;
+         }
+         
+         .btn-primary {
+             background: var(--accent-primary);
+             color: white;
+         }
+         
+         .btn-primary:hover {
+             background: var(--accent-secondary);
+             transform: translateY(-1px);
+             box-shadow: 0 4px 12px rgba(17, 17, 17, 0.3);
+         }
+         
+         .btn-secondary {
+             background: #6b7280;
+             color: white;
+         }
+         
+         .btn-secondary:hover {
+             background: #4b5563;
+             transform: translateY(-1px);
+             box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+         }
+         
+         /* Responsive improvements */
+         @media (max-width: 768px) {
+             .stats-grid {
+                 grid-template-columns: 1fr;
+                 gap: 16px;
+             }
+             
+             table {
+                 font-size: 14px;
+             }
+             
+             .action-buttons {
+                 flex-direction: column;
+                 gap: 4px;
+             }
+         }
+     

@@ -87,7 +87,7 @@ if (!$registration) {
     <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
         <!-- Participant Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-graduate" style="color: #3b82f6;"></i> Participant Information</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-graduate" style="color: #111111;"></i> Participant Information</h4>
             <div class="detail-content">
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Name:</span>
@@ -96,14 +96,14 @@ if (!$registration) {
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Email:</span>
                     <span class="value" style="color: #1f2937;">
-                        <a href="mailto:<?php echo htmlspecialchars($registration['email']); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($registration['email']); ?></a>
+                        <a href="mailto:<?php echo htmlspecialchars($registration['email']); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($registration['email']); ?></a>
                     </span>
                 </div>
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Phone:</span>
                     <span class="value" style="color: #1f2937;">
                         <?php if ($registration['phone']): ?>
-                            <a href="tel:<?php echo htmlspecialchars($registration['phone']); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($registration['phone']); ?></a>
+                            <a href="tel:<?php echo htmlspecialchars($registration['phone']); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($registration['phone']); ?></a>
                         <?php else: ?>
                             <span style="color: #9ca3af;">Not provided</span>
                         <?php endif; ?>
@@ -226,7 +226,7 @@ if (!$registration) {
         </div>
 
         <!-- Additional Information -->
-        <div class="detail-section" style="background: #f3e8ff; border: 1px solid #a855f7; border-radius: 12px; padding: 20px;">
+        <div class="detail-section" style="background: #f4f4f5; border: 1px solid #a855f7; border-radius: 12px; padding: 20px;">
             <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle" style="color: #a855f7;"></i> Additional Information</h4>
             <div class="detail-content" style="display: flex; flex-direction: column; gap: 12px;">
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
@@ -266,7 +266,7 @@ if (!$registration) {
 
         <!-- Programme Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-graduation-cap" style="color: #3b82f6;"></i> Programme Details</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-graduation-cap" style="color: #111111;"></i> Programme Details</h4>
             <div class="detail-content" style="display: flex; flex-direction: column; gap: 12px;">
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Programme:</span>
@@ -295,7 +295,7 @@ if (!$registration) {
     <!-- Additional Notes -->
     <?php if ($registration['additional_notes']): ?>
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-alt" style="color: #3b82f6;"></i> Additional Notes</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-alt" style="color: #111111;"></i> Additional Notes</h4>
             <div class="notes-content" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; line-height: 1.6; color: #374151;">
                 <?php echo nl2br(htmlspecialchars($registration['additional_notes'])); ?>
             </div>
@@ -305,7 +305,7 @@ if (!$registration) {
     <!-- Programme Description -->
     <?php if ($registration['programme_description']): ?>
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle" style="color: #3b82f6;"></i> Programme Description</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle" style="color: #111111;"></i> Programme Description</h4>
             <div class="description-content" style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; line-height: 1.6; color: #374151;">
                 <?php echo nl2br(htmlspecialchars($registration['programme_description'])); ?>
             </div>
@@ -314,12 +314,12 @@ if (!$registration) {
 
     <!-- Actions -->
     <div class="detail-actions" style="display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-        <button class="btn btn-primary" onclick="updateStatus(<?php echo $registration['id']; ?>, '<?php echo $registration['status']; ?>')" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+        <button class="btn btn-primary" onclick="updateStatus(<?php echo $registration['id']; ?>, '<?php echo $registration['status']; ?>')" style="background: #111111; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
             <i class="fas fa-edit"></i>
             Update Status
         </button>
         <?php if ($registration['programme_id']): ?>
-            <a href="programmes.php#programme-<?php echo $registration['programme_id']; ?>" target="_blank" class="btn btn-info" style="background: #06b6d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0891b2'" onmouseout="this.style.backgroundColor='#06b6d4'">
+            <a href="programmes.php#programme-<?php echo $registration['programme_id']; ?>" target="_blank" class="btn btn-info" style="background: #111111; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                 <i class="fas fa-external-link-alt"></i>
                 View Programme
             </a>
@@ -333,7 +333,7 @@ if (!$registration) {
     <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
         <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-edit" style="color: #3b82f6;"></i>
+                <i class="fas fa-edit" style="color: #111111;"></i>
                 Update Status
             </h3>
             <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
@@ -345,7 +345,7 @@ if (!$registration) {
             <input type="hidden" name="registration_id" id="registrationId">
             <div class="form-group" style="margin-bottom: 24px;">
                 <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Registration Status</label>
-                <select name="status" id="statusSelect" required style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                <select name="status" id="statusSelect" class="form-control" required>
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="waitlisted">Waitlisted</option>
@@ -357,7 +357,7 @@ if (!$registration) {
                 <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
                     Cancel
                 </button>
-                <button type="submit" class="btn btn-primary" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                     Update Status
                 </button>
             </div>
@@ -432,7 +432,7 @@ document.addEventListener('keydown', function(e) {
     }
     
     .detail-section h4 i {
-        color: #2563eb;
+        color: #111111;
     }
     
     .detail-content {
@@ -465,7 +465,7 @@ document.addEventListener('keydown', function(e) {
     }
     
     .value a {
-        color: #2563eb;
+        color: #111111;
         text-decoration: none;
     }
     
@@ -512,8 +512,8 @@ document.addEventListener('keydown', function(e) {
     }
     
     .status-waitlisted {
-        background: rgba(59, 130, 246, 0.1);
-        color: #2563eb;
+        background: rgba(17, 17, 17, 0.1);
+        color: #111111;
     }
     
     .status-cancelled {

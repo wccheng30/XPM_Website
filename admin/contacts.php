@@ -133,172 +133,14 @@ $status_labels = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contacts - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
-    <style>
-        /* Autocomplete Styles */
-        .search-container {
-            position: relative;
-            flex: 1;
-        }
-        
-        .search-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-top: none;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            z-index: 9999;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-        }
-        
-        .suggestion-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .suggestion-item:hover {
-            background-color: #f8fafc;
-        }
-        
-        .suggestion-item.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .suggestion-item.active .suggestion-icon,
-        .suggestion-item.active .suggestion-name,
-        .suggestion-item.active .suggestion-details {
-            color: white;
-        }
-        
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-        
-        /* Status badge styles */
-        .status-new {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #2563eb;
-            border: 1px solid #3b82f6;
-        }
-        
-        .status-contacted {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #d97706;
-            border: 1px solid #f59e0b;
-        }
-        
-        .status-qualified {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #16a34a;
-            border: 1px solid #22c55e;
-        }
-        
-        .status-blacklisted {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-            color: #ffffff;
-            border: 1px solid #111827;
-        }
-        
-        .suggestion-icon {
-            color: #64748b;
-            font-size: 14px;
-            width: 16px;
-        }
-        
-        .suggestion-text {
-            flex: 1;
-        }
-        
-        .suggestion-name {
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 2px;
-        }
-        
-        .suggestion-details {
-            font-size: 12px;
-            color: #64748b;
-        }
-        
-        .suggestion-highlight {
-            background-color: #fef3c7;
-            padding: 1px 2px;
-            border-radius: 2px;
-        }
-        
-        .suggestion-item.active .suggestion-highlight {
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-        
-        .no-suggestions {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-            font-style: italic;
-        }
-        
-        .search-loading {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-        }
-        
-        .search-loading i {
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Ensure the card doesn't clip the dropdown */
-        .card {
-            overflow: visible;
-        }
-        
-        .card-body {
-            overflow: visible;
-        }
-        
-        /* Ensure form container doesn't clip */
-        .d-flex {
-            overflow: visible;
-        }
-        
-        .form-group {
-            overflow: visible;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/contacts.css?v=20260930-4">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-users"></i>
-            Contact Management
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-                            <a href="logout-confirm.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Contacts', 'fas fa-users'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -399,7 +241,7 @@ $status_labels = [
                         </p>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: 700; color: #3b82f6;">
+                        <div style="font-size: 24px; font-weight: 700; color: #111111;">
                             <?php echo number_format($total_contacts); ?>
                         </div>
                         <div style="font-size: 14px; color: #64748b;">
@@ -420,7 +262,7 @@ $status_labels = [
                             <div class="contact-info" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                 <div style="flex: 1;">
                                     <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600;">
-                                        <i class="fas fa-user" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-user" style="color: #111111; margin-right: 8px;"></i>
                                         <?php echo htmlspecialchars($contact['name']); ?>
                                     </h3>
                                     <div class="contact-meta" style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
@@ -454,7 +296,7 @@ $status_labels = [
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
                                         Message
                                     </h4>
                                     <div style="color: #374151; line-height: 1.6; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -463,7 +305,7 @@ $status_labels = [
                                 </div>
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-info-circle" style="color: #111111; margin-right: 8px;"></i>
                                         Contact Details
                                     </h4>
                                     <div style="color: #374151; line-height: 1.8; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -565,7 +407,7 @@ $status_labels = [
         <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-edit" style="color: #3b82f6;"></i>
+                    <i class="fas fa-edit" style="color: #111111;"></i>
                     Update Contact Status
                 </h3>
                 <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
@@ -577,7 +419,7 @@ $status_labels = [
                 <input type="hidden" name="contact_id" id="contactId">
                 <div class="form-group" style="margin-bottom: 24px;">
                     <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Contact Status</label>
-                    <select name="status" id="statusSelect" required style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                    <select name="status" id="statusSelect" class="form-control" required>
                         <option value="new">New</option>
                         <option value="contacted">Contacted</option>
                         <option value="qualified">Qualified</option>
@@ -588,7 +430,7 @@ $status_labels = [
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                         Update Status
                     </button>
                 </div>
@@ -808,7 +650,7 @@ $status_labels = [
             
             modal.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #3b82f6; margin-right: 12px; font-size: 20px;"></i>
+                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
                     <h3 style="margin: 0; color: #1e293b;">Export Contacts</h3>
                 </div>
                 
@@ -818,7 +660,7 @@ $status_labels = [
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
-                    <select id="exportFormat" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
                         <option value="sql">SQL (Database Script)</option>
@@ -829,7 +671,7 @@ $status_labels = [
                     <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-download" style="margin-right: 4px;"></i>
                         Export
                     </button>
@@ -848,7 +690,7 @@ $status_labels = [
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="position: fixed"]');
+            const overlay = document.querySelector('[style*="z-index: 10000"]');
             if (overlay) {
                 overlay.remove();
             }
@@ -888,5 +730,6 @@ $status_labels = [
             }, 1000);
         }
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html> 

@@ -12,6 +12,7 @@ require_once '../includes/database.php';
 
 $error = '';
 $success = '';
+$field_errors = [];
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upload_dir = '../assets/images/logos/';
                 if (!is_dir($upload_dir)) {
                     mkdir($upload_dir, 0755, true);
-                }
+                }   
                 
                 $file_info = pathinfo($_FILES['poster_image']['name']);
                 $file_extension = strtolower($file_info['extension']);
@@ -55,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Validate file type
                 $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 if (!in_array($file_extension, $allowed_types)) {
-                    $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.';
+                    $field_errors['poster_image'] = 'Use a JPG, PNG, GIF, or WebP image.';
                 } else {
                     // Generate unique filename
                                     $filename = 'logo_' . time() . '_' . uniqid() . '.' . $file_extension;
@@ -64,39 +65,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (move_uploaded_file($_FILES['poster_image']['tmp_name'], $filepath)) {
                     $poster_image = 'assets/images/logos/' . $filename;
                     } else {
-                        $errors[] = 'Failed to upload poster image.';
+                        $field_errors['poster_image'] = 'The poster could not be uploaded. Try again.';
                     }
                 }
             }
             
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             
-            // Validation
-            $errors = [];
-            
             if (empty($title)) {
-                $errors[] = 'Job title is required';
+                $field_errors['title'] = 'Add a job title.';
             }
             
             if (empty($location)) {
-                $errors[] = 'Job location is required';
+                $field_errors['location'] = 'Add a location.';
             }
             
-            if (empty($type)) {
-                $errors[] = 'Job type is required';
+            if (empty($type) || $type === 'custom') {
+                $field_errors['type'] = 'Choose a job type.';
             }
             
             if (empty($description)) {
-                $errors[] = 'Job description is required';
+                $field_errors['description'] = 'Add a description.';
             }
             
-            if (empty($requirements)) {
-                $errors[] = 'Job requirements are required';
-            }
-            
-
-            
-            if (empty($errors)) {
+            if (empty($field_errors)) {
                 // Handle work hours - set to NULL if not specified
                 $final_start_time = isset($_POST['hours_not_specified']) ? null : $start_time;
                 $final_end_time = isset($_POST['hours_not_specified']) ? null : $end_time;
@@ -114,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Clear form data
                 $_POST = [];
             } else {
-                $error = implode('<br>', $errors);
+                $error = 'Please check the highlighted fields.';
             }
             
         } catch (PDOException $e) {
@@ -132,23 +124,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Job - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261006-2">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-plus"></i>
-            Add New Job
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Add New Job', 'fas fa-plus', ['url' => 'jobs.php', 'label' => 'Jobs']); ?>
 
     <div class="admin-container">
         <!-- Page Header -->
@@ -184,24 +166,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="add-job-form">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <p class="form-intro">Fields with a star are required. You can add images and extras after the first save.</p>
+
+                    <section class="form-section">
+                        <h4 class="form-section-title">What people see</h4>
+                    <div class="form-grid">
                         <div class="form-group">
                             <label for="title">Job Title *</label>
-                            <input type="text" id="title" name="title" class="form-control" 
+                            <input type="text" id="title" name="title" class="form-control<?php echo isset($field_errors['title']) ? ' is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($_POST['title'] ?? ''); ?>" required>
+                            <?php if (!empty($field_errors['title'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['title']); ?></div><?php endif; ?>
                         </div>
                         
                         <div class="form-group">
                             <label for="location">Location *</label>
-                            <input type="text" id="location" name="location" class="form-control" 
+                            <input type="text" id="location" name="location" class="form-control<?php echo isset($field_errors['location']) ? ' is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($_POST['location'] ?? ''); ?>" required>
+                            <small class="form-text text-muted">City or Remote.</small>
+                            <?php if (!empty($field_errors['location'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['location']); ?></div><?php endif; ?>
                         </div>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div class="form-group">
+                    <div class="form-group">
                             <label for="type">Job Type *</label>
-                            <select id="type" name="type" class="form-control" required>
+                            <select id="type" name="type" class="form-control<?php echo isset($field_errors['type']) ? ' is-invalid' : ''; ?>" required>
                                 <option value="">Select job type</option>
                                 <option value="Full-time" <?php echo ($_POST['type'] ?? '') === 'Full-time' ? 'selected' : ''; ?>>Full-time</option>
                                 <option value="Part-time" <?php echo ($_POST['type'] ?? '') === 'Part-time' ? 'selected' : ''; ?>>Part-time</option>
@@ -217,25 +205,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                        placeholder="e.g., Freelance, Temporary, Seasonal" value="<?php echo htmlspecialchars($_POST['custom_job_type'] ?? ''); ?>">
                                 <small class="form-text text-muted">Enter custom job type (e.g., Freelance, Temporary, Seasonal)</small>
                             </div>
+                            <?php if (!empty($field_errors['type'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['type']); ?></div><?php endif; ?>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="company_name">Company Name</label>
-                            <input type="text" id="company_name" name="company_name" class="form-control" 
-                                   value="<?php echo htmlspecialchars($_POST['company_name'] ?? ''); ?>" 
-                                   placeholder="Enter company name">
+                            <label for="description">Job Description *</label>
+                            <textarea id="description" name="description" class="form-control<?php echo isset($field_errors['description']) ? ' is-invalid' : ''; ?>" rows="6" required
+                                      placeholder="Describe the role, responsibilities, and what the job entails..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                            <?php if (!empty($field_errors['description'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['description']); ?></div><?php endif; ?>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h4 class="form-section-title">When and where</h4>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="hours_not_specified" name="hours_not_specified" 
+                                   <?php echo (isset($_POST['hours_not_specified']) ? 'checked' : ''); ?>>
+                            <span class="checkmark"></span>
+                            <div class="checkbox-text">
+                                <div class="checkbox-main-text">
+                                    <i class="fas fa-question-circle text-warning"></i>
+                                    Work hours not specified by company
+                                </div>
+                                <div class="checkbox-description">Check this if the company didn't provide specific work hours</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="work-hours-section" class="form-grid">
+                        <div class="form-group">
+                            <label for="start_time"><i class="fas fa-clock"></i> Work Start Time</label>
+                            <input type="time" id="start_time" name="start_time" class="form-control" 
+                                   value="<?php echo htmlspecialchars($_POST['start_time'] ?? '09:00'); ?>">
+                            <small class="form-text text-muted">Typical work start time</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_time"><i class="fas fa-clock"></i> Work End Time</label>
+                            <input type="time" id="end_time" name="end_time" class="form-control" 
+                                   value="<?php echo htmlspecialchars($_POST['end_time'] ?? '17:00'); ?>">
+                            <small class="form-text text-muted">Typical work end time</small>
                         </div>
                     </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    </section>
+
+                    <section class="form-section">
+                        <h4 class="form-section-title">Images</h4>
+                        <div class="form-group">
+                            <label for="poster_image">Company logo</label>
+                            <div class="file-upload-container">
+                                <div class="file-upload logo-upload<?php echo isset($field_errors['poster_image']) ? ' is-invalid' : ''; ?>" id="poster_image_upload">
+                                    <input type="file" id="poster_image" name="poster_image" accept="image/*" onchange="previewJobLogo(this)">
+                                    <label for="poster_image" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <div>
+                                            <strong>Click to upload</strong> or drag and drop<br>
+                                            <span>Recommended: 200×200px · PNG, JPG, GIF, WebP</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="poster_image_preview" class="logo-preview"></div>
+                            <small class="form-text text-muted">Shown with the job. A square PNG with a transparent background works best.</small>
+                            <?php if (!empty($field_errors['poster_image'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['poster_image']); ?></div><?php endif; ?>
+                        </div>
+                    </section>
+
+                    <details class="form-extra">
+                        <summary>Extra</summary>
+                    <div class="form-grid">
                         <div class="form-group">
                             <label for="job_icon">Job Icon</label>
-                            <select id="job_icon" name="job_icon" class="form-control" required>
-                                <option value="">Select an icon</option>
-                                
-                                <!-- Business & Professional -->
-                                <optgroup label="💼 Business & Professional">
-                                    <option value="fas fa-briefcase" <?php echo ($_POST['job_icon'] ?? '') === 'fas fa-briefcase' ? 'selected' : ''; ?>>💼 Briefcase</option>
+                            <select id="job_icon" name="job_icon" class="form-control">
+                                <optgroup label="Business & Professional">
+                                    <option value="fas fa-briefcase" <?php echo ($_POST['job_icon'] ?? 'fas fa-briefcase') === 'fas fa-briefcase' ? 'selected' : ''; ?>>Briefcase</option>
                                     <option value="fas fa-user-tie" <?php echo ($_POST['job_icon'] ?? '') === 'fas fa-user-tie' ? 'selected' : ''; ?>>👔 Business Person</option>
                                     <option value="fas fa-chalkboard-teacher" <?php echo ($_POST['job_icon'] ?? '') === 'fas fa-chalkboard-teacher' ? 'selected' : ''; ?>>👨‍🏫 Teacher</option>
                                     <option value="fas fa-users" <?php echo ($_POST['job_icon'] ?? '') === 'fas fa-users' ? 'selected' : ''; ?>>👥 Team</option>
@@ -291,7 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             
                             <div style="margin-top: 10px; text-align: center;">
-                                <div id="preview-icon" style="font-size: 2rem; color: #3b82f6;">
+                                <div id="preview-icon" style="font-size: 2rem; color: #111111;">
                                     <i class="fas fa-briefcase"></i>
                                 </div>
                                 <small style="color: #64748b;">Icon Preview</small>
@@ -326,59 +368,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     
                     <div class="form-group">
-                        <label for="poster_image">Company Logo</label>
-                        <input type="file" id="poster_image" name="poster_image" class="form-control" 
-                               accept="image/*">
-                        <small class="form-text text-muted">Upload company logo. Recommended size: 200x200px. Supported formats: PNG with transparent background</small>
+                        <label for="company_name">Company Name</label>
+                        <input type="text" id="company_name" name="company_name" class="form-control" 
+                               value="<?php echo htmlspecialchars($_POST['company_name'] ?? ''); ?>" 
+                               placeholder="Enter company name">
                     </div>
-                    
+
                     <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="hours_not_specified" name="hours_not_specified" 
-                                   <?php echo (isset($_POST['hours_not_specified']) ? 'checked' : ''); ?>>
-                            <span class="checkmark"></span>
-                            <div class="checkbox-text">
-                                <div class="checkbox-main-text">
-                                    <i class="fas fa-question-circle text-warning"></i>
-                                    Work hours not specified by company
-                                </div>
-                                <div class="checkbox-description">Check this if the company didn't provide specific work hours</div>
-                            </div>
-                        </label>
-                    </div>
-                    
-                    <div id="work-hours-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <div class="form-group">
-                            <label for="start_time">
-                                <i class="fas fa-clock"></i>
-                                Work Start Time
-                            </label>
-                            <input type="time" id="start_time" name="start_time" class="form-control" 
-                                   value="<?php echo htmlspecialchars($_POST['start_time'] ?? '09:00'); ?>">
-                            <small class="form-text text-muted">Typical work start time</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="end_time">
-                                <i class="fas fa-clock"></i>
-                                Work End Time
-                            </label>
-                            <input type="time" id="end_time" name="end_time" class="form-control" 
-                                   value="<?php echo htmlspecialchars($_POST['end_time'] ?? '17:00'); ?>">
-                            <small class="form-text text-muted">Typical work end time</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Job Description *</label>
-                        <textarea id="description" name="description" class="form-control" rows="6" required
-                                  placeholder="Describe the role, responsibilities, and what the job entails..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requirements">Job Requirements *</label>
-                        <textarea id="requirements" name="requirements" class="form-control" rows="6" required
+                        <label for="requirements">Job Requirements</label>
+                        <textarea id="requirements" name="requirements" class="form-control" rows="6"
                                   placeholder="List the qualifications, skills, and experience required..."><?php echo htmlspecialchars($_POST['requirements'] ?? ''); ?></textarea>
+                        <small class="form-text text-muted">Optional. Visitors see this under the job description.</small>
                     </div>
                     
                     <div class="form-group">
@@ -390,10 +390,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="checkbox-main-text">Active job posting</div>
                                 <div class="checkbox-description">Active jobs will be visible on the website</div>
                             </div>
-                        </label>
+                            </label>
                     </div>
+                    </details>
                     
-                    <div style="display: flex; gap: 16px; margin-top: 24px;">
+                    <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i>
                             Post Job
@@ -408,8 +409,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     
+    <script src="../assets/js/leave-guard.js?v=20261006-3"></script>
     <!-- Enhanced Date/Time and Icon Selection JavaScript -->
     <script>
+        function previewJobLogo(input) {
+            const preview = document.getElementById('poster_image_preview');
+            if (!preview || !input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.style.display = 'block';
+                preview.innerHTML = '<img src="' + e.target.result + '" alt="Logo preview">';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Add Job Form: DOM loaded, initializing...');
             // Auto-save functionality
@@ -417,6 +430,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const formId = 'add-job-form';
             let autoSaveInterval;
             let hasUnsavedChanges = false;
+            function markUnsaved(dirty) {
+                hasUnsavedChanges = dirty;
+                window.xpmFormDirty = dirty;
+            }
             
             // Auto-save form data
             function autoSaveForm() {
@@ -430,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Save to localStorage
                 localStorage.setItem(`form_${formId}_draft`, JSON.stringify(data));
-                hasUnsavedChanges = true;
+                markUnsaved(true);
                 
                 // Show auto-save indicator
                 showAutoSaveIndicator();
@@ -461,7 +478,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         // Show restore notification
                         showRestoreNotification();
-                        hasUnsavedChanges = true;
+                        markUnsaved(true);
                     } catch (e) {
                         console.error('Error restoring form data:', e);
                     }
@@ -471,7 +488,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Clear saved form data
             function clearSavedFormData() {
                 localStorage.removeItem(`form_${formId}_draft`);
-                hasUnsavedChanges = false;
+                markUnsaved(false);
             }
             
             // Show auto-save indicator
@@ -515,7 +532,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         top: 20px;
                         left: 50%;
                         transform: translateX(-50%);
-                        background: #3b82f6;
+                        background: #111111;
                         color: white;
                         padding: 12px 24px;
                         border-radius: 8px;
@@ -543,7 +560,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Warn before leaving with unsaved changes
             window.addEventListener('beforeunload', function(e) {
-                if (hasUnsavedChanges) {
+                if (window.xpmFormDirty) {
                     e.preventDefault();
                     e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
                     return e.returnValue;
@@ -552,6 +569,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Start auto-save when form is modified
             form.addEventListener('input', function() {
+                markUnsaved(true);
                 if (!autoSaveInterval) {
                     autoSaveInterval = setInterval(autoSaveForm, 2000);
                 }
@@ -705,5 +723,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             toggleWorkHoursSection();
         });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html> 

@@ -1,0 +1,43 @@
+/* Admin page styles: registrations.php */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-pending {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            border: 1px solid #f59e0b;
+        }
+        
+        .status-confirmed {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #16a34a;
+            border: 1px solid #22c55e;
+        }
+        
+        .status-waitlisted {
+            background: linear-gradient(135deg, #f4f4f5 0%, #d9d9db 100%);
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+        }
+        
+        .status-cancelled {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            border: 1px solid #ef4444;
+        }
+        
+        .status-blacklisted {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: #ffffff;
+            border: 1px solid #111827;
+        }
+    

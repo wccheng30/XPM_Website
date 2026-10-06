@@ -1,0 +1,149 @@
+/* Admin page styles: contacts.php */
+        /* Autocomplete Styles */
+        .search-container {
+            position: relative;
+            flex: 1;
+        }
+        
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        .suggestion-item.active {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .suggestion-item.active .suggestion-icon,
+        .suggestion-item.active .suggestion-name,
+        .suggestion-item.active .suggestion-details {
+            color: white;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Status badge styles */
+        .status-new {
+            background: linear-gradient(135deg, #f4f4f5 0%, #d9d9db 100%);
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+        }
+        
+        .status-contacted {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            border: 1px solid #f59e0b;
+        }
+        
+        .status-qualified {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #16a34a;
+            border: 1px solid #22c55e;
+        }
+        
+        .status-blacklisted {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: #ffffff;
+            border: 1px solid #111827;
+        }
+        
+        .suggestion-icon {
+            color: #64748b;
+            font-size: 14px;
+            width: 16px;
+        }
+        
+        .suggestion-text {
+            flex: 1;
+        }
+        
+        .suggestion-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        
+        .suggestion-details {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .suggestion-highlight {
+            background-color: #fef3c7;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+        
+        .suggestion-item.active .suggestion-highlight {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        .no-suggestions {
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+        }
+        
+        .search-loading {
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+        }
+        
+        .search-loading i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Ensure the card doesn't clip the dropdown */
+        .card {
+            overflow: visible;
+        }
+        
+        .card-body {
+            overflow: visible;
+        }
+        
+        /* Ensure form container doesn't clip */
+        .d-flex {
+            overflow: visible;
+        }
+        
+        .form-group {
+            overflow: visible;
+        }
+    

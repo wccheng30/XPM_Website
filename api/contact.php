@@ -48,6 +48,7 @@ function validate_phone($phone) {
 
 // Include shared database connection
 require_once '../includes/database.php';
+require_once '../includes/phone-field.php';
 
 function create_tables($pdo) {
     try {
@@ -173,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$input) {
             $input = $_POST;
         }
+
+        $input['phone'] = combine_phone($input['phone_code'] ?? '+60', $input['phone'] ?? '');
         
         // Validate required fields
         $required_fields = ['name', 'email', 'message'];

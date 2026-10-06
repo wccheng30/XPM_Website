@@ -100,147 +100,14 @@ if ($pdo) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Management - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
-    <style>
-        /* Autocomplete Styles */
-        .search-container {
-            position: relative;
-            flex: 1;
-        }
-        
-        .search-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-top: none;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            z-index: 9999;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-        }
-        
-        .suggestion-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .suggestion-item:hover {
-            background-color: #f8fafc;
-        }
-        
-        .suggestion-item.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .suggestion-item.active .suggestion-icon,
-        .suggestion-item.active .suggestion-name,
-        .suggestion-item.active .suggestion-details {
-            color: white;
-        }
-        
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-        
-        .suggestion-icon {
-            color: #64748b;
-            font-size: 14px;
-            width: 16px;
-        }
-        
-        .suggestion-text {
-            flex: 1;
-        }
-        
-        .suggestion-name {
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 2px;
-        }
-        
-        .suggestion-details {
-            font-size: 12px;
-            color: #64748b;
-        }
-        
-        .suggestion-highlight {
-            background-color: #fef3c7;
-            padding: 1px 2px;
-            border-radius: 2px;
-        }
-        
-        .suggestion-item.active .suggestion-highlight {
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-        
-        .no-suggestions {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-            font-style: italic;
-        }
-        
-        .search-loading {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-        }
-        
-        .search-loading i {
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Ensure the card doesn't clip the dropdown */
-        .card {
-            overflow: visible;
-        }
-        
-        .card-body {
-            overflow: visible;
-        }
-        
-        /* Ensure form container doesn't clip */
-        .d-flex {
-            overflow: visible;
-        }
-        
-        .form-group {
-            overflow: visible;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/jobs.css?v=20260930-4">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-briefcase"></i>
-            Job Management
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Jobs', 'fas fa-briefcase'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -336,7 +203,7 @@ if ($pdo) {
                         </p>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: 700; color: #3b82f6;">
+                        <div style="font-size: 24px; font-weight: 700; color: #111111;">
                             <?php echo count($jobs); ?>
                         </div>
                         <div style="font-size: 14px; color: #64748b;">
@@ -347,7 +214,7 @@ if ($pdo) {
                                 <i class="fas fa-download" style="margin-right: 4px;"></i>
                                 Export
                             </button>
-                            <a href="import-jobs.php" class="btn btn-primary" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                            <a href="import-jobs.php" class="btn btn-primary" style="background: #111111; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                                 <i class="fas fa-upload" style="margin-right: 4px;"></i>
                                 Import
                             </a>
@@ -367,7 +234,7 @@ if ($pdo) {
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                 <div style="flex: 1;">
                                     <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600;">
-                                        <i class="fas fa-briefcase" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-briefcase" style="color: #111111; margin-right: 8px;"></i>
                                         <?php echo htmlspecialchars($job['title']); ?>
                                     </h3>
                                     <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
@@ -440,7 +307,7 @@ if ($pdo) {
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
                                         Job Description
                                     </h4>
                                     <div style="color: #374151; line-height: 1.6; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -449,7 +316,7 @@ if ($pdo) {
                                 </div>
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-list-check" style="color: #3b82f6; margin-right: 8px;"></i>
+                                        <i class="fas fa-list-check" style="color: #111111; margin-right: 8px;"></i>
                                         Requirements
                                     </h4>
                                     <div style="color: #374151; line-height: 1.6; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -665,7 +532,7 @@ if ($pdo) {
             
             modal.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #3b82f6; margin-right: 12px; font-size: 20px;"></i>
+                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
                     <h3 style="margin: 0; color: #1e293b;">Export Jobs</h3>
                 </div>
                 
@@ -675,7 +542,7 @@ if ($pdo) {
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
-                    <select id="exportFormat" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
                         <option value="sql">SQL (Database Script)</option>
@@ -686,7 +553,7 @@ if ($pdo) {
                     <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-download" style="margin-right: 4px;"></i>
                         Export
                     </button>
@@ -705,7 +572,7 @@ if ($pdo) {
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="position: fixed"]');
+            const overlay = document.querySelector('[style*="z-index: 10000"]');
             if (overlay) {
                 overlay.remove();
             }
@@ -745,5 +612,6 @@ if ($pdo) {
             }, 1000);
         }
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html> 

@@ -1,0 +1,55 @@
+/* Fragment styles: registration-details.php (loaded into the registration modal) */
+.modal .registration-details .detail-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 14px;
+    animation: xpmFadeUp var(--dur-slow) var(--ease-out) backwards;
+}
+
+.modal .registration-details .detail-section:nth-child(2) { animation-delay: 60ms; }
+.modal .registration-details .detail-section:nth-child(3) { animation-delay: 120ms; }
+.modal .registration-details .detail-section:nth-child(4) { animation-delay: 180ms; }
+
+.modal .registration-details .detail-section h4 {
+    color: var(--text-primary);
+    font-size: 15px;
+    letter-spacing: -0.01em;
+}
+
+.modal .registration-details .detail-section h4 i,
+.modal .registration-details .value a {
+    color: var(--text-primary);
+}
+
+.modal .registration-details .detail-row,
+.modal .registration-details .detail-actions {
+    border-color: var(--border-primary);
+}
+
+.modal .registration-details .label {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.modal .registration-details .value {
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.modal .registration-details .notes-content,
+.modal .registration-details .description-content {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+    color: var(--text-secondary);
+}
+
+.modal .registration-details .text-muted {
+    color: var(--text-tertiary, var(--text-secondary));
+}
+
+[data-theme="dark"] .modal .registration-details .status-waitlisted,
+[data-theme="dark"] .modal .registration-details .status-blacklisted {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}

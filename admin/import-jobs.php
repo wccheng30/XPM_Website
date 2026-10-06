@@ -282,181 +282,14 @@ function formatTime($time) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Import Jobs - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
-    <style>
-        .import-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .import-step {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-        
-        .step-number {
-            background: #3b82f6;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 12px;
-        }
-        
-        .step-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .file-upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            background: #f8fafc;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .file-upload-area:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .file-upload-area.dragover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .column-mapping {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .mapping-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .mapping-label {
-            font-weight: 600;
-            color: #374151;
-            min-width: 120px;
-        }
-        
-        .mapping-select {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background: white;
-        }
-        
-        .required {
-            color: #dc2626;
-        }
-        
-        .preview-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-        }
-        
-        .preview-table th,
-        .preview-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .preview-table th {
-            background: #f9fafb;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .preview-table tr.error-row {
-            background: #fef2f2;
-        }
-        
-        .preview-table tr.error-row td {
-            color: #dc2626;
-        }
-        
-        .import-summary {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        
-        .summary-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .summary-label {
-            font-weight: 600;
-            color: #1e293b;
-        }
-        
-        .summary-value {
-            color: #64748b;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 24px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/import-jobs.css?v=20260930-4">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-upload"></i>
-            Import Jobs
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Import Jobs', 'fas fa-upload', ['url' => 'jobs.php', 'label' => 'Jobs']); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -509,9 +342,9 @@ function formatTime($time) {
                         </button>
                     </div>
                     
-                    <div id="file-info" class="hidden" style="margin-top: 16px; padding: 16px; background: #f0f9ff; border-radius: 8px;">
+                    <div id="file-info" class="hidden" style="margin-top: 16px; padding: 16px; background: #f4f4f5; border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-file" style="color: #3b82f6;"></i>
+                            <i class="fas fa-file" style="color: #111111;"></i>
                             <div>
                                 <div id="file-name" style="font-weight: 600; color: #1e293b;"></div>
                                 <div id="file-size" style="font-size: 14px; color: #64748b;"></div>
@@ -738,5 +571,6 @@ function formatTime($time) {
             }
         });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

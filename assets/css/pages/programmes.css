@@ -1,0 +1,82 @@
+/* Programmes page */
+.programme-listing .listing-media img {
+    aspect-ratio: 4 / 5;
+    object-fit: contain;
+    background: var(--c-surface);
+    padding: var(--sp-3);
+}
+
+.check-list-sm li {
+    font-size: 0.875rem;
+}
+
+.check-list-sm li::before {
+    width: 0.95rem;
+    height: 0.95rem;
+    font-size: 0.6rem;
+    top: 0.22rem;
+}
+
+.price-save {
+    align-self: flex-start;
+    margin-top: 0.3rem;
+}
+
+.pum-logo {
+    max-width: 220px;
+    margin-bottom: var(--sp-5);
+}
+
+.pum-section .eyebrow {
+    margin-bottom: var(--sp-4);
+}
+
+.pum-section .lead {
+    margin-bottom: var(--sp-5);
+}
+
+.pum-trainers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.pum-trainer {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+
+.pum-trainer:hover {
+    transform: translateX(6px);
+    box-shadow: var(--sh-md);
+}
+
+.pum-trainer img {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 50%;
+    filter: grayscale(0.25);
+    transition: filter var(--dur) var(--ease-out);
+}
+
+.pum-trainer:hover img {
+    filter: none;
+}
+
+.pum-trainer h4 {
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+}
+
+.pum-trainer p {
+    font-size: 0.875rem;
+    margin-bottom: 0.4rem;
+}

@@ -130,298 +130,15 @@ $month_names = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/facility-calendar.css?v=20260930-4">
     
-    <style>
-        .calendar-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .calendar-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 0;
-        }
-        
-        .calendar-nav {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .nav-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1rem;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        
-        .nav-btn:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-        }
-        
-        .current-month {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1e293b;
-            min-width: 200px;
-            text-align: center;
-        }
-        
-        .calendar-grid {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            background: #f8fafc;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .weekday {
-            padding: 1rem;
-            text-align: center;
-            font-weight: 600;
-            color: #64748b;
-            border-right: 1px solid #e2e8f0;
-        }
-        
-        .weekday:last-child {
-            border-right: none;
-        }
-        
-        .calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-        }
-        
-        .calendar-day {
-            min-height: 120px;
-            padding: 0.75rem;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            position: relative;
-            background: white;
-        }
-        
-        .calendar-day:nth-child(7n) {
-            border-right: none;
-        }
-        
-        .day-number {
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .day-bookings {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        
-        .booking-item {
-            background: #3b82f6;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            text-decoration: none;
-            display: block;
-        }
-        
-        .booking-item:hover {
-            background: #2563eb;
-            transform: scale(1.02);
-        }
-        
-        .booking-item.conference_room {
-            background: #10b981;
-        }
-        
-        .booking-item.training_room {
-            background: #f59e0b;
-        }
-        
-        .booking-item.breakout_area {
-            background: #8b5cf6;
-        }
-        
-        .booking-item.programme {
-            background: #ef4444;
-        }
-        
-        .other-month {
-            background: #f8fafc;
-            color: #9ca3af;
-        }
-        
-        .today {
-            background: #fef3c7;
-        }
-        
-        .today .day-number {
-            color: #92400e;
-            font-weight: 700;
-        }
-        
-        .booking-details {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            display: none;
-            padding: 1rem;
-        }
-        
-        .booking-details.show {
-            display: block;
-        }
-        
-        .booking-detail-item {
-            margin-bottom: 0.5rem;
-        }
-        
-        .booking-detail-label {
-            font-size: 0.75rem;
-            color: #64748b;
-            font-weight: 600;
-        }
-        
-        .booking-detail-value {
-            font-size: 0.875rem;
-            color: #1e293b;
-        }
-        
-        .facility-legend {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-        
-        .quick-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .quick-action-btn {
-            padding: 0.5rem 1rem;
-            background: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .quick-action-btn:hover {
-            background: #4b5563;
-        }
-        
-        .quick-action-btn.primary {
-            background: #3b82f6;
-        }
-        
-        .quick-action-btn.primary:hover {
-            background: #2563eb;
-        }
-        
-        @media (max-width: 768px) {
-            .calendar-header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .calendar-nav {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .calendar-day {
-                min-height: 80px;
-                padding: 0.5rem;
-            }
-            
-            .booking-item {
-                font-size: 0.7rem;
-                padding: 0.2rem 0.4rem;
-            }
-        }
-    </style>
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-calendar-alt"></i>
-            Facility Booking Calendar
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Facility Calendar', 'fas fa-calendar'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -562,7 +279,7 @@ $month_names = [
         <!-- Legend -->
         <div class="facility-legend">
             <div class="legend-item">
-                <div class="legend-color" style="background: #3b82f6;"></div>
+                <div class="legend-color" style="background: #111111;"></div>
                 <span>General Bookings (Click → Booking Details)</span>
             </div>
             <div class="legend-item">
@@ -574,7 +291,7 @@ $month_names = [
                 <span>Training Room</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background: #8b5cf6;"></div>
+                <div class="legend-color" style="background: #111111;"></div>
                 <span>Breakout Area</span>
             </div>
             <div class="legend-item">
@@ -616,5 +333,6 @@ $month_names = [
             }
         }
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

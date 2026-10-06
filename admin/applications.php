@@ -225,24 +225,16 @@ if ($pdo) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Applications - Admin Panel</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/applications.css?v=20260930-4">
+    <link rel="stylesheet" href="css/application-details.css?v=20260930-4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-file-alt"></i>
-            Job Applications Management
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-                            <a href="logout-confirm.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Job Applications', 'fas fa-file-alt'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -252,7 +244,7 @@ if ($pdo) {
         <div class="card mb-3">
             <div class="card-body">
                 <h2 style="margin-bottom: 8px; color: #1e293b; font-size: 24px; font-weight: 700;">
-                    <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 12px;"></i>
+                    <i class="fas fa-file-alt" style="color: #111111; margin-right: 12px;"></i>
                     Job Applications
                 </h2>
                 <p style="color: #64748b; margin: 0; font-size: 16px;">Manage and review job applications from candidates</p>
@@ -386,7 +378,7 @@ if ($pdo) {
                      <div style="display: flex; justify-content: space-between; align-items: center;">
                          <div>
                              <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">
-                                 <i class="fas fa-list" style="color: #3b82f6; margin-right: 8px;"></i>
+                                 <i class="fas fa-list" style="color: #111111; margin-right: 8px;"></i>
                                  All Applications
                              </h3>
                              <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">
@@ -404,7 +396,7 @@ if ($pdo) {
                 <div class="card-body">
                                          <?php if (empty($applications)): ?>
                          <div style="text-align: center; padding: 60px 20px; color: #64748b; background: #f8fafc; border-radius: 12px; margin: 20px 0;">
-                             <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px;">
+                             <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #111111 0%, #111111 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px;">
                                  <i class="fas fa-file-alt"></i>
                              </div>
                              <h3 style="margin-bottom: 12px; color: #374151; font-size: 24px; font-weight: 600;">No Applications Yet</h3>
@@ -412,7 +404,7 @@ if ($pdo) {
                                  Job applications will appear here once candidates start applying to your job postings.
                              </p>
                              <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                                 <a href="jobs.php" style="background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                                 <a href="jobs.php" style="background: #111111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                                      <i class="fas fa-plus" style="margin-right: 8px;"></i>
                                      Add Job Posting
                                  </a>
@@ -446,7 +438,7 @@ if ($pdo) {
                                      <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s; <?php echo $is_blacklisted ? 'background-color: #fef2f2;' : ''; ?>" onmouseover="this.style.backgroundColor='<?php echo $is_blacklisted ? '#fee2e2' : '#f8fafc'; ?>'" onmouseout="this.style.backgroundColor='<?php echo $is_blacklisted ? '#fef2f2' : 'white'; ?>'">
                                          <td style="padding: 16px 12px;">
                                              <div style="display: flex; align-items: center; gap: 12px;">
-                                                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, <?php echo $is_blacklisted ? '#ef4444 0%, #b91c1c 100%' : '#667eea 0%, #764ba2 100%'; ?>); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
+                                                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, <?php echo $is_blacklisted ? '#ef4444 0%, #b91c1c 100%' : '#111111 0%, #111111 100%'; ?>); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
                                                      <i class="fas fa-<?php echo $is_blacklisted ? 'user-slash' : 'user'; ?>"></i>
                                                  </div>
                                                  <div>
@@ -475,12 +467,12 @@ if ($pdo) {
                                          </td>
                                          <td style="padding: 16px 12px;">
                                              <div style="margin-bottom: 6px;">
-                                                 <a href="mailto:<?php echo htmlspecialchars($application['email']); ?>" style="color: #3b82f6; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px;">
+                                                 <a href="mailto:<?php echo htmlspecialchars($application['email']); ?>" style="color: #111111; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px;">
                                                      <i class="fas fa-envelope" style="font-size: 12px;"></i>
                                                      <?php echo htmlspecialchars($application['email']); ?>
                                                  </a>
                                              </div>
-                                            <div style="margin-bottom: 6px; color: #7c3aed; font-size: 14px; display: flex; align-items: center; gap: 4px;">
+                                            <div style="margin-bottom: 6px; color: #111111; font-size: 14px; display: flex; align-items: center; gap: 4px;">
                                                 <i class="fas fa-id-card" style="font-size: 12px;"></i>
                                                 <?php echo htmlspecialchars($application['ic_number'] ?? ''); ?>
                                             </div>
@@ -526,7 +518,7 @@ if ($pdo) {
                                          </td>
                                          <td style="padding: 16px 12px; text-align: center;">
                                              <div style="display: flex; gap: 8px; justify-content: center;">
-                                                 <button onclick="viewApplication(<?php echo $application['id']; ?>)" style="background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                                                 <button onclick="viewApplication(<?php echo $application['id']; ?>)" style="background: #111111; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                                                      <i class="fas fa-eye" style="margin-right: 4px;"></i>
                                                      View
                                                  </button>
@@ -572,7 +564,7 @@ if ($pdo) {
         <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-edit" style="color: #3b82f6;"></i>
+                    <i class="fas fa-edit" style="color: #111111;"></i>
                     Update Status
                 </h3>
                 <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
@@ -584,7 +576,7 @@ if ($pdo) {
                 <input type="hidden" name="application_id" id="applicationId">
                 <div class="form-group" style="margin-bottom: 24px;">
                     <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Application Status</label>
-                    <select name="status" id="statusSelect" required style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                    <select name="status" id="statusSelect" class="form-control" required>
                         <option value="pending">Pending</option>
                         <option value="reviewed">KIV</option>
                         <option value="shortlisted">Shortlisted</option>
@@ -598,7 +590,7 @@ if ($pdo) {
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                         Update Status
                     </button>
                 </div>
@@ -610,7 +602,7 @@ if ($pdo) {
         <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-edit" style="color: #3b82f6;"></i>
+                    <i class="fas fa-edit" style="color: #111111;"></i>
                     Submit Comment
                 </h3>
                 <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
@@ -620,11 +612,11 @@ if ($pdo) {
             <form method="POST" class="comment-form" style="padding: 24px;">
                 <input type="hidden" name="application_id" id="commentApplicationId">
                 <input type="hidden" name="action" value="update_comment">
-                    <textarea id="comment" name="comment" rows="4" style="width: 100%;"></textarea>
+                    <textarea id="comment" name="comment" class="form-control" rows="4"></textarea>
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                         Submit
                     </button>             
             </form>
@@ -705,7 +697,7 @@ if ($pdo) {
         <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 95%; max-width: 900px; height: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600;">
-                    <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 8px;"></i>
+                    <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
                     Cover Letter Preview - <span id="coverLetterCandidateName"></span>
                 </h3>
                 <button class="modal-close" onclick="closeCoverLetterPreview()" style="background: none; border: none; font-size: 20px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px;">
@@ -746,7 +738,7 @@ if ($pdo) {
                     </div>
                     <div style="margin-bottom: 16px;">
                         <label style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Reason for Blacklisting</label>
-                        <textarea name="blacklist_reason" id="blacklistReason" rows="3" placeholder="Enter the reason for blacklisting this candidate..." style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; resize: vertical; font-family: inherit; box-sizing: border-box;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#d1d5db'"></textarea>
+                        <textarea name="blacklist_reason" id="blacklistReason" class="form-control" rows="3" placeholder="Enter the reason for blacklisting this candidate..."></textarea>
                     </div>
                 </div>
                 <div style="padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end;">
@@ -844,7 +836,7 @@ if ($pdo) {
              
              detailsContent.innerHTML = `
                  <div style="text-align: center; padding: 40px 20px;">
-                     <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                     <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #111111; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
                      <p style="color: #6b7280; margin: 0;">Loading application details...</p>
                  </div>
              `;
@@ -1069,7 +1061,7 @@ if ($pdo) {
              // Show loading state
              coverLetterContent.innerHTML = `
                  <div style="text-align: center; padding: 40px 20px;">
-                     <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                     <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #111111; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
                      <p style="color: #6b7280; margin: 0;">Loading cover letter content...</p>
                  </div>
              `;
@@ -1152,7 +1144,7 @@ if ($pdo) {
             
             modal.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #3b82f6; margin-right: 12px; font-size: 20px;"></i>
+                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
                     <h3 style="margin: 0; color: #1e293b;">Export Applications</h3>
                 </div>
                 
@@ -1162,7 +1154,7 @@ if ($pdo) {
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
-                    <select id="exportFormat" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
                         <option value="sql">SQL (Database Script)</option>
@@ -1174,7 +1166,7 @@ if ($pdo) {
                     <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-download" style="margin-right: 4px;"></i>
                         Export
                     </button>
@@ -1193,7 +1185,7 @@ if ($pdo) {
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="position: fixed"]');
+            const overlay = document.querySelector('[style*="z-index: 10000"]');
             if (overlay) {
                 overlay.remove();
             }
@@ -1280,228 +1272,6 @@ if ($pdo) {
          document.head.appendChild(style);
      </script>
 
-         <style>
-         .status-badge {
-             padding: 6px 12px;
-             border-radius: 20px;
-             font-size: 12px;
-             font-weight: 600;
-             text-transform: uppercase;
-             letter-spacing: 0.5px;
-             display: inline-flex;
-             align-items: center;
-             gap: 6px;
-         }
-         
-         /* Pending - Orange */
-         .status-pending {
-             background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-             color: #c2410c;
-             border: 1px solid #f97316;
-         }
-         
-         /* KIV - Yellow */
-         .status-reviewed {
-             background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
-             color: #a16207;
-             border: 1px solid #eab308;
-         }
-         
-         /* Shortlisted - Purple */
-         .status-shortlisted {
-             background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-             color: #7c3aed;
-             border: 1px solid #8b5cf6;
-         }
-         
-         /* Rejected - Red */
-         .status-rejected {
-             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-             color: #dc2626;
-             border: 1px solid #ef4444;
-         }
-         
-         /* Blacklisted - Black */
-         .status-blacklisted {
-             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-             color: #ffffff;
-             border: 1px solid #111827;
-         }
-
-        /* Hired - Green */
-        .status-hired {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #15803d;
-            border: 1px solid #22c55e;
-        }
-
-        /* Interview - Blue */
-        .status-interview,
-        .status-interviewed,
-        .status-waiting-for-interview,
-        .status-waiting_for_interview {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #2563eb;
-            border: 1px solid #3b82f6;
-        }
-
-         
-         
-         /* Modal improvements */
-         .modal {
-             display: none;
-             position: fixed;
-             z-index: 1000;
-             left: 0;
-             top: 0;
-             width: 100%;
-             height: 100%;
-             background-color: rgba(0,0,0,0.5);
-             backdrop-filter: blur(4px);
-         }
-         
-         .modal-content {
-             background-color: white;
-             margin: 5% auto;
-             padding: 0;
-             border-radius: 12px;
-             width: 90%;
-             max-width: 500px;
-             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-             animation: modalSlideIn 0.3s ease-out;
-         }
-         
-         @keyframes modalSlideIn {
-             from {
-                 opacity: 0;
-                 transform: translateY(-20px);
-             }
-             to {
-                 opacity: 1;
-                 transform: translateY(0);
-             }
-         }
-         
-         .modal-header {
-             padding: 20px 24px;
-             border-bottom: 1px solid #e5e7eb;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-         }
-         
-         .modal-header h3 {
-             margin: 0;
-             color: #1f2937;
-             font-size: 18px;
-             font-weight: 600;
-         }
-         
-         .modal-close {
-             background: none;
-             border: none;
-             font-size: 20px;
-             color: #6b7280;
-             cursor: pointer;
-             padding: 4px;
-             border-radius: 4px;
-             transition: background-color 0.2s;
-         }
-         
-         .modal-close:hover {
-             background-color: #f3f4f6;
-             color: #374151;
-         }
-         
-         .form-group {
-             margin-bottom: 20px;
-         }
-         
-         .form-group label {
-             display: block;
-             margin-bottom: 8px;
-             color: #374151;
-             font-weight: 500;
-             font-size: 14px;
-         }
-         
-         .form-group select {
-             width: 100%;
-             padding: 12px 16px;
-             border: 1px solid #d1d5db;
-             border-radius: 8px;
-             font-size: 14px;
-             color: #374151;
-             background-color: white;
-             transition: border-color 0.2s;
-         }
-         
-         .form-group select:focus {
-             outline: none;
-             border-color: #3b82f6;
-             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-         }
-         
-         .form-actions {
-             padding: 20px 24px;
-             border-top: 1px solid #e5e7eb;
-             display: flex;
-             gap: 12px;
-             justify-content: flex-end;
-         }
-         
-         .btn {
-             padding: 10px 20px;
-             border-radius: 8px;
-             font-weight: 500;
-             font-size: 14px;
-             cursor: pointer;
-             transition: all 0.2s;
-             border: none;
-             text-decoration: none;
-             display: inline-flex;
-             align-items: center;
-             gap: 6px;
-         }
-         
-         .btn-primary {
-             background: #3b82f6;
-             color: white;
-         }
-         
-         .btn-primary:hover {
-             background: #2563eb;
-             transform: translateY(-1px);
-             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-         }
-         
-         .btn-secondary {
-             background: #6b7280;
-             color: white;
-         }
-         
-         .btn-secondary:hover {
-             background: #4b5563;
-             transform: translateY(-1px);
-             box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
-         }
-         
-         /* Responsive improvements */
-         @media (max-width: 768px) {
-             .stats-grid {
-                 grid-template-columns: 1fr;
-                 gap: 16px;
-             }
-             
-             table {
-                 font-size: 14px;
-             }
-             
-             .action-buttons {
-                 flex-direction: column;
-                 gap: 4px;
-             }
-         }
-     </style>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

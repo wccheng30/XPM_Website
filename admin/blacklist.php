@@ -101,25 +101,15 @@ $total_pages = ceil($total_trainers / $per_page);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainers Management - XpressPoint Admin</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Blacklist', 'fas fa-user-slash'); ?>
     <div class="admin-container">
-        <!-- Header -->
-        <header class="admin-header">
-            <h1>
-                <i class="fas fa-chalkboard-teacher"></i>
-                Trainers Management
-            </h1>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-                <a href="logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
-            </div>
-        </header>
         
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('blacklist'); ?>
@@ -195,7 +185,7 @@ $total_pages = ceil($total_trainers / $per_page);
                             </p>
                         </div>
                         <div style="display: flex; gap: 12px;">
-                            <a href="add-blacklist.php" class="btn btn-primary" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none;">
+                            <a href="add-blacklist.php" class="btn btn-primary" style="background: #111111; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none;">
                                 <i class="fas fa-plus" style="margin-right: 6px;"></i>
                                 Add New
                             </a>
@@ -275,7 +265,7 @@ $total_pages = ceil($total_trainers / $per_page);
                                             </td>
                                             <td style="padding: 16px 12px;">
                                                 <div style="display: flex; gap: 8px; align-items: center;">
-                                                    <a href="edit-blacklist.php?id=<?php echo $person['id']; ?>" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px; text-decoration: none;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                                                    <a href="edit-blacklist.php?id=<?php echo $person['id']; ?>" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #111111 0%, #111111 100%); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px; text-decoration: none;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                                                         <i class="fas fa-edit" style="font-size: 11px;"></i>
                                                         Edit
                                                     </a>
@@ -359,7 +349,7 @@ $total_pages = ceil($total_trainers / $per_page);
             
             modal.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #3b82f6; margin-right: 12px; font-size: 20px;"></i>
+                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
                     <h3 style="margin: 0; color: #1e293b;">Export Blacklist</h3>
                 </div>
                 
@@ -369,7 +359,7 @@ $total_pages = ceil($total_trainers / $per_page);
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
-                    <select id="exportFormat" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
                         <option value="sql">SQL (Database Script)</option>
@@ -381,7 +371,7 @@ $total_pages = ceil($total_trainers / $per_page);
                     <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-download" style="margin-right: 4px;"></i>
                         Export
                     </button>
@@ -400,7 +390,7 @@ $total_pages = ceil($total_trainers / $per_page);
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="position: fixed"]');
+            const overlay = document.querySelector('[style*="z-index: 10000"]');
             if (overlay) {
                 overlay.remove();
             }
@@ -446,36 +436,7 @@ $total_pages = ceil($total_trainers / $per_page);
                 setTimeout(() => alert.remove(), 300);
             });
         }, 5000);
-        
-        // Mobile Navigation Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navTabs = document.getElementById('navTabs');
-            
-            if (navToggle && navTabs) {
-                navToggle.addEventListener('click', function() {
-                    navToggle.classList.toggle('active');
-                    navTabs.classList.toggle('active');
-                });
-                
-                // Close navigation when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!navToggle.contains(e.target) && !navTabs.contains(e.target)) {
-                        navToggle.classList.remove('active');
-                        navTabs.classList.remove('active');
-                    }
-                });
-                
-                // Close navigation when clicking on a nav link
-                const navLinks = navTabs.querySelectorAll('.nav-tab');
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        navToggle.classList.remove('active');
-                        navTabs.classList.remove('active');
-                    });
-                });
-            }
-        });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

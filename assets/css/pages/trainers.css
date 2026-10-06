@@ -1,0 +1,110 @@
+/* Trainers page */
+.breadcrumb-center {
+    justify-content: center;
+}
+
+.pum-hero-logo {
+    max-width: 240px;
+    margin: 0 auto var(--sp-5);
+}
+
+.trainers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--sp-5);
+}
+
+.trainer-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out), border-color var(--dur);
+}
+
+.trainer-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--c-border-strong);
+    box-shadow: var(--sh-lg);
+}
+
+.trainer-image {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--c-surface-2);
+}
+
+.trainer-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.35);
+    transition: transform var(--dur-slower) var(--ease-out), filter var(--dur-slow) var(--ease-out);
+}
+
+.trainer-card:hover .trainer-image img {
+    transform: scale(1.05);
+    filter: none;
+}
+
+.trainer-experience {
+    position: absolute;
+    left: 0.9rem;
+    bottom: 0.9rem;
+    padding: 0.3rem 0.7rem;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--c-white);
+    background: rgba(17, 17, 17, 0.8);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-radius: var(--r-pill);
+}
+
+.trainer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-5);
+}
+
+.trainer-info h3 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.trainer-title {
+    margin-top: -0.4rem;
+    font-size: var(--fs-sm);
+    color: var(--c-text-3);
+}
+
+.trainer-description {
+    font-size: 0.9rem;
+}
+
+.trainer-credentials {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--c-border);
+}
+
+.trainer-credentials li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-sm);
+    color: var(--c-text-2);
+}
+
+.trainer-credentials i {
+    font-size: 0.75rem;
+    color: var(--c-text);
+}

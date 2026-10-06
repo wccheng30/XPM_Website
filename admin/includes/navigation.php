@@ -63,8 +63,9 @@ function renderAdminNavigation($current_page = '') {
         ]
     ];
     
-    echo '<nav class="admin-nav">';
-    echo '<div class="nav-mobile-toggle" id="navToggle">';
+    echo '<div class="admin-nav-sentinel" aria-hidden="true"></div>';
+    echo '<nav class="admin-nav" aria-label="Admin sections">';
+    echo '<div class="nav-mobile-toggle" id="navToggle" aria-expanded="false">';
     echo '<span></span>';
     echo '<span></span>';
     echo '<span></span>';
@@ -73,13 +74,15 @@ function renderAdminNavigation($current_page = '') {
     
     foreach ($nav_items as $key => $item) {
         $active_class = ($current_page === $key) ? 'active' : '';
-        echo '<a href="' . $item['url'] . '" class="nav-tab ' . $active_class . '">';
-        echo '<i class="' . $item['icon'] . '"></i>';
-        echo '<span class="nav-label">' . $item['label'] . '</span>';
+        $label = htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8');
+        echo '<a href="' . htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') . '" class="nav-tab ' . $active_class . '" title="' . $label . '">';
+        echo '<i class="' . $item['icon'] . '" aria-hidden="true"></i>';
+        echo '<span class="nav-label">' . $label . '</span>';
         echo '</a>';
     }
     
     echo '</div>';
     echo '</nav>';
+    echo '<button type="button" class="back-to-top" id="adminBackToTop" hidden aria-label="Back to top"><i class="fas fa-arrow-up" aria-hidden="true"></i></button>';
 }
 ?>

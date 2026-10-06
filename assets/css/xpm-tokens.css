@@ -1,0 +1,103 @@
+/* ==========================================================================
+   XPM Design Tokens
+   Charcoal structure, red actions, teal detail.
+   Lavender tokens are reserved for #initiator and must stay as they are.
+   ========================================================================== */
+:root {
+    /* Brand — sampled from the logo */
+    --c-red: #B31B01;
+    --c-red-hover: #8E1400;
+    --c-red-soft: #F8EEEB;
+    --c-teal: #B8E0E0;
+    --c-teal-deep: #1F6A6E;
+    --c-teal-soft: #F3FAFA;
+    --c-charcoal: #1E2328;
+
+    /* Neutrals */
+    --c-white: #ffffff;
+    --c-surface: #fafafa;
+    --c-surface-2: #f4f4f5;
+    --c-surface-3: #ededee;
+    --c-border: #ececec;
+    --c-border-strong: #d9d9db;
+    --c-text: var(--c-charcoal);
+    --c-text-2: #4E575E;
+    --c-text-3: #6A737A;
+    --c-accent: var(--c-red);
+    --c-accent-hover: var(--c-red-hover);
+    --c-accent-contrast: #ffffff;
+    --c-focus: rgba(31, 106, 110, 0.22);
+    --c-overlay: rgba(30, 35, 40, 0.55);
+
+    /* Semantic (muted so they sit quietly on white) */
+    --c-success: #15803d;
+    --c-success-bg: #f0fdf4;
+    --c-danger: #b91c1c;
+    --c-danger-bg: #fef2f2;
+    --c-warning: #a16207;
+    --c-warning-bg: #fefce8;
+    --c-info: #374151;
+    --c-info-bg: #f5f5f5;
+
+    /* Founder only */
+    --lavender-50: #f7f3ff;
+    --lavender-100: #efe7ff;
+    --lavender-200: #e2d6fb;
+    --lavender-300: #cbb8f2;
+    --lavender-500: #9b84d6;
+    --lavender-700: #6b58a8;
+    --lavender-900: #3f3370;
+
+    /* Typography */
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-head: 'Poppins', 'Inter', system-ui, sans-serif;
+    --fs-xs: 0.75rem;
+    --fs-sm: 0.875rem;
+    --fs-base: 1rem;
+    --fs-md: 1.125rem;
+    --fs-lg: 1.25rem;
+    --fs-xl: 1.5rem;
+    --fs-2xl: 2rem;
+    --fs-3xl: clamp(2rem, 3.2vw + 1rem, 2.75rem);
+    --fs-4xl: clamp(2.4rem, 4.5vw + 1rem, 3.75rem);
+    --lh-tight: 1.15;
+    --lh-snug: 1.35;
+    --lh-body: 1.65;
+
+    /* Spacing */
+    --sp-1: 0.25rem;
+    --sp-2: 0.5rem;
+    --sp-3: 0.75rem;
+    --sp-4: 1rem;
+    --sp-5: 1.5rem;
+    --sp-6: 2rem;
+    --sp-7: 3rem;
+    --sp-8: 4rem;
+    --sp-9: 6rem;
+    --section-y: clamp(4rem, 8vw, 7rem);
+    --container: 1200px;
+    --container-narrow: 820px;
+    --nav-h: 88px;
+
+    /* Radius */
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    --r-pill: 999px;
+
+    /* Shadows */
+    --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-md: 0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
+    --sh-lg: 0 18px 40px -12px rgba(0, 0, 0, 0.14);
+    --sh-xl: 0 30px 70px -20px rgba(0, 0, 0, 0.22);
+
+    /* Motion */
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --dur-fast: 150ms;
+    --dur: 300ms;
+    --dur-slow: 600ms;
+    --dur-slower: 900ms;
+}

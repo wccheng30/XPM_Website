@@ -1,0 +1,343 @@
+/* Admin page styles: facility-calendar-enhanced.php */
+        .calendar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+        
+        .current-month {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .calendar-grid {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .weekday {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #64748b;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .weekday:last-child {
+            border-right: none;
+        }
+        
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        
+        .calendar-day {
+            min-height: 120px;
+            padding: 0.75rem;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day:hover {
+            background: #f8fafc;
+        }
+        
+        .calendar-day:nth-child(7n) {
+            border-right: none;
+        }
+        
+        .day-number {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .day-bookings {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .booking-item {
+            background: var(--c-charcoal);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .booking-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .booking-item.conference_room {
+            background: #10b981;
+        }
+        
+        .booking-item.training_room {
+            background: #f59e0b;
+        }
+        
+        .booking-item.breakout_area {
+            background: var(--c-charcoal);
+        }
+        
+        .booking-item.programme {
+            background: #ef4444;
+        }
+        
+        .other-month {
+            background: #f8fafc;
+            color: #9ca3af;
+        }
+        
+        .today {
+            background: #fef3c7;
+        }
+        
+        .today .day-number {
+            color: #92400e;
+            font-weight: 700;
+        }
+        
+        .booking-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .booking-tooltip.show {
+            display: block;
+        }
+        
+        .tooltip-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tooltip-details {
+            font-size: 0.875rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+        
+        .facility-legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .quick-action-btn {
+            padding: 0.5rem 1rem;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .quick-action-btn:hover {
+            background: #4b5563;
+        }
+        
+        .quick-action-btn.primary {
+            background: var(--accent-primary);
+        }
+        
+        .quick-action-btn.primary:hover {
+            background: var(--accent-secondary);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .calendar-nav {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+                padding: 0.5rem;
+            }
+            
+            .booking-item {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .calendar-header {
+                padding: 1rem;
+            }
+
+            .calendar-nav {
+                gap: 0.5rem;
+            }
+
+            .current-month {
+                min-width: 0;
+                font-size: 1rem;
+            }
+
+            .nav-btn {
+                padding: 0.55rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .calendar-weekdays,
+            .calendar-days {
+                grid-template-columns: repeat(7, minmax(0, 1fr));
+            }
+
+            .weekday {
+                padding: 0.5rem 0.15rem;
+                font-size: 0.7rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .calendar-day {
+                min-width: 0;
+                padding: 0.3rem;
+            }
+
+            .quick-actions {
+                flex-wrap: wrap;
+            }
+        }
+    

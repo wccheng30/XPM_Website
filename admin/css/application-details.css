@@ -1,0 +1,71 @@
+/* Fragment styles: application-details.php (loaded into #applicationModal) */
+.modal .application-details .detail-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 14px;
+    animation: xpmFadeUp var(--dur-slow) var(--ease-out) backwards;
+}
+
+.modal .application-details .detail-section:nth-child(2) { animation-delay: 60ms; }
+.modal .application-details .detail-section:nth-child(3) { animation-delay: 120ms; }
+.modal .application-details .detail-section:nth-child(4) { animation-delay: 180ms; }
+
+.modal .application-details .detail-section h4 {
+    color: var(--text-primary);
+    font-size: 15px;
+    letter-spacing: -0.01em;
+}
+
+.modal .application-details .detail-section h4 i,
+.modal .application-details .value a {
+    color: var(--text-primary);
+}
+
+.modal .application-details .detail-row,
+.modal .application-details .detail-actions {
+    border-color: var(--border-primary);
+}
+
+.modal .application-details .label {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.modal .application-details .value {
+    color: var(--text-primary);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.modal .application-details .cover-letter-content,
+.modal .application-details .job-description-content {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+    color: var(--text-secondary);
+}
+
+.modal .application-details .file-info,
+.modal .application-details .text-muted {
+    color: var(--text-tertiary, var(--text-secondary));
+}
+
+[data-theme="dark"] .modal .application-details textarea {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal .application-details .status-shortlisted,
+[data-theme="dark"] .modal .application-details .status-interview,
+[data-theme="dark"] .modal .application-details .status-interviewed,
+[data-theme="dark"] .modal .application-details .status-waiting-for-interview,
+[data-theme="dark"] .modal .application-details .status-waiting_for_interview,
+[data-theme="dark"] .modal .application-details .status-blacklisted {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal .application-details .status-hired {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+}

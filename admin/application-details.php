@@ -96,7 +96,7 @@ if (!$application) {
     <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
         <!-- Candidate Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user" style="color: #3b82f6;"></i> Candidate Information</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user" style="color: #111111;"></i> Candidate Information</h4>
             <div class="detail-content">
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Name:</span>
@@ -105,14 +105,14 @@ if (!$application) {
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Email:</span>
                     <span class="value" style="color: #1f2937;">
-                        <a href="mailto:<?php echo htmlspecialchars($application['email']); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($application['email']); ?></a>
+                        <a href="mailto:<?php echo htmlspecialchars($application['email']); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($application['email']); ?></a>
                     </span>
                 </div>
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Phone:</span>
                     <span class="value" style="color: #1f2937;">
                         <?php if ($application['phone']): ?>
-                            <a href="tel:<?php echo htmlspecialchars($application['phone']); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($application['phone']); ?></a>
+                            <a href="tel:<?php echo htmlspecialchars($application['phone']); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($application['phone']); ?></a>
                         <?php else: ?>
                             <span style="color: #9ca3af;">Not provided</span>
                         <?php endif; ?>
@@ -129,7 +129,7 @@ if (!$application) {
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Application Type:</span>
                     <span class="value">
-                        <span class="application-type-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; background: <?php echo $application['application_type'] === 'with_resume' ? 'rgba(59, 130, 246, 0.1); color: #2563eb;' : 'rgba(16, 185, 129, 0.1); color: #10b981;'; ?>">
+                        <span class="application-type-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; background: <?php echo $application['application_type'] === 'with_resume' ? 'rgba(17, 17, 17, 0.1); color: #111111;' : 'rgba(16, 185, 129, 0.1); color: #10b981;'; ?>">
                             <?php echo $application['application_type'] === 'with_resume' ? 'With Resume' : 'Detailed Application'; ?>
                         </span>
                     </span>
@@ -147,7 +147,7 @@ if (!$application) {
 
         <!-- Job Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-briefcase" style="color: #3b82f6;"></i> Position Details</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-briefcase" style="color: #111111;"></i> Position Details</h4>
             <div class="detail-content" style="display: flex; flex-direction: column; gap: 12px;">
                 <div class="detail-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
                     <span class="label" style="font-weight: 500; color: #374151; min-width: 80px;">Position:</span>
@@ -172,9 +172,9 @@ if (!$application) {
     <!-- Cover Letter -->
     <?php if ($application['cover_letter_path']): ?>
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-alt" style="color: #3b82f6;"></i> Cover Letter</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-alt" style="color: #111111;"></i> Cover Letter</h4>
             <div class="cover-letter-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="previewCoverLetter('<?php echo htmlspecialchars($application['cover_letter_path']); ?>', '<?php echo htmlspecialchars($application['name']); ?>')" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                <button class="btn btn-primary" onclick="previewCoverLetter('<?php echo htmlspecialchars($application['cover_letter_path']); ?>', '<?php echo htmlspecialchars($application['name']); ?>')" style="background: #111111; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                     <i class="fas fa-eye"></i>
                     Preview Cover Letter
                 </button>
@@ -196,9 +196,9 @@ if (!$application) {
     <!-- Resume -->
     <?php if ($application['resume_path']): ?>
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-pdf" style="color: #3b82f6;"></i> Resume/CV</h4>
+            <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-file-pdf" style="color: #111111;"></i> Resume/CV</h4>
             <div class="resume-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="previewResume('<?php echo htmlspecialchars($application['resume_path']); ?>', '<?php echo htmlspecialchars($application['name']); ?>')" style="background: #3b82f6; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                <button class="btn btn-primary" onclick="previewResume('<?php echo htmlspecialchars($application['resume_path']); ?>', '<?php echo htmlspecialchars($application['name']); ?>')" style="background: #111111; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                     <i class="fas fa-eye"></i>
                     Preview Resume
                 </button>
@@ -263,7 +263,7 @@ if (!$application) {
                                         <span style="font-weight: 500; color: #374151; font-size: 13px;">Phone:</span>
                                         <div style="color: #1f2937; margin-top: 4px;">
                                             <?php if ($application["reference{$i}_phone"]): ?>
-                                                <a href="tel:<?php echo htmlspecialchars($application["reference{$i}_phone"]); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($application["reference{$i}_phone"]); ?></a>
+                                                <a href="tel:<?php echo htmlspecialchars($application["reference{$i}_phone"]); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($application["reference{$i}_phone"]); ?></a>
                                             <?php else: ?>
                                                 N/A
                                             <?php endif; ?>
@@ -273,7 +273,7 @@ if (!$application) {
                                         <span style="font-weight: 500; color: #374151; font-size: 13px;">Email:</span>
                                         <div style="color: #1f2937; margin-top: 4px;">
                                             <?php if ($application["reference{$i}_email"]): ?>
-                                                <a href="mailto:<?php echo htmlspecialchars($application["reference{$i}_email"]); ?>" style="color: #3b82f6; text-decoration: none;"><?php echo htmlspecialchars($application["reference{$i}_email"]); ?></a>
+                                                <a href="mailto:<?php echo htmlspecialchars($application["reference{$i}_email"]); ?>" style="color: #111111; text-decoration: none;"><?php echo htmlspecialchars($application["reference{$i}_email"]); ?></a>
                                             <?php else: ?>
                                                 N/A
                                             <?php endif; ?>
@@ -289,8 +289,8 @@ if (!$application) {
 
         <!-- Employment History -->
         <?php if ($application['employment1_company'] || $application['employment2_company'] || $application['employment3_company']): ?>
-            <div class="detail-section" style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-briefcase" style="color: #0ea5e9;"></i> Employment History</h4>
+            <div class="detail-section" style="background: #f4f4f5; border: 1px solid #111111; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-briefcase" style="color: #111111;"></i> Employment History</h4>
                 <div class="detail-content" style="display: flex; flex-direction: column; gap: 16px;">
                     <?php for ($i = 1; $i <= 3; $i++): ?>
                         <?php if ($application["employment{$i}_company"]): ?>
@@ -359,7 +359,7 @@ if (!$application) {
 
         <!-- Additional Information -->
         <?php if ($application['expected_salary'] || $application['availability_date'] || $application['additional_notes']): ?>
-            <div class="detail-section" style="background: #f3e8ff; border: 1px solid #a855f7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div class="detail-section" style="background: #f4f4f5; border: 1px solid #a855f7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                 <h4 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;"><i class="fas fa-info-circle" style="color: #a855f7;"></i> Additional Information</h4>
                 <div class="detail-content" style="display: flex; flex-direction: column; gap: 12px;">
                     <?php if ($application['expected_salary']): ?>
@@ -404,11 +404,9 @@ if (!$application) {
             <textarea 
                 name="interviewer_comment" 
                 id="interviewCommentTextarea"
+                class="form-control"
                 rows="4" 
                 placeholder="Enter interview comments, notes, or feedback here..."
-                style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; font-family: inherit; resize: vertical; line-height: 1.6; transition: border-color 0.2s, box-shadow 0.2s; background: white; box-sizing: border-box;"
-                onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.1)'"
-                onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
             ><?php echo htmlspecialchars($application['interviewer_comment'] ?? ''); ?></textarea>
             <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
                 <button type="submit" class="btn btn-save-comment" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
@@ -421,7 +419,7 @@ if (!$application) {
 
     <!-- Actions -->
     <div class="detail-actions" style="display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-        <button class="btn btn-primary" onclick="updateStatus(<?php echo $application['id']; ?>, '<?php echo $application['status']; ?>')" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+        <button class="btn btn-primary" onclick="updateStatus(<?php echo $application['id']; ?>, '<?php echo $application['status']; ?>')" style="background: #111111; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
             <i class="fas fa-edit"></i>
             Update Status
         </button>
@@ -430,7 +428,7 @@ if (!$application) {
             Export to PDF
         </a>
         <?php if ($application['job_id']): ?>
-            <a href="jobs.php#job-<?php echo $application['job_id']; ?>" target="_blank" class="btn btn-info" style="background: #06b6d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0891b2'" onmouseout="this.style.backgroundColor='#06b6d4'">
+            <a href="jobs.php#job-<?php echo $application['job_id']; ?>" target="_blank" class="btn btn-info" style="background: #111111; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                 <i class="fas fa-external-link-alt"></i>
                 View Job
             </a>
@@ -449,7 +447,7 @@ if (!$application) {
     <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
         <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-edit" style="color: #3b82f6;"></i>
+                <i class="fas fa-edit" style="color: #111111;"></i>
                 Update Status
             </h3>
             <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
@@ -461,7 +459,7 @@ if (!$application) {
             <input type="hidden" name="application_id" id="applicationId">
             <div class="form-group" style="margin-bottom: 24px;">
                 <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Application Status</label>
-                <select name="status" id="statusSelect" required style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; color: #1f2937; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                <select name="status" id="statusSelect" class="form-control" required>
                     <option value="pending">Pending</option>
                     <option value="reviewed">KIV</option>
                     <option value="shortlisted">Shortlisted</option>
@@ -475,7 +473,7 @@ if (!$application) {
                 <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
                     Cancel
                 </button>
-                <button type="submit" class="btn btn-primary" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                     Update Status
                 </button>
             </div>
@@ -506,7 +504,7 @@ if (!$application) {
     <div class="modal-content" style="background-color: white; margin: 2% auto; padding: 0; border-radius: 12px; width: 95%; max-width: 900px; height: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
         <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600;">
-                <i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 8px;"></i>
+                <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
                 Cover Letter Preview - <span id="coverLetterCandidateName"></span>
             </h3>
             <button class="modal-close" onclick="closeCoverLetterPreview()" style="background: none; border: none; font-size: 20px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px;">
@@ -623,7 +621,7 @@ function previewCoverLetter(coverLetterPath, candidateName) {
     // Show loading state
     coverLetterContent.innerHTML = `
         <div style="text-align: center; padding: 40px 20px;">
-            <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+            <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #111111; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
             <p style="color: #6b7280; margin: 0;">Loading cover letter content...</p>
         </div>
     `;
@@ -766,7 +764,7 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
     }
     
     .detail-section h4 i {
-        color: #2563eb;
+        color: #111111;
     }
     
     .detail-content {
@@ -799,7 +797,7 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
     }
     
     .value a {
-        color: #2563eb;
+        color: #111111;
         text-decoration: none;
     }
     
@@ -861,8 +859,8 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
     
     /* Shortlisted - Purple */
     .status-shortlisted {
-        background: rgba(139, 92, 246, 0.1);
-        color: #7c3aed;
+        background: rgba(17, 17, 17, 0.1);
+        color: #111111;
     }
     
     /* Rejected - Red */
@@ -889,8 +887,8 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
     .status-interviewed,
     .status-waiting-for-interview,
     .status-waiting_for_interview {
-        background: rgba(59, 130, 246, 0.1);
-        color: #2563eb;
+        background: rgba(17, 17, 17, 0.1);
+        color: #111111;
     }
     
     .text-muted {

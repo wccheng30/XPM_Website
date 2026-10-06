@@ -67,25 +67,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Blacklist Entry - XpressPoint Admin</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Add Blacklist Entry', 'fas fa-plus', ['url' => 'blacklist.php', 'label' => 'Blacklist']); ?>
     <div class="admin-container">
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('blacklist'); ?>
 
-        <!-- Header -->
-        <header class="admin-header">
-            <div class="header-content">
-                <h1><i class="fas fa-plus"></i> Add Blacklist Entry</h1>
-                <div class="header-actions">
-                    <a href="blacklist.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Blacklist
-                    </a>
-                </div>
-            </div>
-        </header>
 
         <!-- Main Content -->
         <main class="admin-main">
@@ -186,5 +179,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }, 5000);
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

@@ -13,6 +13,7 @@ require_once '../includes/programme-question-config.php';
 
 $error = '';
 $success = '';
+$field_errors = [];
 $programme = null;
 $question_configs = [];
 
@@ -114,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validate file type
             $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             if (!in_array($file_extension, $allowed_types)) {
-                $errors[] = 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.';
+                $field_errors['poster_image'] = 'Use a JPG, PNG, GIF, or WebP image.';
             } else {
                 // Generate unique filename
                 $filename = 'programme_' . time() . '_' . uniqid() . '.' . $file_extension;
@@ -128,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink('../' . $_POST['current_poster_image']);
                     }
                 } else {
-                    $errors[] = 'Failed to upload poster image.';
+                    $field_errors['poster_image'] = 'The poster could not be uploaded. Try again.';
                 }
             }
         }
@@ -155,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validate file type
             $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             if (!in_array($file_extension, $allowed_types)) {
-                $errors[] = 'Invalid file type for second poster. Only JPG, PNG, GIF, and WebP are allowed.';
+                $field_errors['poster_image_2'] = 'Use a JPG, PNG, GIF, or WebP image.';
             } else {
                 // Generate unique filename
                 $filename = 'programme_2_' . time() . '_' . uniqid() . '.' . $file_extension;
@@ -169,75 +170,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink('../' . $_POST['current_poster_image_2']);
                     }
                 } else {
-                    $errors[] = 'Failed to upload second poster image.';
+                    $field_errors['poster_image_2'] = 'The second poster could not be uploaded. Try again.';
                 }
             }
         }
         
+        // Handle banner image upload (auto-sets featured)
+        $banner_image = $_POST['current_banner_image'] ?? null; // Keep existing image by default
+        
+        // Check if user wants to remove the banner image
+        if (isset($_POST['remove_banner_image']) && $_POST['remove_banner_image'] == '1') {
+            $banner_image = null;
+            // Delete old image if it exists
+            if (!empty($_POST['current_banner_image']) && file_exists('../' . $_POST['current_banner_image'])) {
+                unlink('../' . $_POST['current_banner_image']);
+            }
+        } elseif (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = '../assets/images/programmes/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            $file_info = pathinfo($_FILES['banner_image']['name']);
+            $file_extension = strtolower($file_info['extension']);
+            
+            // Validate file type
+            $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array($file_extension, $allowed_types)) {
+                $field_errors['banner_image'] = 'Use a JPG, PNG, GIF, or WebP image.';
+            } else {
+                // Generate unique filename
+                $filename = 'banner_' . time() . '_' . uniqid() . '.' . $file_extension;
+                $filepath = $upload_dir . $filename;
+                
+                if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $filepath)) {
+                    $banner_image = 'assets/images/programmes/' . $filename;
+                    
+                    // Delete old banner image if it exists
+                    if (!empty($_POST['current_banner_image']) && file_exists('../' . $_POST['current_banner_image'])) {
+                        unlink('../' . $_POST['current_banner_image']);
+                    }
+                } else {
+                    $field_errors['banner_image'] = 'The banner could not be uploaded. Try again.';
+                }
+            }
+        }
+        
+        // Auto-set is_featured based on banner_image presence
+        $is_featured = !empty($banner_image) ? 1 : 0;
+        
         // Validation
         
+        if ($max_participants <= 0) {
+            $max_participants = 25;
+        }
+
         if (empty($title)) {
-            $errors[] = 'Programme title is required';
+            $field_errors['title'] = 'Add a programme title.';
         }
         
         if (empty($description)) {
-            $errors[] = 'Programme description is required';
+            $field_errors['description'] = 'Add a description.';
         }
         
         if (empty($duration)) {
-            $errors[] = 'Programme duration is required';
+            $field_errors['duration'] = 'Add a duration.';
         }
         
-                    if (empty($price_raw)) {
-                $errors[] = 'Programme price is required';
-            }
-        
-        if (empty($category)) {
-            $errors[] = 'Programme category is required';
-        }
-        
-        if ($max_participants <= 0) {
-            $errors[] = 'Maximum participants must be greater than 0';
+        if (empty($price_raw)) {
+            $field_errors['programme_price'] = 'Add a price.';
         }
         
         if (empty($location)) {
-            $errors[] = 'Location/format is required';
+            $field_errors['location'] = 'Add a location.';
         }
         
         if ($requires_facility && empty($facility_type)) {
-            $errors[] = 'Facility type is required when facility booking is enabled';
+            $field_errors['facility_type'] = 'Choose a facility when booking is turned on.';
         }
         
         if ($requires_facility && empty($start_date)) {
-            $errors[] = 'Start date is required for facility booking';
+            $field_errors['start_date'] = 'Add a start date for the facility booking.';
         }
         
         if ($requires_facility && (empty($start_time) || empty($end_time))) {
-            $errors[] = 'Start time and end time are required for facility booking';
+            $field_errors['start_time'] = 'Add a start and end time for the facility booking.';
         }
         
-        if (empty($errors)) {
+        if (empty($field_errors)) {
             // Update programme in database
             $stmt = $pdo->prepare("
                 UPDATE programmes 
                 SET title = ?, description = ?, duration = ?, price = ?, tax_inclusive = ?, tax_amount = ?, original_price = ?, category = ?, 
                     max_participants = ?, certification = ?, programme_icon = ?, 
-                    programme_badge = ?, location = ?, poster_image = ?, poster_image_2 = ?, modules = ?, schedule_type = ?, start_date = ?, 
+                    programme_badge = ?, location = ?, poster_image = ?, poster_image_2 = ?, banner_image = ?, modules = ?, schedule_type = ?, start_date = ?, 
                     end_date = ?, start_time = ?, end_time = ?, requires_facility = ?, facility_type = ?, auto_create_facility_booking = ?,
-                    is_active = ?, registration_status = ?, updated_at = NOW()
+                    is_active = ?, registration_status = ?, is_featured = ?, updated_at = NOW()
                 WHERE id = ?
             ");
             
             $stmt->execute([$title, $description, $duration, $price, $tax_inclusive, $tax_amount, $original_price, $category, 
                           $max_participants, $certification, $programme_icon, 
-                          $programme_badge, $location, $poster_image, $poster_image_2, $modules, $schedule_type, $start_date, 
+                          $programme_badge, $location, $poster_image, $poster_image_2, $banner_image, $modules, $schedule_type, $start_date, 
                           $end_date, $start_time, $end_time, $requires_facility, $facility_type, $auto_create_facility_booking,
-                          $is_active, $registration_status, $programme_id]);
+                          $is_active, $registration_status, $is_featured, $programme_id]);
             saveProgrammeQuestionConfigs($pdo, (int)$programme_id, $_POST['question_configs'] ?? getDefaultProgrammeQuestions());
             
             $success = 'Training programme updated successfully!';
         } else {
-            $error = implode('<br>', $errors);
+            $error = 'Please check the highlighted fields.';
         }
         
     } catch (PDOException $e) {
@@ -256,6 +297,28 @@ try {
         exit;
     }
     $question_configs = getProgrammeQuestionConfigs($pdo, (int)$programme_id, false);
+    if (!empty($field_errors) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        foreach (['title', 'description', 'duration', 'location', 'category', 'certification', 'programme_icon', 'programme_badge', 'modules', 'schedule_type', 'start_date', 'end_date', 'start_time', 'end_time', 'facility_type'] as $posted_key) {
+            if (array_key_exists($posted_key, $_POST)) {
+                $programme[$posted_key] = $_POST[$posted_key];
+            }
+        }
+        if (array_key_exists('programme_price', $_POST)) {
+            $programme['price'] = $_POST['programme_price'];
+        }
+        if (array_key_exists('programme_original_price', $_POST)) {
+            $programme['original_price'] = $_POST['programme_original_price'];
+        }
+        if (array_key_exists('tax_inclusive', $_POST)) {
+            $programme['tax_inclusive'] = $_POST['tax_inclusive'];
+        }
+        if (array_key_exists('tax_amount', $_POST)) {
+            $programme['tax_amount'] = $_POST['tax_amount'];
+        }
+        if (array_key_exists('max_participants', $_POST)) {
+            $programme['max_participants'] = $_POST['max_participants'];
+        }
+    }
 } catch (PDOException $e) {
     header('Location: programmes.php?error=Database error');
     exit;
@@ -268,23 +331,13 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Programme - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-edit"></i>
-            Edit Training Programme
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Edit Training Programme', 'fas fa-edit', ['url' => 'programmes.php', 'label' => 'Programmes']); ?>
 
     <div class="admin-container">
         <!-- Page Header -->
@@ -320,52 +373,204 @@ try {
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
+                    <p class="form-intro">Fields with a star are required. You can add images and extras after the first save.</p>
+                    <section class="form-section">
+                        <h4 class="form-section-title">What people see</h4>
                     <div class="form-group">
                         <label for="title">Programme Title *</label>
-                        <input type="text" id="title" name="title" class="form-control" 
+                        <input type="text" id="title" name="title" class="form-control<?php echo isset($field_errors['title']) ? ' is-invalid' : ''; ?>" 
                                value="<?php echo htmlspecialchars($programme['title']); ?>" required>
+                        <?php if (!empty($field_errors['title'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['title']); ?></div><?php endif; ?>
                     </div>
                     
                     <div class="form-group">
                         <label for="description">Programme Description *</label>
-                        <textarea id="description" name="description" class="form-control" rows="4" required><?php echo htmlspecialchars($programme['description']); ?></textarea>
+                        <textarea id="description" name="description" class="form-control<?php echo isset($field_errors['description']) ? ' is-invalid' : ''; ?>" rows="4" required><?php echo htmlspecialchars($programme['description']); ?></textarea>
+                        <?php if (!empty($field_errors['description'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['description']); ?></div><?php endif; ?>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" name="location" class="form-control<?php echo isset($field_errors['location']) ? ' is-invalid' : ''; ?>" 
+                               value="<?php echo htmlspecialchars($programme['location'] ?? ''); ?>" required>
+                        <small class="form-text text-muted">City or Remote.</small>
+                        <?php if (!empty($field_errors['location'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['location']); ?></div><?php endif; ?>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
                             <label for="duration">Duration *</label>
-                            <input type="text" id="duration" name="duration" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['duration']); ?>" placeholder="e.g., 3 months, 2 weeks" required>
+                            <input type="text" id="duration" name="duration" class="form-control<?php echo isset($field_errors['duration']) ? ' is-invalid' : ''; ?>" 
+                                   value="<?php echo htmlspecialchars($programme['duration']); ?>" placeholder="e.g., 2 days" required>
+                            <small class="form-text text-muted">What visitors will read, for example 2 days.</small>
+                            <?php if (!empty($field_errors['duration'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['duration']); ?></div><?php endif; ?>
                         </div>
                         
                         <div class="form-group">
                             <label for="programme_price">Current Price (RM) *</label>
-                            <input type="text" id="programme_price" name="programme_price" class="form-control" 
+                            <input type="text" id="programme_price" name="programme_price" class="form-control<?php echo isset($field_errors['programme_price']) ? ' is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($programme['price']); ?>" 
                                    placeholder="e.g., 1500.00, Free, Contact for pricing" oninput="calculateTax()" required>
-                            <small class="form-text text-muted">This is the price participants will pay</small>
+                            <small class="form-text text-muted">This is the price participants will pay.</small>
+                            <?php if (!empty($field_errors['programme_price'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['programme_price']); ?></div><?php endif; ?>
                         </div>
                     </div>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="programme_original_price">Original Price (RM)</label>
-                            <input type="text" id="programme_original_price" name="programme_original_price" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['original_price'] ?? ''); ?>" 
-                                   placeholder="e.g., 2000.00 (leave empty if no discount)">
-                            <small class="form-text text-muted">Original price before discount (optional)</small>
-                        </div>
-                        
+                    <div class="form-group">
+                        <label for="programme_original_price">Original Price (RM)</label>
+                        <input type="text" id="programme_original_price" name="programme_original_price" class="form-control" 
+                               value="<?php echo htmlspecialchars($programme['original_price'] ?? ''); ?>" 
+                               placeholder="e.g., 2000.00 (leave empty if no discount)">
+                        <small class="form-text text-muted">Original price before discount. Leave empty if there is no discount.</small>
                     </div>
-                    
-                    <div class="form-row">
+                    </section>
+
+                    <section class="form-section">
+                        <h4 class="form-section-title">When and where</h4>
+                        <?php $schedule_value = $programme['schedule_type'] ?? ''; ?>
                         <div class="form-group">
-                            <label for="tax_inclusive">Tax Type</label>
-                            <select id="tax_inclusive" name="tax_inclusive" class="form-control" onchange="calculateTax()">
-                                <option value="0" <?php echo ($programme['tax_inclusive'] == '0') ? 'selected' : ''; ?>>Exclusive</option>
-                                <option value="1" <?php echo ($programme['tax_inclusive'] == '1') ? 'selected' : ''; ?>>Inclusive</option>
+                            <label for="schedule_type">How people attend</label>
+                            <select id="schedule_type" name="schedule_type" class="form-control">
+                                <option value="">Choose one</option>
+                                <option value="in_person" <?php echo $schedule_value === 'in_person' ? 'selected' : ''; ?>>In person</option>
+                                <option value="online" <?php echo $schedule_value === 'online' ? 'selected' : ''; ?>>Online</option>
+                                <option value="hybrid" <?php echo $schedule_value === 'hybrid' ? 'selected' : ''; ?>>Hybrid</option>
+                                <?php if ($schedule_value !== '' && !in_array($schedule_value, ['in_person', 'online', 'hybrid'], true)): ?>
+                                <option value="<?php echo htmlspecialchars($schedule_value); ?>" selected><?php echo htmlspecialchars($schedule_value); ?></option>
+                                <?php endif; ?>
                             </select>
-                            <small class="form-text text-muted">Is tax included in the price?</small>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="start_date">Start Date</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control<?php echo isset($field_errors['start_date']) ? ' is-invalid' : ''; ?>" 
+                                       value="<?php echo htmlspecialchars($programme['start_date'] ?? ''); ?>">
+                                <?php if (!empty($field_errors['start_date'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['start_date']); ?></div><?php endif; ?>
+                            </div>
+                            <div class="form-group" id="end_date_group">
+                                <label for="end_date">End Date</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control" 
+                                       value="<?php echo htmlspecialchars($programme['end_date'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="start_time">Start Time</label>
+                                <input type="time" id="start_time" name="start_time" class="form-control<?php echo isset($field_errors['start_time']) ? ' is-invalid' : ''; ?>" 
+                                       value="<?php echo htmlspecialchars($programme['start_time'] ?? ''); ?>">
+                                <?php if (!empty($field_errors['start_time'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['start_time']); ?></div><?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <label for="end_time">End Time</label>
+                                <input type="time" id="end_time" name="end_time" class="form-control" 
+                                       value="<?php echo htmlspecialchars($programme['end_time'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="schedule-preview" id="schedule_preview" style="display: none;">
+                                <label>Schedule Preview:</label>
+                                <div class="preview-box" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #111111;">
+                                    <div id="preview_text"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="form-section">
+                        <h4 class="form-section-title">Images</h4>
+                        <div class="form-group">
+                            <label for="banner_image">Banner</label>
+                            <?php if (!empty($programme['banner_image'])): ?>
+                                <div class="current-upload" style="margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <img src="../<?php echo htmlspecialchars($programme['banner_image']); ?>" alt="Current banner" style="max-width: 400px; height: auto; border-radius: 8px;">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImage('banner_image')"><i class="fas fa-trash"></i> Remove Banner</button>
+                                    </div>
+                                    <input type="hidden" name="current_banner_image" value="<?php echo htmlspecialchars($programme['banner_image']); ?>">
+                                </div>
+                            <?php endif; ?>
+                            <div class="file-upload-container">
+                                <div class="file-upload<?php echo isset($field_errors['banner_image']) ? ' is-invalid' : ''; ?>" id="banner_image_upload">
+                                    <input type="file" id="banner_image" name="banner_image" accept="image/*" onchange="handleFileUpload(this)">
+                                    <label for="banner_image" class="file-upload-label">
+                                        <i class="fas fa-image"></i>
+                                        <div>
+                                            <strong>Click to upload banner</strong> or drag and drop<br>
+                                            <span style="font-size: 12px; opacity: 0.7;">Recommended: 1920×520px · PNG, JPG, GIF, WebP up to 5MB</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="banner_image_preview" class="file-preview-container" style="display: none;"></div>
+                            </div>
+                            <input type="hidden" id="remove_banner_image" name="remove_banner_image" value="0">
+                            <small class="form-text text-muted">A banner is what places the programme on the homepage slideshow.</small>
+                            <?php if (!empty($field_errors['banner_image'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['banner_image']); ?></div><?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label for="poster_image">Primary poster</label>
+                            <?php if (!empty($programme['poster_image'])): ?>
+                                <div class="current-upload" style="margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <img src="../<?php echo htmlspecialchars($programme['poster_image']); ?>" alt="Current poster" style="max-width: 200px; height: auto; border-radius: 8px;">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImage('poster_image')"><i class="fas fa-trash"></i> Remove Image</button>
+                                    </div>
+                                    <input type="hidden" name="current_poster_image" value="<?php echo htmlspecialchars($programme['poster_image']); ?>">
+                                </div>
+                            <?php endif; ?>
+                            <div class="file-upload-container">
+                                <div class="file-upload<?php echo isset($field_errors['poster_image']) ? ' is-invalid' : ''; ?>" id="poster_image_upload">
+                                    <input type="file" id="poster_image" name="poster_image" accept="image/*" onchange="handleFileUpload(this)">
+                                    <label for="poster_image" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <div>
+                                            <strong>Click to upload</strong> or drag and drop<br>
+                                            <span style="font-size: 12px; opacity: 0.7;">PNG, JPG, GIF, WebP up to 5MB</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="poster_image_preview" class="file-preview-container" style="display: none;"></div>
+                            </div>
+                            <input type="hidden" id="remove_poster_image" name="remove_poster_image" value="0">
+                            <?php if (!empty($field_errors['poster_image'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['poster_image']); ?></div><?php endif; ?>
+                        </div>
+                        <div class="form-group">
+                            <label for="poster_image_2">Secondary poster</label>
+                            <?php if (!empty($programme['poster_image_2'])): ?>
+                                <div class="current-upload" style="margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <img src="../<?php echo htmlspecialchars($programme['poster_image_2']); ?>" alt="Current secondary poster" style="max-width: 200px; height: auto; border-radius: 8px;">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImage('poster_image_2')"><i class="fas fa-trash"></i> Remove Image</button>
+                                    </div>
+                                    <input type="hidden" name="current_poster_image_2" value="<?php echo htmlspecialchars($programme['poster_image_2']); ?>">
+                                </div>
+                            <?php endif; ?>
+                            <div class="file-upload-container">
+                                <div class="file-upload<?php echo isset($field_errors['poster_image_2']) ? ' is-invalid' : ''; ?>" id="poster_image_2_upload">
+                                    <input type="file" id="poster_image_2" name="poster_image_2" accept="image/*" onchange="handleFileUpload(this)">
+                                    <label for="poster_image_2" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <div>
+                                            <strong>Click to upload</strong> or drag and drop<br>
+                                            <span style="font-size: 12px; opacity: 0.7;">PNG, JPG, GIF, WebP up to 5MB (optional)</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="poster_image_2_preview" class="file-preview-container" style="display: none;"></div>
+                            </div>
+                            <input type="hidden" id="remove_poster_image_2" name="remove_poster_image_2" value="0">
+                            <?php if (!empty($field_errors['poster_image_2'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['poster_image_2']); ?></div><?php endif; ?>
+                        </div>
+                    </section>
+
+                    <details class="form-extra">
+                        <summary>Extra</summary>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tax_inclusive">Is the 8% SST already inside the price?</label>
+                            <select id="tax_inclusive" name="tax_inclusive" class="form-control" onchange="calculateTax()">
+                                <option value="0" <?php echo ($programme['tax_inclusive'] == '0') ? 'selected' : ''; ?>>No</option>
+                                <option value="1" <?php echo ($programme['tax_inclusive'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                            </select>
                         </div>
                         
                         <div class="form-group">
@@ -379,17 +584,16 @@ try {
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="category">Category *</label>
+                            <label for="category">Category</label>
                             <input type="text" id="category" name="category" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['category'] ?? ''); ?>" 
-                                   placeholder="" required>
+                                   value="<?php echo htmlspecialchars($programme['category'] ?? ''); ?>">
                             <small class="form-text text-muted">Enter the category for this programme</small>
                         </div>
                         
                         <div class="form-group">
-                            <label for="max_participants">Max Participants *</label>
+                            <label for="max_participants">Max Participants</label>
                             <input type="number" id="max_participants" name="max_participants" min="1" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['max_participants'] ?? 25); ?>" required>
+                                   value="<?php echo htmlspecialchars($programme['max_participants'] ?? 25); ?>">
                         </div>
                     </div>
                     
@@ -403,7 +607,7 @@ try {
                         
                         <div class="form-group">
                             <label for="programme_icon">Programme Icon</label>
-                            <select id="programme_icon" name="programme_icon" class="form-control" required>
+                            <select id="programme_icon" name="programme_icon" class="form-control">
                                 <option value="">Select an icon</option>
                                 <?php 
                                 // Check if current icon is custom (not in predefined list)
@@ -509,7 +713,7 @@ try {
                             
                             <!-- Icon Preview -->
                             <div id="icon-preview" style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 2rem; color: #2563eb; margin-bottom: 10px;">
+                                <div style="font-size: 2rem; color: #111111; margin-bottom: 10px;">
                                     <i id="preview-icon" class="<?php echo htmlspecialchars($programme['programme_icon'] ?? 'fas fa-graduation-cap'); ?>"></i>
                                 </div>
                                 <small style="color: #64748b;">Icon Preview</small>
@@ -527,58 +731,6 @@ try {
                     </div>
                     
                     <div class="form-group">
-                        <label for="location">Location/Format *</label>
-                        <input type="text" id="location" name="location" class="form-control" 
-                               value="<?php echo htmlspecialchars($programme['location'] ?? 'Online'); ?>" 
-                               placeholder="" required>
-                        <small class="form-text text-muted">Enter the delivery format or specific location for this programme</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="poster_image">Programme Poster Image (Primary)</label>
-                        <?php if (!empty($programme['poster_image'])): ?>
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <img src="../<?php echo htmlspecialchars($programme['poster_image']); ?>" 
-                                         alt="Current poster" style="max-width: 200px; height: auto; border-radius: 8px;">
-                                    <div>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImage('poster_image')">
-                                            <i class="fas fa-trash"></i> Remove Image
-                                        </button>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="current_poster_image" value="<?php echo htmlspecialchars($programme['poster_image']); ?>">
-                            </div>
-                        <?php endif; ?>
-                        <input type="file" id="poster_image" name="poster_image" class="form-control" 
-                               accept="image/*">
-                        <input type="hidden" id="remove_poster_image" name="remove_poster_image" value="0">
-                        <small class="form-text text-muted">Recommended size: 800x400px. Supported formats: JPG, PNG, GIF, WebP. Leave empty to keep current image.</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="poster_image_2">Programme Poster Image (Secondary)</label>
-                        <?php if (!empty($programme['poster_image_2'])): ?>
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <img src="../<?php echo htmlspecialchars($programme['poster_image_2']); ?>" 
-                                         alt="Current secondary poster" style="max-width: 200px; height: auto; border-radius: 8px;">
-                                    <div>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeImage('poster_image_2')">
-                                            <i class="fas fa-trash"></i> Remove Image
-                                        </button>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="current_poster_image_2" value="<?php echo htmlspecialchars($programme['poster_image_2']); ?>">
-                            </div>
-                        <?php endif; ?>
-                        <input type="file" id="poster_image_2" name="poster_image_2" class="form-control" 
-                               accept="image/*">
-                        <input type="hidden" id="remove_poster_image_2" name="remove_poster_image_2" value="0">
-                        <small class="form-text text-muted">Optional secondary poster. Recommended size: 800x400px. Supported formats: JPG, PNG, GIF, WebP. Leave empty to keep current image.</small>
-                    </div>
-                    
-                    <div class="form-group">
                         <label for="modules">Key Modules</label>
                         <textarea id="modules" name="modules" class="form-control" rows="4" 
                                   placeholder="Enter each key module on a new line:&#10;Strategic Planning&#10;Change Management&#10;Team Leadership&#10;Performance Management"><?php 
@@ -591,70 +743,6 @@ try {
                                   ?></textarea>
                         <small class="form-text text-muted">Enter each key module on a separate line (press Enter for new module)</small>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="schedule_type">Schedule Type</label>
-                        <input type="text" id="schedule_type" name="schedule_type" class="form-control" 
-                               value="<?php echo htmlspecialchars($programme['schedule_type'] ?? ''); ?>" 
-                               placeholder="e.g., Single Day, Multi-Day, Recurring">
-                        <small class="form-text text-muted">Enter the schedule type for this programme (single_day, multi_day, recurring)</small>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="start_date">
-                                <i class="fas fa-calendar-alt"></i>
-                                Start Date
-                            </label>
-                            <input type="date" id="start_date" name="start_date" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['start_date'] ?? ''); ?>"
-                                   min="<?php echo date('Y-m-d'); ?>">
-                            <small class="form-text text-muted">Select the programme start date</small>
-                        </div>
-                        
-                        <div class="form-group" id="end_date_group">
-                            <label for="end_date">
-                                <i class="fas fa-calendar-alt"></i>
-                                End Date
-                            </label>
-                            <input type="date" id="end_date" name="end_date" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['end_date'] ?? ''); ?>"
-                                   min="<?php echo date('Y-m-d'); ?>">
-                            <small class="form-text text-muted">Select the programme end date (optional for single day)</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="start_time">
-                                <i class="fas fa-clock"></i>
-                                Start Time
-                            </label>
-                            <input type="time" id="start_time" name="start_time" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['start_time'] ?? '09:00'); ?>">
-                            <small class="form-text text-muted">Programme start time (24-hour format)</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="end_time">
-                                <i class="fas fa-clock"></i>
-                                End Time
-                            </label>
-                            <input type="time" id="end_time" name="end_time" class="form-control" 
-                                   value="<?php echo htmlspecialchars($programme['end_time'] ?? '17:00'); ?>">
-                            <small class="form-text text-muted">Programme end time (24-hour format)</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="schedule-preview" id="schedule_preview" style="display: none;">
-                            <label>Schedule Preview:</label>
-                            <div class="preview-box" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #2563eb;">
-                                <div id="preview_text"></div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div style="grid-column: 1 / -1; width: 100%; display: flex; flex-direction: column; gap: 2rem;">
                     <!-- Facility Booking Section -->
                     <div class="card" style="margin-top: 0; width: 100%; display: block; clear: both;">
@@ -678,12 +766,13 @@ try {
                             <div id="facility-options" style="display: none;">
                                 <div class="form-group">
                                     <label for="facility_type">Facility Type</label>
-                                    <select id="facility_type" name="facility_type" class="form-control">
+                                    <select id="facility_type" name="facility_type" class="form-control<?php echo isset($field_errors['facility_type']) ? ' is-invalid' : ''; ?>">
                                         <option value="">Select Facility Type</option>
                                         <option value="conference_room" <?php echo ($programme['facility_type'] ?? '') === 'conference_room' ? 'selected' : ''; ?>>Conference Room</option>
                                         <option value="training_room" <?php echo ($programme['facility_type'] ?? '') === 'training_room' ? 'selected' : ''; ?>>Training Room</option>
                                         <option value="breakout_area" <?php echo ($programme['facility_type'] ?? '') === 'breakout_area' ? 'selected' : ''; ?>>Breakout Area</option>
                                     </select>
+                                    <?php if (!empty($field_errors['facility_type'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['facility_type']); ?></div><?php endif; ?>
                                 </div>
                                 
                                 <div class="form-group">
@@ -793,7 +882,9 @@ try {
                         <div class="form-help">Control whether users can register for this programme</div>
                     </div>
                     
-                    <div style="display: flex; gap: 16px; margin-top: 24px;">
+                </details>
+
+                    <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i>
                             Update Programme
@@ -810,6 +901,33 @@ try {
     
     <!-- Enhanced Date/Time and Icon Selection JavaScript -->
     <script>
+function removeFilePreview(inputId) {
+    const previewContainer = document.getElementById(inputId + '_preview');
+    const uploadContainer = document.getElementById(inputId + '_upload');
+    const fileInput = document.getElementById(inputId);
+    if (previewContainer && uploadContainer && fileInput) {
+        fileInput.value = '';
+        previewContainer.style.display = 'none';
+        previewContainer.innerHTML = '';
+        uploadContainer.style.display = 'block';
+    }
+}
+
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewContainer = document.getElementById(input.id + '_preview');
+        const uploadContainer = document.getElementById(input.id + '_upload');
+        if (!previewContainer || !uploadContainer) return;
+        uploadContainer.style.display = 'none';
+        previewContainer.style.display = 'block';
+        previewContainer.innerHTML = '<div class="file-preview"><div class="preview-image"><img src="' + e.target.result + '" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px;"></div><div class="preview-info"><div class="file-name">' + file.name + '</div></div><button type="button" onclick="removeFilePreview(\'' + input.id + '\')" class="remove-file" aria-label="Remove"><i class="fas fa-times"></i></button></div>';
+    };
+    reader.readAsDataURL(file);
+}
+
         // Function to remove image
         function removeImage(imageType) {
             if (confirm('Are you sure you want to remove this image?')) {
@@ -818,7 +936,7 @@ try {
                 
                 // Hide the image and remove button
                 const imageContainer = document.querySelector(`input[name="${imageType}"]`).closest('.form-group');
-                const imageDisplay = imageContainer.querySelector('div[style*="display: flex"]');
+                const imageDisplay = imageContainer.querySelector('.current-upload');
                 if (imageDisplay) {
                     imageDisplay.style.display = 'none';
                 }
@@ -1086,6 +1204,7 @@ try {
 
         document.addEventListener('DOMContentLoaded', function() {
             toggleFacilityOptions();
+            calculateTax();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1097,5 +1216,6 @@ try {
     });
 });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html> 

@@ -69,381 +69,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - XpressPoint HR Training</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Animated background */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            animation: float 20s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 48px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            z-index: 10;
-            animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .login-header .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .login-header .logo i {
-            font-size: 32px;
-            color: white;
-        }
-        
-        .login-header h1 {
-            color: #1e293b;
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .login-header p {
-            color: #64748b;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-            position: relative;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 12px;
-            color: #374151;
-            font-weight: 600;
-            font-size: 15px;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 18px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-            background: white;
-        }
-        
-        .form-control.error {
-            border-color: #ef4444;
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 18px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .login-btn:hover::before {
-            left: 100%;
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
-        }
-        
-        .login-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .error-message {
-            background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
-            color: #dc2626;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            border: 1px solid #fecaca;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        
-        .error-message i {
-            font-size: 18px;
-        }
-        
-        .form-footer {
-            text-align: center;
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid #e2e8f0;
-        }
-        
-        .form-footer p {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .security-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 16px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-        
-        /* Floating elements */
-        .floating-element {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        .floating-element:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-        
-        .floating-element:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-        
-        .floating-element:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
-        }
-        
-        /* Responsive */
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 32px 24px;
-                margin: 16px;
-            }
-            
-            .login-header h1 {
-                font-size: 24px;
-            }
-            
-            .form-control {
-                padding: 16px 18px;
-            }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/auth.css?v=20261005-1">
 </head>
-<body>
-    <!-- Floating background elements -->
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
-    <div class="floating-element"></div>
-    
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo">
-                <i class="fas fa-shield-alt"></i>
+<body class="auth-body" data-motion="admin">
+    <div class="auth-shell">
+        <aside class="auth-aside">
+            <a href="../index.html" class="auth-brand">
+                <span class="auth-brand-mark">XP</span>
+                XpressPoint
+            </a>
+
+            <div class="auth-pitch">
+                <span class="auth-pitch-kicker"><span class="pulse-dot"></span> Admin workspace</span>
+                <h2>Everything your team runs, in one quiet place.</h2>
+                <p>Manage contacts, programmes, job applications and facility bookings for XpressPoint HR Training.</p>
+                <ul class="auth-features">
+                    <li><i class="fas fa-users"></i> Contacts, applications and registrations</li>
+                    <li><i class="fas fa-calendar-alt"></i> Facility bookings and calendars</li>
+                    <li><i class="fas fa-chalkboard-teacher"></i> Programmes, trainers and jobs</li>
+                </ul>
             </div>
-            <h1>Admin Access</h1>
-            <p>Sign in to your XpressPoint dashboard</p>
-        </div>
-        
-        <?php if ($error): ?>
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
+
+            <div class="auth-aside-foot">&copy; <?php echo date('Y'); ?> Xpress Point Management Services</div>
+        </aside>
+
+        <main class="auth-main">
+            <div class="login-container auth-card">
+                <div class="login-header auth-card-head">
+                    <div class="logo auth-card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h1>Welcome back</h1>
+                    <p>Sign in to your XpressPoint dashboard</p>
+                </div>
+
+                <?php if ($error): ?>
+                    <div class="error-message" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <?php echo htmlspecialchars($error); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['logout']) && $_GET['logout'] === 'success'): ?>
+                    <div class="auth-notice" role="status">
+                        <i class="fas fa-check-circle"></i>
+                        You have been successfully logged out.
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i>
+                            Username
+                        </label>
+                        <input type="text" id="username" name="username" class="form-control"
+                               value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                               placeholder="Enter your username" autocomplete="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="Enter your password" autocomplete="current-password" required>
+                    </div>
+
+                    <button type="submit" class="login-btn btn btn-primary auth-submit">
+                        Sign In
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <span>Secure admin access</span>
+                    <span class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        SSL Secured
+                    </span>
+                </div>
+
+                <a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to website</a>
             </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_GET['logout']) && $_GET['logout'] === 'success'): ?>
-            <div class="error-message" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; border: 1px solid #a7f3d0;">
-                <i class="fas fa-check-circle"></i>
-                You have been successfully logged out.
-            </div>
-        <?php endif; ?>
-        
-        <form method="POST" action="">
-            <div class="form-group">
-                <label for="username">
-                    <i class="fas fa-user" style="margin-right: 8px; color: #667eea;"></i>
-                    Username
-                </label>
-                <input type="text" id="username" name="username" class="form-control" 
-                       value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" 
-                       placeholder="Enter your username" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">
-                    <i class="fas fa-lock" style="margin-right: 8px; color: #667eea;"></i>
-                    Password
-                </label>
-                <input type="password" id="password" name="password" class="form-control" 
-                       placeholder="Enter your password" required>
-            </div>
-            
-            <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
-                Sign In
-            </button>
-        </form>
-        
-        <div class="form-footer">
-            <p>Secure admin access for XpressPoint HR Training</p>
-            <div class="security-badge">
-                <i class="fas fa-shield-alt"></i>
-                SSL Secured
-            </div>
-        </div>
+        </main>
     </div>
-    
+
     <script>
-        // Enhanced form interactions
         document.addEventListener('DOMContentLoaded', function() {
-            const formControls = document.querySelectorAll('.form-control');
-            
-            formControls.forEach(control => {
-                control.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'translateY(-2px)';
-                });
-                
-                control.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'translateY(0)';
-                });
-            });
-            
             // Add loading state to form submission
             const form = document.querySelector('form');
             form.addEventListener('submit', function() {
                 const submitBtn = this.querySelector('.login-btn');
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Signing In...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
                 submitBtn.style.pointerEvents = 'none';
             });
         });
-        
+
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -451,5 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
-</html> 
+</html>

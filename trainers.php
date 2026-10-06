@@ -63,27 +63,15 @@ if (empty($trainers)) {
 ?>
 
 <!-- Expert Trainers Section -->
-<div class="expert-trainers">
-    <div class="trainers-section-header">
-        <!-- Section Badge at Top -->
-        <div class="section-badge">
-            <i class="fas fa-users"></i>
-            <span>Power Up Mentor</span>
+<section class="section expert-trainers">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <span class="eyebrow"><i class="fas fa-users"></i> Our collective</span>
+            <h2 class="section-title">Melaka's premier training collective.</h2>
+            <p class="section-subtitle">Power Up Mentor (PUM) is a collaborative platform that benefits individual trainers, clients, and the training ecosystem as a whole.</p>
         </div>
-        
-        <!-- PUM Logo Below Badge -->
-        <div class="pum-logo-section">
-            <img src="assets/images/PowerUpMentor.png" alt="Power Up Mentor (PUM) Logo" style="max-width: 350px; height: auto; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));">
-        </div>
-        
-        <!-- Overview Content -->
-        <h3>Melaka's Premier Training Collective</h3>
-        <p>Power Up Mentor (PUM) serves as a collaborative platform that benefits individual trainers, clients, and the training ecosystem as a whole. Our collective brings together passionate, experienced trainers from Melaka to elevate the visibility, credibility, and professionalism of the training industry.</p>
-    </div>
-    
-    <!-- Trainers List Container -->
-    <div class="trainers-list-container">
-        <div class="trainers-grid">
+
+        <div class="trainers-grid" data-reveal-stagger>
             <?php foreach ($trainers as $trainer): 
                 // Parse specialties and credentials
                 $specialties = [];
@@ -105,41 +93,37 @@ if (empty($trainers)) {
                     }
                 }
             ?>
-                <div class="trainer-card">
-                    <div class="trainer-card-inner">
-                        <div class="trainer-image">
-                            <img src="<?php echo htmlspecialchars($trainer['image_path']); ?>" alt="<?php echo htmlspecialchars($trainer['name']); ?>">
-                        </div>
-                        <div class="trainer-info">
-                            <h4><?php echo htmlspecialchars($trainer['name']); ?></h4>
-                            <p class="trainer-title"><?php echo htmlspecialchars($trainer['title']); ?></p>
-                            <p class="trainer-experience"><?php echo $trainer['experience_years']; ?>+ Years Experience</p>
-                            
-                            <?php if (!empty($specialties)): ?>
-                            <div class="trainer-specialties">
-                                    <?php foreach ($specialties as $specialty): ?>
-                                        <span class="specialty-tag"><?php echo htmlspecialchars($specialty); ?></span>
-                                    <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($trainer['description'])): ?>
-                            <div class="trainer-description">
-                                    <p><?php echo htmlspecialchars($trainer['description']); ?></p>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($credentials)): ?>
-                            <div class="trainer-credentials">
-                                    <?php foreach ($credentials as $credential): ?>
-                                        <span class="credential"><?php echo htmlspecialchars($credential); ?></span>
-                                    <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
+                <article class="trainer-card">
+                    <div class="trainer-image">
+                        <img src="<?php echo htmlspecialchars($trainer['image_path']); ?>" alt="<?php echo htmlspecialchars($trainer['name']); ?>" loading="lazy">
+                        <span class="trainer-experience"><?php echo $trainer['experience_years']; ?>+ yrs</span>
                     </div>
-                </div>
+                    <div class="trainer-info">
+                        <h3><?php echo htmlspecialchars($trainer['name']); ?></h3>
+                        <p class="trainer-title"><?php echo htmlspecialchars($trainer['title']); ?></p>
+
+                        <?php if (!empty($trainer['description'])): ?>
+                        <p class="trainer-description"><?php echo htmlspecialchars($trainer['description']); ?></p>
+                        <?php endif; ?>
+
+                        <?php if (!empty($specialties)): ?>
+                        <div class="tags">
+                            <?php foreach ($specialties as $specialty): ?>
+                                <span class="tag"><?php echo htmlspecialchars($specialty); ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($credentials)): ?>
+                        <ul class="trainer-credentials">
+                            <?php foreach ($credentials as $credential): ?>
+                                <li><i class="fas fa-circle-check"></i><?php echo htmlspecialchars($credential); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <?php endif; ?>
+                    </div>
+                </article>
             <?php endforeach; ?>
         </div>
     </div>
-</div>
+</section>

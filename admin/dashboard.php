@@ -141,6 +141,11 @@ $interest_labels = [
     'compensation' => 'Compensation',
     'custom' => 'Custom Service'
 ];
+
+$interest_total = 0;
+foreach ($interest_breakdown as $interest_row) {
+    $interest_total += (int) $interest_row['count'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -149,31 +154,13 @@ $interest_labels = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - XpressPoint Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-tachometer-alt"></i>
-            XpressPoint Admin Dashboard
-        </h1>
-        <div class="user-info">
-            <button class="theme-toggle" onclick="toggleTheme()">
-                <i class="fas fa-moon" id="theme-icon"></i>
-                <span id="theme-text">Dark Mode</span>
-            </button>
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-                            <a href="change-password.php" class="logout-btn" style="margin-right: 10px;">
-                <i class="fas fa-key"></i>
-                Change Password
-            </a>
-            <a href="logout-confirm.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Dashboard', 'fas fa-tachometer-alt'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -183,7 +170,7 @@ $interest_labels = [
         <div class="card mb-3">
             <div class="card-body">
                 <h2 style="margin-bottom: 8px; color: #1e293b; font-size: 24px; font-weight: 700;">
-                    <i class="fas fa-home" style="color: #3b82f6; margin-right: 12px;"></i>
+                    <i class="fas fa-home" style="color: #111111; margin-right: 12px;"></i>
                     Welcome to XpressPoint Admin
                 </h2>
                 <p style="color: #64748b; margin: 0; font-size: 16px;">Manage your HR training business from one central location.</p>
@@ -385,12 +372,19 @@ $interest_labels = [
                             Interest Breakdown
                         </h3>
                         <div class="interest-list">
-                            <?php foreach ($interest_breakdown as $interest): ?>
+                            <?php foreach ($interest_breakdown as $interest):
+                                $interest_count = (int) $interest['count'];
+                                $interest_share = $interest_total > 0 ? round(($interest_count / $interest_total) * 100, 1) : 0;
+                                $interest_name = $interest_labels[$interest['interest']] ?? $interest['interest'];
+                            ?>
                                 <div class="interest-item">
                                     <span class="interest-label">
-                                        <?php echo htmlspecialchars($interest_labels[$interest['interest']] ?? $interest['interest']); ?>
+                                        <?php echo htmlspecialchars($interest_name); ?>
                                     </span>
-                                    <span class="interest-count"><?php echo $interest['count']; ?></span>
+                                    <span class="interest-bar" role="img" aria-label="<?php echo htmlspecialchars($interest_name); ?>: <?php echo $interest_share; ?>%">
+                                        <span class="interest-bar-fill" style="width: <?php echo $interest_share; ?>%"></span>
+                                    </span>
+                                    <span class="interest-count"><?php echo $interest_count; ?></span>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -659,5 +653,6 @@ filePreviewStyles.textContent = `
 `;
 document.head.appendChild(filePreviewStyles);
 </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html> 

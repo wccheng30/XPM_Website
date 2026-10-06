@@ -1,0 +1,228 @@
+/* ==========================================================================
+   XPM Motion: keyframes, reveal states, page transitions, micro-interactions
+   ========================================================================== */
+
+@keyframes xpmFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes xpmFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes xpmScaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes xpmPageIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes xpmShimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+}
+
+@keyframes xpmFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes xpmMarquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@keyframes xpmPulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(179, 27, 1, 0.28); }
+    100% { box-shadow: 0 0 0 12px rgba(179, 27, 1, 0); }
+}
+
+@keyframes xpmSpin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes xpmLineGrow {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+@keyframes xpmWordIn {
+    from { opacity: 0; transform: translateY(0.45em); filter: blur(4px); }
+    to { opacity: 1; transform: none; filter: none; }
+}
+
+/* ---------- Page enter / leave ----------
+   fill-mode stays "backwards": a lingering transform would turn the element
+   into the containing block for position:fixed descendants (modals, drawers). */
+main,
+.page-enter {
+    animation: xpmPageIn var(--dur-slow) var(--ease-out) backwards;
+}
+
+.navbar {
+    animation: xpmFade var(--dur-slow) var(--ease-out) both;
+}
+
+body.is-leaving main,
+body.is-leaving .footer {
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 220ms var(--ease-in-out), transform 220ms var(--ease-in-out);
+}
+
+/* ---------- Scroll reveal ----------
+   [data-reveal] is driven by motion.js (.is-visible);
+   .scroll-reveal is added by main.js (.revealed). */
+.js [data-reveal],
+.scroll-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity var(--dur-slower) var(--ease-out),
+                transform var(--dur-slower) var(--ease-out),
+                box-shadow var(--dur) var(--ease-out),
+                border-color var(--dur) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 80ms);
+}
+
+.js [data-reveal="fade"] { transform: none; }
+.js [data-reveal="left"] { transform: translateX(-28px); }
+.js [data-reveal="right"] { transform: translateX(28px); }
+.js [data-reveal="scale"] { transform: scale(0.95); }
+
+.js [data-reveal].is-visible,
+.js [data-reveal].revealed,
+.scroll-reveal.revealed {
+    opacity: 1;
+    transform: none;
+}
+
+/* Hover transforms must win once revealed */
+.js .card-hover[data-reveal].is-visible:hover,
+.scroll-reveal.revealed.card-hover:hover,
+.scroll-reveal.revealed.listing-card:hover,
+.js .listing-card[data-reveal].is-visible:hover {
+    transform: translateY(-5px);
+    transition-delay: 0s;
+}
+
+.reveal-fallback [data-reveal],
+.reveal-fallback .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Word-by-word heading */
+.split-words .word {
+    display: inline-block;
+    opacity: 0;
+    animation: xpmWordIn 0.8s var(--ease-out) forwards;
+    animation-delay: calc(var(--w, 0) * 70ms + 150ms);
+}
+
+/* ---------- Loading skeleton ---------- */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, var(--c-surface-2) 25%, var(--c-surface-3) 37%, var(--c-surface-2) 63%);
+    background-size: 400% 100%;
+    animation: xpmShimmer 1.6s ease-in-out infinite;
+}
+
+.slideshow-container:has(.slideshow-loader) {
+    background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-surface-2) 37%, var(--c-surface) 63%);
+    background-size: 400% 100%;
+    animation: xpmShimmer 1.8s ease-in-out infinite;
+}
+
+.fa-spin,
+.spinner {
+    animation: xpmSpin 0.9s linear infinite;
+}
+
+/* ---------- Micro-interactions ---------- */
+.hover-lift {
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--sh-lg);
+}
+
+.float-soft {
+    animation: xpmFloat 6s ease-in-out infinite;
+}
+
+.pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--c-red);
+    border-radius: 50%;
+    animation: xpmPulseRing 1.8s var(--ease-out) infinite;
+}
+
+.pixel-magnet {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Ripple element injected by motion.js on .btn */
+.btn .ripple {
+    position: absolute;
+    z-index: -1;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.18;
+    transform: scale(0);
+    animation: xpmRipple 600ms var(--ease-out) forwards;
+    pointer-events: none;
+}
+
+@keyframes xpmRipple {
+    to { transform: scale(28); opacity: 0; }
+}
+
+/* Staggered table rows (admin) */
+.stagger-rows > * {
+    animation: xpmFadeUp var(--dur-slow) var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 35ms);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .js [data-reveal],
+    .scroll-reveal,
+    .split-words .word {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+}

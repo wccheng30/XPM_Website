@@ -1,0 +1,772 @@
+/* ==========================================================================
+   Facility booking wizard (facility-booking.php)
+   ========================================================================== */
+
+.booking-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-5);
+}
+
+.booking-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+}
+
+.booking-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.booking-container > .alert {
+    margin-bottom: var(--sp-5);
+}
+
+/* The inline wizard script scales an input's parent on focus; keep layout still. */
+.booking-page .form-group,
+.booking-page .checkbox-label,
+.booking-page .form-row {
+    transform: none !important;
+}
+
+/* ---------- Progress ---------- */
+.booking-progress {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 0 0 var(--sp-6);
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+
+.progress-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--c-text-3);
+    text-align: center;
+    transition: color var(--dur) var(--ease-out);
+}
+
+.progress-step::before {
+    content: '';
+    position: absolute;
+    top: 17px;
+    left: calc(-50% + 22px);
+    right: calc(50% + 22px);
+    height: 2px;
+    background: var(--c-border);
+}
+
+.progress-step::after {
+    content: '';
+    position: absolute;
+    top: 17px;
+    left: calc(-50% + 22px);
+    right: calc(50% + 22px);
+    height: 2px;
+    background: var(--c-teal-deep);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.progress-step:first-child::before,
+.progress-step:first-child::after {
+    display: none;
+}
+
+.progress-step.active::after,
+.progress-step.completed::after {
+    transform: scaleX(1);
+}
+
+.progress-dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--c-white);
+    border: 1.5px solid var(--c-border-strong);
+    color: transparent;
+    font-size: 0.75rem;
+    counter-increment: step;
+    transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), color var(--dur), transform var(--dur) var(--ease-out);
+}
+
+.progress-dot::before {
+    content: counter(step);
+    position: absolute;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-text-3);
+    transition: opacity var(--dur);
+}
+
+.progress-dot i {
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity var(--dur), transform var(--dur) var(--ease-out);
+}
+
+.progress-step.active {
+    color: var(--c-text);
+}
+
+.progress-step.active .progress-dot {
+    border-color: var(--c-teal-deep);
+    transform: scale(1.08);
+    box-shadow: 0 0 0 5px var(--c-focus);
+}
+
+.progress-step.active .progress-dot::before {
+    color: var(--c-text);
+}
+
+.progress-step.completed {
+    color: var(--c-text);
+}
+
+.progress-step.completed .progress-dot {
+    background: var(--c-teal-deep);
+    border-color: var(--c-teal-deep);
+    color: var(--c-white);
+}
+
+.progress-step.completed .progress-dot::before {
+    opacity: 0;
+}
+
+.progress-step.completed .progress-dot i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* The wizard marks the current step as completed too; the last completed one is "current". */
+.progress-step.completed:has(+ .progress-step:not(.completed)) .progress-dot,
+.progress-step.completed:last-child .progress-dot {
+    color: transparent;
+    background: var(--c-white);
+    border-color: var(--c-teal-deep);
+    transform: scale(1.08);
+    box-shadow: 0 0 0 5px var(--c-focus);
+}
+
+.progress-step.completed:has(+ .progress-step:not(.completed)) .progress-dot::before,
+.progress-step.completed:last-child .progress-dot::before {
+    opacity: 1;
+    color: var(--c-text);
+}
+
+.progress-step.completed:has(+ .progress-step:not(.completed)) .progress-dot i,
+.progress-step.completed:last-child .progress-dot i {
+    opacity: 0;
+}
+
+/* ---------- Wizard shell ---------- */
+.booking-wizard {
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--sh-md);
+}
+
+.wizard-step {
+    display: none;
+}
+
+.wizard-step.active {
+    display: block;
+    animation: wizardIn var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes wizardIn {
+    from { opacity: 0; transform: translateX(14px); }
+    to { opacity: 1; transform: none; }
+}
+
+.step-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-6);
+}
+
+.step-head .step-no {
+    width: 40px;
+    height: 40px;
+    font-size: var(--fs-base);
+}
+
+.step-head h2 {
+    font-size: var(--fs-xl);
+    margin-bottom: 0.15rem;
+}
+
+.step-head p {
+    color: var(--c-text-2);
+    font-size: var(--fs-sm);
+}
+
+.wizard-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-5);
+    border-top: 1px solid var(--c-border);
+}
+
+.wizard-navigation #nextBtn,
+.wizard-navigation #submitBtn {
+    margin-left: auto;
+}
+
+/* ---------- Step 1: facilities ---------- */
+.facilities-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-4);
+}
+
+.facility-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+}
+
+.facility-card:hover,
+.facility-card:focus-visible {
+    border-color: var(--c-border-strong);
+    box-shadow: var(--sh-md);
+    transform: translateY(-3px);
+}
+
+.facility-card:focus-visible {
+    box-shadow: 0 0 0 4px var(--c-focus), var(--sh-md);
+}
+
+.facility-card.selected {
+    border-color: var(--c-teal-deep);
+    box-shadow: 0 0 0 1px var(--c-text), var(--sh-lg);
+}
+
+.facility-image {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--c-surface-2);
+}
+
+.facility-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.3);
+    transition: transform 1s var(--ease-out), filter var(--dur-slow);
+}
+
+.facility-card:hover .facility-image img,
+.facility-card.selected .facility-image img {
+    transform: scale(1.05);
+    filter: grayscale(0);
+}
+
+.facility-overlay {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--c-border);
+    color: transparent;
+    font-size: 0.8rem;
+    transition: background var(--dur) var(--ease-out), color var(--dur), transform var(--dur) var(--ease-out);
+}
+
+.facility-card.selected .facility-overlay {
+    background: var(--c-teal-deep);
+    border-color: var(--c-teal-deep);
+    color: var(--c-white);
+    animation: xpmScaleIn var(--dur) var(--ease-out) both;
+}
+
+.facility-info {
+    padding: var(--sp-4) var(--sp-5) var(--sp-5);
+}
+
+.facility-capacity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: var(--sp-2);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-3);
+}
+
+.facility-info h3 {
+    font-size: var(--fs-lg);
+    margin-bottom: var(--sp-2);
+}
+
+.facility-info p {
+    font-size: var(--fs-sm);
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-3);
+}
+
+.facility-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.facility-features li {
+    padding: 0.2rem 0.6rem;
+    font-size: var(--fs-xs);
+    color: var(--c-text-2);
+    background: var(--c-surface-2);
+    border-radius: var(--r-pill);
+}
+
+/* ---------- Step 2: calendar + time ---------- */
+.datetime-selection {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--sp-6);
+    align-items: start;
+}
+
+.calendar-section h3,
+.timeslot-section h3 {
+    margin-bottom: var(--sp-3);
+    font-size: var(--fs-base);
+}
+
+.calendar-container {
+    padding: var(--sp-4);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-3);
+}
+
+.calendar-header h4 {
+    font-size: var(--fs-base);
+}
+
+.calendar-nav {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    color: var(--c-text);
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.calendar-nav:hover {
+    color: var(--c-white);
+    background: var(--c-teal-deep);
+    border-color: var(--c-teal-deep);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-day-header {
+    padding: 0.4rem 0;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-align: center;
+    color: var(--c-text-3);
+}
+
+.calendar-day {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    font-size: var(--fs-sm);
+    border-radius: var(--r-sm);
+    color: var(--c-text);
+    user-select: none;
+    animation: xpmFade var(--dur) var(--ease-out) both;
+    transition: background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast) var(--ease-out);
+}
+
+.calendar-day.other-month {
+    visibility: hidden;
+}
+
+.calendar-day.past {
+    color: #c4c4c7;
+}
+
+.calendar-day.available {
+    cursor: pointer;
+}
+
+.calendar-day.available:hover {
+    background: var(--c-surface-2);
+    transform: scale(1.06);
+}
+
+.calendar-day.booked {
+    color: var(--c-text-3);
+    background: repeating-linear-gradient(135deg, var(--c-surface-2) 0 4px, var(--c-white) 4px 8px);
+    cursor: not-allowed;
+}
+
+.booking-indicator {
+    position: absolute;
+    right: 3px;
+    bottom: 2px;
+    font-size: 0.55rem;
+    color: var(--c-text-3);
+}
+
+.calendar-day.selected {
+    color: var(--c-white);
+    background: var(--c-teal-deep);
+    font-weight: 600;
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--c-border);
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.calendar-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    border: 1px solid var(--c-border-strong);
+}
+
+.legend-dot.is-booked {
+    background: repeating-linear-gradient(135deg, var(--c-surface-3) 0 2px, var(--c-white) 2px 4px);
+}
+
+.legend-dot.is-selected {
+    background: var(--c-teal-deep);
+    border-color: var(--c-teal-deep);
+}
+
+.method-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: var(--sp-4);
+    padding: 4px;
+    background: var(--c-surface-2);
+    border-radius: var(--r-md);
+}
+
+.method-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--c-text-2);
+    background: transparent;
+    border: 0;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: background var(--dur) var(--ease-out), color var(--dur-fast), box-shadow var(--dur);
+}
+
+.method-tab i {
+    pointer-events: none;
+}
+
+.method-tab.active {
+    color: var(--c-text);
+    background: var(--c-white);
+    box-shadow: var(--sh-sm);
+}
+
+.preset-times h4,
+.selected-time-display h4 {
+    margin-bottom: var(--sp-3);
+    font-size: var(--fs-sm);
+    color: var(--c-text-2);
+}
+
+.preset-times,
+.custom-times,
+.selected-time-display {
+    animation: xpmFadeUp var(--dur) var(--ease-out) both;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-2);
+}
+
+.time-slot-preset {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast) var(--ease-out);
+}
+
+.time-slot-preset:hover,
+.time-slot-preset:focus-visible {
+    border-color: var(--c-teal-deep);
+    transform: translateY(-2px);
+}
+
+.time-slot-preset.selected {
+    color: var(--c-white);
+    background: var(--c-teal-deep);
+    border-color: var(--c-teal-deep);
+}
+
+.time-display {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+
+.duration {
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.time-slot-preset.selected .duration {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.selected-time-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    font-weight: 600;
+    color: var(--c-white);
+    background: var(--c-teal-deep);
+    border-radius: var(--r-md);
+}
+
+.change-time-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    font: inherit;
+    font-size: var(--fs-xs);
+    color: var(--c-white);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--r-pill);
+    cursor: pointer;
+}
+
+.change-time-btn i {
+    pointer-events: none;
+}
+
+.change-time-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.time-help {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: var(--sp-4);
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.time-help i {
+    margin-top: 0.15rem;
+}
+
+/* ---------- Step 3: details ---------- */
+.details-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--sp-6);
+    align-items: start;
+}
+
+.form-help {
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+    margin-top: 0.35rem;
+}
+
+.booking-summary {
+    position: sticky;
+    top: calc(var(--nav-h) + var(--sp-4));
+    padding: var(--sp-5);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+}
+
+.booking-summary h3 {
+    margin-bottom: var(--sp-4);
+    font-size: var(--fs-base);
+}
+
+.summary-item,
+.confirmation-item {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: 0.6rem 0;
+    font-size: var(--fs-sm);
+    border-top: 1px solid var(--c-border);
+}
+
+.summary-item .label,
+.confirmation-item .label {
+    color: var(--c-text-3);
+}
+
+.summary-item .value,
+.confirmation-item .value {
+    font-weight: 600;
+    color: var(--c-text);
+    text-align: right;
+}
+
+/* ---------- Step 4: confirmation ---------- */
+.confirmation-summary {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--sp-5);
+}
+
+.confirmation-card {
+    padding: var(--sp-5);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+}
+
+.confirmation-card h3 {
+    margin-bottom: var(--sp-4);
+    font-size: var(--fs-base);
+}
+
+.terms-content {
+    margin-bottom: var(--sp-5);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: border-color var(--dur-fast), background var(--dur-fast);
+}
+
+.checkbox-label:has(input:checked) {
+    border-color: var(--c-teal-deep);
+    background: var(--c-white);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+    .facilities-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .datetime-selection,
+    .details-layout,
+    .confirmation-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-summary {
+        position: static;
+        order: -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .facilities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-progress span:not(.progress-dot) {
+        font-size: var(--fs-xs);
+    }
+
+    .progress-step::before,
+    .progress-step::after {
+        left: calc(-50% + 20px);
+        right: calc(50% + 20px);
+    }
+
+    .wizard-navigation .btn {
+        flex: 1;
+    }
+}

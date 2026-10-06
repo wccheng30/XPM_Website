@@ -8,15 +8,15 @@ require_once '../includes/database.php';
 try {
     $pdo = get_db_connection();
     
-    // Fetch active and featured programmes
+    // Fetch active and featured programmes (those with banner images)
     $stmt = $pdo->prepare("
         SELECT id, title, description, category, duration, price, 
                tax_inclusive, tax_amount, original_price, max_participants, 
                certification, location, start_date, end_date, 
                start_time, end_time, programme_icon, programme_badge, 
-               schedule_type, modules, poster_image 
+               schedule_type, modules, poster_image, banner_image 
         FROM programmes 
-        WHERE is_active = 1 AND is_featured = 1 
+        WHERE is_active = 1 AND is_featured = 1 AND banner_image IS NOT NULL AND banner_image != ''
         ORDER BY updated_at DESC
     ");
     $stmt->execute();
@@ -28,7 +28,11 @@ try {
         // If tax inclusive, price doesn't change (the original display logic fixed it)
         $programme['display_price'] = $programme['price'];
         if (is_numeric($programme['price'])) {
-            $programme['formatted_price'] = 'RM ' . number_format($programme['price'], 2);
+            if ((float)$programme['price'] == 0) {
+                $programme['formatted_price'] = 'Free';
+            } else {
+                $programme['formatted_price'] = 'RM ' . number_format($programme['price'], 2);
+            }
         } else {
             $programme['formatted_price'] = $programme['price'];
         }

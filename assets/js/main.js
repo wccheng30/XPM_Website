@@ -150,17 +150,6 @@ function initNavigation() {
         });
     });
 
-    // Add hover effects for navigation links
-    navLinks.forEach(link => {
-        link.addEventListener('mouseenter', () => {
-            link.style.transform = 'translateY(-2px) scale(1.05)';
-        });
-        
-        link.addEventListener('mouseleave', () => {
-            link.style.transform = 'translateY(0) scale(1)';
-        });
-    });
-
     // Add keyboard navigation support
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -259,22 +248,6 @@ function initFounderInteractivity() {
     };
     parallax(particles, -1, -1);
     parallax(shapes, 1, 1);
-
-    // Subtle 3D tilt for cards
-    const tiltTargets = section.querySelectorAll('.profile-card, .achievement-card, .expertise-card, .story-container');
-    tiltTargets.forEach((card) => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const rotateY = ((x / rect.width) - 0.5) * 10; // -5 to 5 deg
-            const rotateX = ((y / rect.height) - 0.5) * -10; // -5 to 5 deg
-            card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)';
-        });
-    });
 }
 
 // ===== FOUNDER PHASE 4: Dynamic content loader =====
@@ -484,8 +457,18 @@ function initFormHandling() {
     }
 }
 
+function fieldErrorParent(field) {
+    if (field.closest('.phone-field')) {
+        return field.closest('.form-group') || field.parentNode;
+    }
+    return field.parentNode;
+}
+
 function validateField(e) {
     const field = e.target;
+    if (field.name && field.name.endsWith('_code')) {
+        return;
+    }
     const value = field.value.trim();
     const fieldName = field.name;
     
@@ -511,10 +494,8 @@ function validateField(e) {
             }
             break;
         case 'phone':
-            // Remove common formatting characters and validate
-            const cleanedPhone = value.replace(/[\s\-\(\)\.]/g, '');
-            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-            if (value && !phoneRegex.test(cleanedPhone)) {
+            const cleanedPhone = value.replace(/\D/g, '');
+            if (value && !/^\d{6,15}$/.test(cleanedPhone)) {
                 isValid = false;
                 errorMessage = 'Please enter a valid phone number';
             }
@@ -549,19 +530,18 @@ function showFieldError(field, message) {
     errorDiv.className = 'field-error';
     errorDiv.textContent = message;
     errorDiv.style.cssText = `
-        color: #ef4444;
+        color: #b91c1c;
         font-size: 0.875rem;
         margin-top: 0.25rem;
-        animation: slideIn 0.3s ease;
     `;
     
-    field.parentNode.appendChild(errorDiv);
-    field.style.borderColor = '#ef4444';
+    fieldErrorParent(field).appendChild(errorDiv);
+    field.style.borderColor = '#b91c1c';
 }
 
 function clearFieldError(e) {
     const field = e.target;
-    const errorDiv = field.parentNode.querySelector('.field-error');
+    const errorDiv = fieldErrorParent(field).querySelector('.field-error');
     if (errorDiv) {
         errorDiv.remove();
     }
@@ -592,7 +572,7 @@ async function handleFormSubmit(e) {
     
     inputs.forEach(input => {
         validateField({ target: input });
-        if (input.parentNode.querySelector('.field-error')) {
+        if (fieldErrorParent(input).querySelector('.field-error')) {
             isValid = false;
         }
     });
@@ -660,9 +640,9 @@ function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     
     // Set background color based on type
-    let bgColor = '#3b82f6'; // default blue
-    if (type === 'success') bgColor = '#10b981'; // green
-    if (type === 'error') bgColor = '#ef4444'; // red
+    let bgColor = '#111111';
+    if (type === 'success') bgColor = '#15803d';
+    if (type === 'error') bgColor = '#b91c1c';
     
     notification.innerHTML = `
         <div style="
@@ -1233,320 +1213,361 @@ document.addEventListener('DOMContentLoaded', function() {
     initFounderCounters();
 });
 
-// ===== ADVANCED CONTACT ANIMATIONS =====
-function initContactAnimations() {
-    const contactSection = document.getElementById('contact');
-    if (!contactSection) return;
-
-    const mouseParticles = document.getElementById('mouseParticles');
-    const interactiveGlow = document.getElementById('interactiveGlow');
-    const particles = mouseParticles ? mouseParticles.querySelectorAll('.mouse-particle') : [];
-    
-    let mouseX = 0;
-    let mouseY = 0;
-    let isMoving = false;
-    let moveTimeout;
-
-    // Track mouse movement
-    contactSection.addEventListener('mousemove', (e) => {
-        const rect = contactSection.getBoundingClientRect();
-        mouseX = e.clientX - rect.left;
-        mouseY = e.clientY - rect.top;
-        
-        // Update interactive glow position
-        if (interactiveGlow) {
-            interactiveGlow.style.setProperty('--mouse-x', mouseX + 'px');
-            interactiveGlow.style.setProperty('--mouse-y', mouseY + 'px');
-            interactiveGlow.classList.add('active');
-        }
-        
-        // Activate mouse particles with smooth animation
-        if (mouseParticles && particles.length > 0) {
-            particles.forEach((particle, index) => {
-                const delay = index * 20; // Reduced delay for smoother effect
-                setTimeout(() => {
-                    // Use transform for smoother positioning
-                    particle.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
-                    particle.classList.add('active');
-                    
-                    // Remove active class after animation
-                    setTimeout(() => {
-                        particle.classList.remove('active');
-                    }, 800); // Match CSS transition duration
-                }, delay);
-            });
-        }
-        
-        // Set moving state
-        isMoving = true;
-        clearTimeout(moveTimeout);
-        
-        moveTimeout = setTimeout(() => {
-            isMoving = false;
-            if (interactiveGlow) {
-                interactiveGlow.classList.remove('active');
-            }
-        }, 1000);
-    });
-
-    // Parallax effect on scroll
-    let ticking = false;
-    function updateParallax() {
-        const scrolled = window.pageYOffset;
-        const parallaxWaves = contactSection.querySelectorAll('.parallax-wave');
-        
-        parallaxWaves.forEach((wave, index) => {
-            const speed = 0.5 + (index * 0.1);
-            const yPos = -(scrolled * speed);
-            wave.style.transform = `translateY(${yPos}px) translateZ(-${10 + index * 10}px)`;
-        });
-        
-        ticking = false;
-    }
-
-    function requestTick() {
-        if (!ticking) {
-            requestAnimationFrame(updateParallax);
-            ticking = true;
-        }
-    }
-
-    window.addEventListener('scroll', requestTick);
-}
-
-// Poster Modal Lightbox Functionality
+// Poster Modal — Google Drive-style image viewer
 class PosterModal {
     constructor() {
         this.modal = document.getElementById('posterModal');
+        if (!this.modal) return;
+
         this.modalImage = document.getElementById('posterModalImage');
         this.modalTitle = document.getElementById('posterModalTitle');
         this.modalClose = document.getElementById('posterModalClose');
         this.zoomInBtn = document.getElementById('zoomIn');
         this.zoomOutBtn = document.getElementById('zoomOut');
         this.zoomResetBtn = document.getElementById('zoomReset');
+        this.zoomActualBtn = document.getElementById('zoomActual');
         this.zoomLevel = document.getElementById('zoomLevel');
-        this.zoomContainer = document.querySelector('.poster-zoom-container');
-        
-        this.currentZoom = 1;
-        this.minZoom = 0.5;
-        this.maxZoom = 3;
-        this.zoomStep = 0.25;
-        
+        this.viewport = document.getElementById('posterViewport') || document.querySelector('.poster-zoom-container');
+        this.canvas = document.getElementById('posterCanvas');
+        this.thumbs = document.getElementById('posterThumbs');
+
+        this.scale = 1;
+        this.minScale = 0.2;
+        this.maxScale = 6;
+        this.translateX = 0;
+        this.translateY = 0;
+        this.fitScale = 1;
+
         this.isDragging = false;
-        this.startX = 0;
-        this.startY = 0;
-        this.scrollLeft = 0;
-        this.scrollTop = 0;
-        
+        this.dragMoved = false;
+        this.lastPointerX = 0;
+        this.lastPointerY = 0;
+        this.pointers = new Map();
+        this.lastPinchDist = 0;
+
+        this.images = [];
+        this.activeIndex = 0;
+
+        this._boundKeydown = (e) => this.onKeydown(e);
         this.init();
+        window.posterModalInstance = this;
     }
-    
+
     init() {
-        // Add click handlers to all programme poster images
         this.addPosterClickHandlers();
-        
-        // Modal controls
-        this.modalClose.addEventListener('click', () => this.closeModal());
-        this.zoomInBtn.addEventListener('click', () => this.zoomIn());
-        this.zoomOutBtn.addEventListener('click', () => this.zoomOut());
-        this.zoomResetBtn.addEventListener('click', () => this.resetZoom());
-        
-        // Close modal when clicking overlay
+
+        this.modalClose?.addEventListener('click', () => this.close());
+        this.zoomInBtn?.addEventListener('click', () => this.zoomBy(1.25));
+        this.zoomOutBtn?.addEventListener('click', () => this.zoomBy(1 / 1.25));
+        this.zoomResetBtn?.addEventListener('click', () => this.fitToScreen());
+        this.zoomActualBtn?.addEventListener('click', () => this.actualSize());
+
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal || e.target.classList.contains('poster-modal-overlay')) {
-                this.closeModal();
+                this.close();
             }
         });
-        
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
+
+        // Wheel zoom toward cursor (Google Drive style)
+        this.viewport.addEventListener('wheel', (e) => {
             if (!this.modal.classList.contains('show')) return;
-            
-            switch(e.key) {
-                case 'Escape':
-                    this.closeModal();
-                    break;
-                case '+':
-                case '=':
-                    e.preventDefault();
-                    this.zoomIn();
-                    break;
-                case '-':
-                    e.preventDefault();
-                    this.zoomOut();
-                    break;
-                case '0':
-                    e.preventDefault();
-                    this.resetZoom();
-                    break;
+            e.preventDefault();
+            const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+            const rect = this.viewport.getBoundingClientRect();
+            this.zoomAt(this.scale * factor, e.clientX - rect.left, e.clientY - rect.top);
+        }, { passive: false });
+
+        // Pointer pan + pinch
+        this.viewport.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+        this.viewport.addEventListener('pointermove', (e) => this.onPointerMove(e));
+        this.viewport.addEventListener('pointerup', (e) => this.onPointerUp(e));
+        this.viewport.addEventListener('pointercancel', (e) => this.onPointerUp(e));
+        this.viewport.addEventListener('pointerleave', (e) => {
+            if (this.pointers.has(e.pointerId)) this.onPointerUp(e);
+        });
+
+        // Double-click / double-tap toggle fit <-> ~2x
+        this.viewport.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            const rect = this.viewport.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (Math.abs(this.scale - this.fitScale) < 0.05) {
+                this.zoomAt(Math.min(this.fitScale * 2, this.maxScale), x, y);
+            } else {
+                this.fitToScreen();
             }
         });
-        
-        // Mouse wheel zoom disabled - removed for better scrolling experience
-        
-        // Drag functionality
-        this.addDragFunctionality();
+
+        window.addEventListener('resize', () => {
+            if (this.modal.classList.contains('show')) {
+                this.fitToScreen();
+            }
+        });
     }
-    
+
     addPosterClickHandlers() {
-        const posterImages = document.querySelectorAll('.programme-poster-img');
-        posterImages.forEach(img => {
+        document.querySelectorAll('.programme-poster-img').forEach((img) => {
             img.addEventListener('click', (e) => {
                 e.preventDefault();
-                const src = img.src;
-                const alt = img.alt;
-                const title = alt.replace(' Poster', '');
-                this.openModal(src, title);
+                e.stopPropagation();
+                const primary = img.dataset.posterSrc || img.getAttribute('src');
+                const secondary = img.dataset.posterSecondary || '';
+                const title = img.dataset.posterTitle || (img.alt || 'Programme Poster').replace(/ Poster$/i, '');
+                this.open(primary, title, secondary);
             });
         });
     }
-    
-    openModal(imageSrc, title) {
-        this.modalImage.src = imageSrc;
-        this.modalTitle.textContent = title;
-        this.modal.classList.add('show');
-        this.resetZoom();
-        document.body.style.overflow = 'hidden';
-        
-        // Ensure image loads and container adjusts
-        this.modalImage.onload = () => {
-            this.resetZoom();
+
+    open(imageSrc, title, secondarySrc = '') {
+        if (!this.modal || !this.modalImage) return;
+
+        this.images = [imageSrc].filter(Boolean);
+        if (secondarySrc) this.images.push(secondarySrc);
+        this.activeIndex = 0;
+
+        this.modalTitle.textContent = title || 'Programme Poster';
+        this.renderThumbs();
+        this.loadActiveImage(() => {
+            this.modal.classList.add('show');
+            this.modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', this._boundKeydown);
+            this.fitToScreen();
+        });
+    }
+
+    loadActiveImage(onReady) {
+        const src = this.images[this.activeIndex];
+        if (!src) return;
+
+        // Always update the persistent img node (never destroy it)
+        const finish = () => {
+            this.modalImage.alt = this.modalTitle.textContent || 'Programme Poster';
+            if (typeof onReady === 'function') onReady();
+            else this.fitToScreen();
         };
+
+        if (this.modalImage.getAttribute('src') === src && this.modalImage.complete && this.modalImage.naturalWidth) {
+            finish();
+            return;
+        }
+
+        this.modalImage.onload = () => {
+            this.modalImage.onload = null;
+            this.modalImage.onerror = null;
+            finish();
+        };
+        this.modalImage.onerror = () => {
+            this.modalImage.onload = null;
+            this.modalImage.onerror = null;
+            finish();
+        };
+        // Bust any stale painted frame when switching posters
+        this.modalImage.removeAttribute('src');
+        this.modalImage.src = src;
     }
-    
-    closeModal() {
+
+    renderThumbs() {
+        if (!this.thumbs) return;
+        this.thumbs.innerHTML = '';
+        if (this.images.length < 2) {
+            this.thumbs.hidden = true;
+            return;
+        }
+        this.thumbs.hidden = false;
+        this.images.forEach((src, index) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'poster-thumb' + (index === this.activeIndex ? ' active' : '');
+            btn.innerHTML = `<img src="${src}" alt="Poster ${index + 1}" draggable="false">`;
+            btn.addEventListener('click', () => {
+                if (this.activeIndex === index) return;
+                this.activeIndex = index;
+                this.renderThumbs();
+                this.loadActiveImage();
+            });
+            this.thumbs.appendChild(btn);
+        });
+    }
+
+    close() {
+        if (!this.modal) return;
         this.modal.classList.remove('show');
+        this.modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
-        this.resetZoom();
+        document.removeEventListener('keydown', this._boundKeydown);
+        this.isDragging = false;
+        this.pointers.clear();
     }
-    
-    zoomIn() {
-        if (this.currentZoom < this.maxZoom) {
-            this.currentZoom = Math.min(this.currentZoom + this.zoomStep, this.maxZoom);
-            this.updateZoom();
-        }
-    }
-    
-    zoomOut() {
-        if (this.currentZoom > this.minZoom) {
-            this.currentZoom = Math.max(this.currentZoom - this.zoomStep, this.minZoom);
-            this.updateZoom();
-        }
-    }
-    
-    resetZoom() {
-        this.currentZoom = 1;
-        this.modalImage.style.transform = 'scale(1) translate(0px, 0px)';
-        this.zoomLevel.textContent = '100%';
-        
-        // Update button states
-        this.zoomInBtn.disabled = false;
-        this.zoomOutBtn.disabled = false;
-        this.zoomInBtn.style.opacity = '1';
-        this.zoomInBtn.style.cursor = 'pointer';
-        this.zoomOutBtn.style.opacity = '1';
-        this.zoomOutBtn.style.cursor = 'pointer';
-    }
-    
-    updateZoom() {
-        // Get current transform values to preserve position
-        const currentTransform = this.modalImage.style.transform;
-        let translateX = 0;
-        let translateY = 0;
-        
-        // Extract translate values from current transform
-        const translateMatch = currentTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        if (translateMatch) {
-            translateX = parseFloat(translateMatch[1]);
-            translateY = parseFloat(translateMatch[2]);
-        }
-        
-        this.modalImage.style.transform = `scale(${this.currentZoom}) translate(${translateX}px, ${translateY}px)`;
-        this.zoomLevel.textContent = `${Math.round(this.currentZoom * 100)}%`;
-        
-        // Update button states
-        this.zoomInBtn.disabled = this.currentZoom >= this.maxZoom;
-        this.zoomOutBtn.disabled = this.currentZoom <= this.minZoom;
-        
-        // Add visual feedback for disabled buttons
-        if (this.zoomInBtn.disabled) {
-            this.zoomInBtn.style.opacity = '0.5';
-            this.zoomInBtn.style.cursor = 'not-allowed';
-        } else {
-            this.zoomInBtn.style.opacity = '1';
-            this.zoomInBtn.style.cursor = 'pointer';
-        }
-        
-        if (this.zoomOutBtn.disabled) {
-            this.zoomOutBtn.style.opacity = '0.5';
-            this.zoomOutBtn.style.cursor = 'not-allowed';
-        } else {
-            this.zoomOutBtn.style.opacity = '1';
-            this.zoomOutBtn.style.cursor = 'pointer';
-        }
-    }
-    
-    addDragFunctionality() {
-        let lastX = 0;
-        let lastY = 0;
-        
-        this.modalImage.addEventListener('mousedown', (e) => {
-            if (this.currentZoom > 1) {
-                this.isDragging = true;
-                this.startX = e.clientX - lastX;
-                this.startY = e.clientY - lastY;
-                this.modalImage.style.cursor = 'grabbing';
+
+    onKeydown(e) {
+        if (!this.modal.classList.contains('show')) return;
+        switch (e.key) {
+            case 'Escape':
+                this.close();
+                break;
+            case '+':
+            case '=':
                 e.preventDefault();
-            }
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!this.isDragging) return;
-            e.preventDefault();
-            
-            const deltaX = e.clientX - this.startX;
-            const deltaY = e.clientY - this.startY;
-            
-            lastX = deltaX;
-            lastY = deltaY;
-            
-            this.modalImage.style.transform = `scale(${this.currentZoom}) translate(${deltaX / this.currentZoom}px, ${deltaY / this.currentZoom}px)`;
-        });
-        
-        document.addEventListener('mouseup', () => {
-            this.isDragging = false;
-            this.modalImage.style.cursor = this.currentZoom > 1 ? 'grab' : 'default';
-        });
-        
-        // Touch support for mobile
-        this.modalImage.addEventListener('touchstart', (e) => {
-            if (this.currentZoom > 1) {
-                this.isDragging = true;
-                const touch = e.touches[0];
-                this.startX = touch.clientX - lastX;
-                this.startY = touch.clientY - lastY;
+                this.zoomBy(1.25);
+                break;
+            case '-':
+            case '_':
                 e.preventDefault();
-            }
-        });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (!this.isDragging) return;
-            e.preventDefault();
-            
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - this.startX;
-            const deltaY = touch.clientY - this.startY;
-            
-            lastX = deltaX;
-            lastY = deltaY;
-            
-            this.modalImage.style.transform = `scale(${this.currentZoom}) translate(${deltaX / this.currentZoom}px, ${deltaY / this.currentZoom}px)`;
-        });
-        
-        document.addEventListener('touchend', () => {
-            this.isDragging = false;
-        });
+                this.zoomBy(1 / 1.25);
+                break;
+            case '0':
+                e.preventDefault();
+                this.fitToScreen();
+                break;
+            case '1':
+                e.preventDefault();
+                this.actualSize();
+                break;
+        }
     }
+
+    fitToScreen() {
+        if (!this.modalImage.naturalWidth || !this.viewport) return;
+        const vw = this.viewport.clientWidth;
+        const vh = this.viewport.clientHeight;
+        const iw = this.modalImage.naturalWidth;
+        const ih = this.modalImage.naturalHeight;
+        const pad = 24;
+        this.fitScale = Math.min((vw - pad) / iw, (vh - pad) / ih, 1);
+        this.scale = this.fitScale;
+        this.translateX = (vw - iw * this.scale) / 2;
+        this.translateY = (vh - ih * this.scale) / 2;
+        this.applyTransform(false);
+    }
+
+    actualSize() {
+        if (!this.modalImage.naturalWidth || !this.viewport) return;
+        const vw = this.viewport.clientWidth;
+        const vh = this.viewport.clientHeight;
+        const iw = this.modalImage.naturalWidth;
+        const ih = this.modalImage.naturalHeight;
+        this.scale = 1;
+        this.translateX = (vw - iw) / 2;
+        this.translateY = (vh - ih) / 2;
+        this.applyTransform();
+    }
+
+    zoomBy(factor) {
+        if (!this.viewport) return;
+        const rect = this.viewport.getBoundingClientRect();
+        this.zoomAt(this.scale * factor, rect.width / 2, rect.height / 2);
+    }
+
+    zoomAt(nextScale, originX, originY) {
+        const newScale = Math.min(this.maxScale, Math.max(this.minScale, nextScale));
+        const contentX = (originX - this.translateX) / this.scale;
+        const contentY = (originY - this.translateY) / this.scale;
+        this.scale = newScale;
+        this.translateX = originX - contentX * this.scale;
+        this.translateY = originY - contentY * this.scale;
+        this.applyTransform();
+    }
+
+    applyTransform(animate = true) {
+        if (!this.canvas && !this.modalImage) return;
+        const target = this.canvas || this.modalImage;
+        if (animate) target.style.transition = 'transform 0.12s ease-out';
+        else target.style.transition = 'none';
+        target.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+        if (this.zoomLevel) {
+            this.zoomLevel.textContent = `${Math.round(this.scale * 100)}%`;
+        }
+        if (this.viewport) {
+            this.viewport.classList.toggle('is-zoomed', this.scale > this.fitScale + 0.02);
+        }
+    }
+
+    onPointerDown(e) {
+        if (!this.modal.classList.contains('show')) return;
+        this.viewport.setPointerCapture?.(e.pointerId);
+        this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        this.dragMoved = false;
+
+        if (this.pointers.size === 1) {
+            this.isDragging = true;
+            this.lastPointerX = e.clientX;
+            this.lastPointerY = e.clientY;
+            this.viewport.classList.add('is-panning');
+        } else if (this.pointers.size === 2) {
+            this.isDragging = false;
+            const pts = [...this.pointers.values()];
+            this.lastPinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        }
+        e.preventDefault();
+    }
+
+    onPointerMove(e) {
+        if (!this.pointers.has(e.pointerId)) return;
+        this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (this.pointers.size === 2) {
+            const pts = [...this.pointers.values()];
+            const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            if (this.lastPinchDist > 0) {
+                const rect = this.viewport.getBoundingClientRect();
+                const midX = (pts[0].x + pts[1].x) / 2 - rect.left;
+                const midY = (pts[0].y + pts[1].y) / 2 - rect.top;
+                this.zoomAt(this.scale * (dist / this.lastPinchDist), midX, midY);
+            }
+            this.lastPinchDist = dist;
+            e.preventDefault();
+            return;
+        }
+
+        if (!this.isDragging || this.pointers.size !== 1) return;
+        const dx = e.clientX - this.lastPointerX;
+        const dy = e.clientY - this.lastPointerY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this.dragMoved = true;
+        this.lastPointerX = e.clientX;
+        this.lastPointerY = e.clientY;
+        this.translateX += dx;
+        this.translateY += dy;
+        this.applyTransform(false);
+        e.preventDefault();
+    }
+
+    onPointerUp(e) {
+        this.pointers.delete(e.pointerId);
+        if (this.pointers.size < 2) this.lastPinchDist = 0;
+        if (this.pointers.size === 0) {
+            this.isDragging = false;
+            this.viewport.classList.remove('is-panning');
+        } else if (this.pointers.size === 1) {
+            const pt = [...this.pointers.values()][0];
+            this.isDragging = true;
+            this.lastPointerX = pt.x;
+            this.lastPointerY = pt.y;
+        }
+    }
+}
+
+// Backward-compatible entry point used by older markup
+function openPosterModal(element, primaryImage, secondaryImage = '') {
+    if (!window.posterModalInstance) {
+        window.posterModalInstance = new PosterModal();
+    }
+    const title = (element && (element.dataset?.posterTitle || element.alt)) || 'Programme Poster';
+    window.posterModalInstance.open(
+        primaryImage || element?.dataset?.posterSrc || element?.src,
+        String(title).replace(/ Poster$/i, ''),
+        secondaryImage || element?.dataset?.posterSecondary || ''
+    );
+}
+
+function createPosterModal() {
+    // Modal markup lives in programmes.php; keep stub for compatibility
+    return document.getElementById('posterModal');
+}
+
+function initPosterZoom() {
+    // Deprecated — handled by PosterModal
 }
 
 // ===== TRAINERS CAROUSEL FUNCTIONALITY =====
@@ -1756,167 +1777,10 @@ function initTrainersCarousel() {
     updateCarousel();
 }
 
-// Enhanced Poster Modal with Multiple Images Support
-function openPosterModal(element, primaryImage, secondaryImage = '') {
-    // Create modal if it doesn't exist
-    let modal = document.getElementById('posterModal');
-    if (!modal) {
-        modal = createPosterModal();
-    }
-    
-    // Get modal elements
-    const modalImage = document.getElementById('posterModalImage');
-    const modalTitle = document.getElementById('posterModalTitle');
-    const zoomContainer = document.querySelector('.poster-zoom-container');
-    
-    // Set primary image
-    modalImage.src = primaryImage;
-    modalImage.alt = element.alt;
-    modalTitle.textContent = element.alt;
-    
-    // Clear existing images
-    zoomContainer.innerHTML = '';
-    
-    // Create image container for primary image
-    const primaryContainer = document.createElement('div');
-    primaryContainer.className = 'poster-image-container';
-    primaryContainer.innerHTML = `
-        <img src="${primaryImage}" alt="${element.alt}" class="poster-zoom-image" style="max-width: 100%; height: auto;">
-    `;
-    zoomContainer.appendChild(primaryContainer);
-    
-    // Add secondary image if available
-    if (secondaryImage) {
-        const secondaryContainer = document.createElement('div');
-        secondaryContainer.className = 'poster-image-container';
-        secondaryContainer.innerHTML = `
-            <img src="${secondaryImage}" alt="${element.alt} - Secondary" class="poster-zoom-image" style="max-width: 100%; height: auto; margin-top: 2rem;">
-        `;
-        zoomContainer.appendChild(secondaryContainer);
-    }
-    
-    // Show modal
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-    
-    // Initialize zoom functionality
-    initPosterZoom(zoomContainer);
-}
-
-function createPosterModal() {
-    const modalHTML = `
-        <div id="posterModal" class="poster-modal">
-            <div class="poster-modal-overlay"></div>
-            <div class="poster-modal-content">
-                <div class="poster-modal-header">
-                    <h3 id="posterModalTitle">Programme Poster</h3>
-                    <button id="posterModalClose" class="poster-modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="poster-modal-body">
-                    <div class="poster-zoom-controls">
-                        <button id="zoomIn" class="zoom-btn">
-                            <i class="fas fa-search-plus"></i>
-                        </button>
-                        <button id="zoomOut" class="zoom-btn">
-                            <i class="fas fa-search-minus"></i>
-                        </button>
-                        <button id="zoomReset" class="zoom-btn">
-                            <i class="fas fa-expand-arrows-alt"></i>
-                        </button>
-                        <span id="zoomLevel" class="zoom-level">100%</span>
-                    </div>
-                    <div class="poster-zoom-container">
-                        <!-- Images will be dynamically added here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Add event listeners
-    const modal = document.getElementById('posterModal');
-    const closeBtn = document.getElementById('posterModalClose');
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
-    const zoomResetBtn = document.getElementById('zoomReset');
-    
-    closeBtn.addEventListener('click', () => {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-    });
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.classList.contains('poster-modal-overlay')) {
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-    });
-    
-    // Keyboard controls
-    document.addEventListener('keydown', (e) => {
-        if (!modal.classList.contains('show')) return;
-        
-        switch(e.key) {
-            case 'Escape':
-                modal.classList.remove('show');
-                document.body.style.overflow = '';
-                break;
-        }
-    });
-    
-    return modal;
-}
-
-function initPosterZoom(container) {
-    let currentZoom = 1;
-    const minZoom = 0.5;
-    const maxZoom = 3;
-    const zoomStep = 0.25;
-    
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
-    const zoomResetBtn = document.getElementById('zoomReset');
-    const zoomLevel = document.getElementById('zoomLevel');
-    
-    function updateZoom() {
-        const images = container.querySelectorAll('.poster-zoom-image');
-        images.forEach(img => {
-            img.style.transform = `scale(${currentZoom})`;
-        });
-        zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
-    }
-    
-    zoomInBtn.addEventListener('click', () => {
-        if (currentZoom < maxZoom) {
-            currentZoom += zoomStep;
-            updateZoom();
-        }
-    });
-    
-    zoomOutBtn.addEventListener('click', () => {
-        if (currentZoom > minZoom) {
-            currentZoom -= zoomStep;
-            updateZoom();
-        }
-    });
-    
-    zoomResetBtn.addEventListener('click', () => {
-        currentZoom = 1;
-        updateZoom();
-    });
-    
-    // Initialize zoom level display
-    updateZoom();
-}
 
 // Initialize all animations when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initFounderStoryVideo();
-    initContactAnimations();
     loadFeaturedProgrammes();
     
     // Initialize poster modal if on programmes page
@@ -1928,9 +1792,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('trainersCarousel')) {
         initTrainersCarousel();
     }
-}); // Load Featured Programmes
+}); // Load Featured Programmes as Slideshow
 async function loadFeaturedProgrammes() {
     const container = document.getElementById('featured-programmes-container');
+    const dotsContainer = document.getElementById('slideshow-dots');
     if (!container) return;
 
     try {
@@ -1938,44 +1803,412 @@ async function loadFeaturedProgrammes() {
         const result = await response.json();
 
         if (result.success && result.data && result.data.length > 0) {
-            let html = '<div class="featured-programmes-wrapper" style="display: grid; gap: 20px; margin-bottom: 40px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">';
-            
-            result.data.forEach(programme => {
-                html += `
-                    <div class="programme-card featured-card" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); position: relative; overflow: hidden; transition: transform 0.3s ease;">
-                        <div style="position: absolute; top: 0; right: 0; background: #f59e0b; color: white; padding: 4px 12px; font-size: 12px; font-weight: 600; border-bottom-left-radius: 12px;">
-                            <i class="fas fa-star" style="margin-right: 4px;"></i> Featured
+            const programmes = result.data;
+            let slidesHtml = '';
+
+            programmes.forEach((prog, i) => {
+                const title = prog.title || 'Training Programme';
+                const bannerSrc = prog.banner_image || '';
+
+                if (!bannerSrc) return; // Skip programmes without banner
+
+                slidesHtml += `
+                    <a href="programme-registration.php?programme_id=${prog.id}" 
+                       class="slideshow-slide${i === 0 ? ' active' : ''}" 
+                       data-index="${i}" 
+                       draggable="false"
+                       title="${title.replace(/"/g, '&quot;')}"
+                       aria-label="Register for ${title.replace(/"/g, '&quot;')}">
+                        <div class="slide-ambient" style="background-image: url('${bannerSrc.replace(/'/g, '%27')}');" aria-hidden="true"></div>
+                        <div class="slide-frame">
+                            <img src="${bannerSrc}" 
+                                 alt="${title.replace(/"/g, '&quot;')}" 
+                                 draggable="false"
+                                 loading="${i === 0 ? 'eager' : 'lazy'}" 
+                                 class="slide-banner-img"
+                                 onerror="this.closest('.slideshow-slide').style.display='none';">
                         </div>
-                        <h3 style="font-size: 20px; color: #1e293b; margin-top: 10px; margin-bottom: 12px;">${programme.title}</h3>
-                        <p style="color: #64748b; font-size: 14px; margin-bottom: 16px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${programme.description}</p>
-                        
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-                            <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;">
-                                <i class="fas fa-clock" style="margin-right: 4px;"></i> ${programme.duration}
-                            </span>
-                            <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;">
-                                <i class="fas fa-tag" style="margin-right: 4px;"></i> ${programme.category}
-                            </span>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                            <div>
-                                <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 2px;">Investment</span>
-                                <span style="font-size: 18px; font-weight: 700; color: #3b82f6;">${programme.formatted_price}</span>
-                            </div>
-                            <a href="programme-registration.php?id=${programme.id}" class="btn btn-primary btn-sm" style="padding: 8px 16px; font-size: 14px;">
-                                Register Now <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
-                            </a>
-                        </div>
-                    </div>
+                    </a>
                 `;
             });
-            
-            html += '</div>';
-            container.innerHTML = html;
+
+            container.innerHTML = slidesHtml;
+
+            // Recount visible slides (some may be hidden via onerror)
+            const allSlides = container.querySelectorAll('.slideshow-slide');
+            const wash = document.getElementById('slideshow-wash');
+            const hint = document.getElementById('slideshow-hint');
+            let washTimer = null;
+
+            function paintWash(slide) {
+                if (!wash || !slide) return;
+                const ambient = slide.querySelector('.slide-ambient');
+                const image = ambient ? ambient.style.backgroundImage : '';
+                if (!image || wash.style.backgroundImage === image) return;
+                if (!wash.style.backgroundImage) {
+                    wash.style.backgroundImage = image;
+                    return;
+                }
+                if (washTimer) clearTimeout(washTimer);
+                wash.classList.add('is-fading');
+                washTimer = setTimeout(() => {
+                    wash.style.backgroundImage = image;
+                    wash.classList.remove('is-fading');
+                    washTimer = null;
+                }, 390);
+            }
+
+            if (allSlides.length) paintWash(allSlides[0]);
+            if (hint) hint.hidden = allSlides.length < 2;
+
+            // Build dots
+            if (dotsContainer) {
+                if (allSlides.length > 1) {
+                    let dotsHtml = '';
+                    allSlides.forEach((_, i) => {
+                        dotsHtml += `<button class="slideshow-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Slide ${i + 1}"></button>`;
+                    });
+                    dotsContainer.innerHTML = dotsHtml;
+                } else {
+                    dotsContainer.innerHTML = '';
+                }
+            }
+
+            // Controls, swipe & autoplay
+            if (allSlides.length > 1) {
+                let current = 0;
+                const slides = allSlides;
+                const dots = dotsContainer ? dotsContainer.querySelectorAll('.slideshow-dot') : [];
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                let autoTimer = null;
+                let dragging = false;
+                let pointerId = null;
+                let startX = 0;
+                let startY = 0;
+                let dx = 0;
+                let axis = null;
+                let moved = false;
+                let startTime = 0;
+                let settleTimer = null;
+                let pendingIndex = null;
+
+                container.classList.add('is-swipeable');
+
+                function wrapIndex(index) {
+                    return (index + slides.length) % slides.length;
+                }
+
+                function setActiveDot(index) {
+                    const active = wrapIndex(index);
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === active);
+                    });
+                }
+
+                function clearDragStyles() {
+                    slides.forEach(slide => {
+                        slide.style.transition = 'none';
+                        slide.style.transform = '';
+                        slide.style.opacity = '';
+                        slide.style.visibility = '';
+                        slide.style.zIndex = '';
+                    });
+                    void container.offsetWidth;
+                    slides.forEach(slide => {
+                        slide.style.transition = '';
+                    });
+                }
+
+                function goToSlide(index) {
+                    cancelSettle();
+                    slides[current].classList.remove('active');
+                    if (dots[current]) dots[current].classList.remove('active');
+                    current = wrapIndex(index);
+                    slides[current].classList.add('active');
+                    if (dots[current]) dots[current].classList.add('active');
+                    paintWash(slides[current]);
+                    clearDragStyles();
+                }
+
+                function animateTo(index) {
+                    if (dragging) return;
+                    if (settleTimer) {
+                        clearTimeout(settleTimer);
+                        settleTimer = null;
+                        if (pendingIndex !== null) {
+                            const commit = pendingIndex;
+                            pendingIndex = null;
+                            goToSlide(commit);
+                        }
+                    }
+
+                    const next = wrapIndex(index);
+                    if (next === current) return;
+                    setActiveDot(next);
+                    if (reduceMotion) {
+                        goToSlide(next);
+                        return;
+                    }
+
+                    const dir = index >= current ? 1 : -1;
+                    const width = container.offsetWidth || 1;
+                    const active = slides[current];
+                    const incoming = slides[next];
+                    paintWash(incoming);
+                    const ms = 780;
+                    const ease = 'transform ' + ms + 'ms var(--ease-out)';
+
+                    slides.forEach(slide => {
+                        if (slide === active || slide === incoming) return;
+                        slide.style.transition = 'none';
+                        slide.style.opacity = '0';
+                        slide.style.visibility = 'hidden';
+                        slide.style.transform = '';
+                        slide.style.zIndex = '0';
+                    });
+
+                    incoming.style.transition = 'none';
+                    incoming.style.visibility = 'visible';
+                    incoming.style.opacity = '1';
+                    incoming.style.zIndex = '1';
+                    incoming.style.transform = 'translateX(' + (dir > 0 ? width : -width) + 'px)';
+
+                    active.style.transition = 'none';
+                    active.style.visibility = 'visible';
+                    active.style.opacity = '1';
+                    active.style.zIndex = '2';
+                    active.style.transform = 'translateX(0px)';
+
+                    void container.offsetWidth;
+
+                    active.style.transition = ease;
+                    active.style.transform = 'translateX(' + (dir > 0 ? -width : width) + 'px)';
+                    incoming.style.transition = ease;
+                    incoming.style.transform = 'translateX(0px)';
+
+                    pendingIndex = next;
+                    container.classList.add('is-settling');
+                    settleTimer = setTimeout(() => {
+                        settleTimer = null;
+                        container.classList.remove('is-settling');
+                        const commit = pendingIndex;
+                        pendingIndex = null;
+                        if (commit !== null) goToSlide(commit);
+                    }, ms);
+                }
+
+                function cancelSettle() {
+                    if (settleTimer) {
+                        clearTimeout(settleTimer);
+                        settleTimer = null;
+                    }
+                    pendingIndex = null;
+                    container.classList.remove('is-settling');
+                }
+
+                function applyDrag(delta) {
+                    const width = container.offsetWidth || 1;
+                    const dir = delta < 0 ? 1 : -1;
+                    const active = slides[current];
+                    const incoming = slides[wrapIndex(current + dir)];
+
+                    slides.forEach(slide => {
+                        if (slide === active || slide === incoming) return;
+                        slide.style.transition = 'none';
+                        slide.style.opacity = '0';
+                        slide.style.visibility = 'hidden';
+                        slide.style.transform = '';
+                        slide.style.zIndex = '0';
+                    });
+
+                    active.style.transition = 'none';
+                    active.style.visibility = 'visible';
+                    active.style.opacity = '1';
+                    active.style.zIndex = '2';
+                    active.style.transform = 'translateX(' + delta + 'px)';
+
+                    if (incoming !== active) {
+                        const incomingOffset = delta < 0 ? width + delta : -width + delta;
+                        incoming.style.transition = 'none';
+                        incoming.style.visibility = 'visible';
+                        incoming.style.opacity = '1';
+                        incoming.style.zIndex = '1';
+                        incoming.style.transform = 'translateX(' + incomingOffset + 'px)';
+                    }
+
+                    const shown = Math.abs(delta) > width / 2 ? wrapIndex(current + dir) : current;
+                    setActiveDot(shown);
+                }
+
+                function finishDrag(commit, done) {
+                    const width = container.offsetWidth || 1;
+                    const delta = dx;
+                    const dir = delta < 0 ? 1 : -1;
+                    const active = slides[current];
+                    const incoming = slides[wrapIndex(current + dir)];
+                    const snapMs = reduceMotion ? 0 : 420;
+                    const ease = 'transform ' + snapMs + 'ms var(--ease-out)';
+
+                    if (Math.abs(delta) < 1) {
+                        clearDragStyles();
+                        if (done) done();
+                        return;
+                    }
+
+                    if (!commit) {
+                        active.style.transition = ease;
+                        active.style.transform = 'translateX(0)';
+                        if (incoming !== active) {
+                            const parked = delta < 0 ? width : -width;
+                            incoming.style.transition = ease;
+                            incoming.style.transform = 'translateX(' + parked + 'px)';
+                        }
+                        pendingIndex = null;
+                        setActiveDot(current);
+                    } else {
+                        active.style.transition = ease;
+                        active.style.transform = 'translateX(' + (delta < 0 ? -width : width) + 'px)';
+                        if (incoming !== active) {
+                            incoming.style.transition = ease;
+                            incoming.style.transform = 'translateX(0)';
+                        }
+                        pendingIndex = wrapIndex(current + dir);
+                        setActiveDot(pendingIndex);
+                    }
+
+                    settleTimer = setTimeout(() => {
+                        settleTimer = null;
+                        if (pendingIndex !== null) {
+                            const next = pendingIndex;
+                            pendingIndex = null;
+                            goToSlide(next);
+                        } else {
+                            clearDragStyles();
+                        }
+                        if (done) done();
+                    }, snapMs);
+                }
+
+                container.addEventListener('pointerdown', (e) => {
+                    if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    if (settleTimer) {
+                        clearTimeout(settleTimer);
+                        settleTimer = null;
+                        if (pendingIndex !== null) {
+                            goToSlide(pendingIndex);
+                        } else {
+                            clearDragStyles();
+                        }
+                    }
+                    dragging = true;
+                    moved = false;
+                    axis = null;
+                    dx = 0;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startTime = Date.now();
+                    pointerId = e.pointerId;
+                    if (e.pointerType === 'mouse') {
+                        container.setPointerCapture(e.pointerId);
+                    }
+                    container.classList.add('is-dragging');
+                    clearInterval(autoTimer);
+                });
+
+                container.addEventListener('pointermove', (e) => {
+                    if (!dragging || e.pointerId !== pointerId) return;
+                    const moveX = e.clientX - startX;
+                    const moveY = e.clientY - startY;
+                    if (!axis) {
+                        if (Math.abs(moveX) < 8 && Math.abs(moveY) < 8) return;
+                        axis = Math.abs(moveX) > Math.abs(moveY) ? 'x' : 'y';
+                        if (axis === 'y') {
+                            dragging = false;
+                            container.classList.remove('is-dragging');
+                            if (container.hasPointerCapture(e.pointerId)) {
+                                container.releasePointerCapture(e.pointerId);
+                            }
+                            resetTimer();
+                            return;
+                        }
+                        if (e.pointerType !== 'mouse') {
+                            container.setPointerCapture(e.pointerId);
+                        }
+                    }
+                    if (axis !== 'x') return;
+                    if (Math.abs(moveX) > 8) moved = true;
+                    dx = moveX;
+                    applyDrag(dx);
+                });
+
+                function endDrag(e) {
+                    if (!dragging || e.pointerId !== pointerId) return;
+                    dragging = false;
+                    container.classList.remove('is-dragging');
+                    if (container.hasPointerCapture(e.pointerId)) {
+                        container.releasePointerCapture(e.pointerId);
+                    }
+                    if (axis !== 'x') {
+                        clearDragStyles();
+                        resetTimer();
+                        axis = null;
+                        dx = 0;
+                        return;
+                    }
+                    const width = container.offsetWidth || 1;
+                    const elapsed = Math.max(Date.now() - startTime, 1);
+                    const velocity = Math.abs(dx) / elapsed;
+                    const threshold = Math.max(48, width * 0.15);
+                    const commit = Math.abs(dx) > threshold || (Math.abs(dx) > 24 && velocity > 0.5);
+                    finishDrag(commit, resetTimer);
+                    axis = null;
+                    dx = 0;
+                }
+
+                container.addEventListener('pointerup', endDrag);
+                container.addEventListener('pointercancel', (e) => {
+                    if (!dragging || e.pointerId !== pointerId) return;
+                    dragging = false;
+                    container.classList.remove('is-dragging');
+                    axis = null;
+                    finishDrag(false, resetTimer);
+                    dx = 0;
+                });
+
+                container.addEventListener('click', (e) => {
+                    if (!moved) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    moved = false;
+                }, true);
+
+                dots.forEach(dot => {
+                    dot.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        animateTo(parseInt(dot.dataset.index, 10));
+                        resetTimer();
+                    });
+                });
+
+                function resetTimer() {
+                    clearInterval(autoTimer);
+                    autoTimer = setInterval(() => {
+                        if (dragging || settleTimer) return;
+                        animateTo(current + 1);
+                    }, 5000);
+                }
+
+                resetTimer();
+            }
+        } else {
+            // No featured programmes — hide the entire section
+            const section = document.getElementById('featured-slideshow');
+            if (section) section.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading featured programmes:', error);
+        const section = document.getElementById('featured-slideshow');
+        if (section) section.style.display = 'none';
     }
 }
 

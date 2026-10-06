@@ -1,0 +1,104 @@
+/* My bookings page */
+.lookup-card {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: clamp(1.75rem, 4vw, 2.5rem);
+    box-shadow: var(--sh-md);
+}
+
+.lookup-card h2 {
+    font-size: var(--fs-xl);
+    margin-bottom: var(--sp-1);
+}
+
+.lookup-card > p {
+    margin-bottom: var(--sp-5);
+}
+
+.bookings-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-5);
+}
+
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.booking-card {
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur);
+}
+
+.booking-card:hover {
+    border-color: var(--c-border-strong);
+    box-shadow: var(--sh-md);
+}
+
+.booking-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-bottom: var(--sp-4);
+    margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.booking-id {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--c-text-3);
+}
+
+.booking-head h3 {
+    margin-top: 0.2rem;
+    font-size: 1.15rem;
+}
+
+.booking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--sp-4);
+}
+
+.booking-grid dt,
+.booking-note span {
+    font-size: var(--fs-xs);
+    color: var(--c-text-3);
+}
+
+.booking-grid dd {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--c-text);
+}
+
+.booking-note {
+    margin-top: var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--c-surface);
+    border-radius: var(--r-md);
+}
+
+.booking-note p {
+    font-size: 0.925rem;
+}
+
+.booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: var(--sp-5);
+}

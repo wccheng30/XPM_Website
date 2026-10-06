@@ -40,11 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     break;
                     
-                case 'toggle_featured':
-                    $stmt = $pdo->prepare("UPDATE programmes SET is_featured = NOT is_featured, updated_at = NOW() WHERE id = ?");
-                    $stmt->execute([$programme_id]);
-                    $message = 'Programme featured status updated successfully!';
-                    break;
                     
                 case 'deactivate':
                     // Deactivate programme

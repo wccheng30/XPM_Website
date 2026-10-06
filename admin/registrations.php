@@ -95,24 +95,16 @@ if ($pdo) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programme Registrations - Admin Panel</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="css/registrations.css?v=20260930-4">
+    <link rel="stylesheet" href="css/registration-details.css?v=20260930-4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <!-- Header -->
-    <header class="admin-header">
-        <h1>
-            <i class="fas fa-graduation-cap"></i>
-            Programme Registrations Management
-        </h1>
-        <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($_SESSION['admin_username'] ?? 'Admin'); ?></span>
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </header>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Programme Registrations', 'fas fa-user-graduate'); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
@@ -122,7 +114,7 @@ if ($pdo) {
         <div class="card mb-3">
             <div class="card-body">
                 <h2 style="margin-bottom: 8px; color: #1e293b; font-size: 24px; font-weight: 700;">
-                    <i class="fas fa-graduation-cap" style="color: #3b82f6; margin-right: 12px;"></i>
+                    <i class="fas fa-graduation-cap" style="color: #111111; margin-right: 12px;"></i>
                     Programme Registrations
                 </h2>
                 <p style="color: #64748b; margin: 0; font-size: 16px;">Manage and review programme registrations from participants</p>
@@ -238,7 +230,7 @@ if ($pdo) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">
-                            <i class="fas fa-list" style="color: #3b82f6; margin-right: 8px;"></i>
+                            <i class="fas fa-list" style="color: #111111; margin-right: 8px;"></i>
                             All Registrations
                         </h3>
                         <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">
@@ -256,7 +248,7 @@ if ($pdo) {
             <div class="card-body">
                 <?php if (empty($registrations)): ?>
                     <div style="text-align: center; padding: 60px 20px; color: #64748b; background: #f8fafc; border-radius: 12px; margin: 20px 0;">
-                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #111111 0%, #111111 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px;">
                             <i class="fas fa-graduation-cap"></i>
                         </div>
                         <h3 style="margin-bottom: 12px; color: #374151; font-size: 24px; font-weight: 600;">No Registrations Yet</h3>
@@ -282,7 +274,7 @@ if ($pdo) {
                                     <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
                                         <td style="padding: 16px 12px;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
+                                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #111111 0%, #111111 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
                                                     <i class="fas fa-user-graduate"></i>
                                                 </div>
                                                 <div>
@@ -306,12 +298,12 @@ if ($pdo) {
                                         </td>
                                         <td style="padding: 16px 12px;">
                                             <div style="margin-bottom: 6px;">
-                                                <a href="mailto:<?php echo htmlspecialchars($registration['email']); ?>" style="color: #3b82f6; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px;">
+                                                <a href="mailto:<?php echo htmlspecialchars($registration['email']); ?>" style="color: #111111; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px;">
                                                     <i class="fas fa-envelope" style="font-size: 12px;"></i>
                                                     <?php echo htmlspecialchars($registration['email']); ?>
                                                 </a>
                                             </div>
-                                            <div style="margin-bottom: 6px; color: #7c3aed; font-size: 14px; display: flex; align-items: center; gap: 4px;">
+                                            <div style="margin-bottom: 6px; color: #111111; font-size: 14px; display: flex; align-items: center; gap: 4px;">
                                                 <i class="fas fa-id-card" style="font-size: 12px;"></i>
                                                 <?php echo htmlspecialchars($registration['ic_number'] ?? ''); ?>
                                             </div>
@@ -330,7 +322,7 @@ if ($pdo) {
                                             <!-- Quick info badges -->
                                             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px;">
                                                 <?php if ($registration['company']): ?>
-                                                    <span style="background: #f0f9ff; color: #0369a1; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: 500;">
+                                                    <span style="background: #f4f4f5; color: #0369a1; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: 500;">
                                                         <i class="fas fa-building" style="margin-right: 3px;"></i><?php echo htmlspecialchars($registration['company']); ?>
                                                     </span>
                                                 <?php endif; ?>
@@ -373,7 +365,7 @@ if ($pdo) {
                                         </td>
                                         <td style="padding: 16px 12px;">
                                             <div style="display: flex; gap: 8px; align-items: center;">
-                                                <button onclick="viewRegistration(<?php echo $registration['id']; ?>)" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.3)'">
+                                                <button onclick="viewRegistration(<?php echo $registration['id']; ?>)" style="background: linear-gradient(135deg, #111111 0%, #111111 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(17, 17, 17, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(17, 17, 17, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(17, 17, 17, 0.3)'">
                                                     <i class="fas fa-info-circle" style="font-size: 12px;"></i>
                                                     View Details
                                                 </button>
@@ -393,56 +385,13 @@ if ($pdo) {
         </div>
     </div>
 
-    <style>
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .status-pending {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #d97706;
-            border: 1px solid #f59e0b;
-        }
-        
-        .status-confirmed {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #16a34a;
-            border: 1px solid #22c55e;
-        }
-        
-        .status-waitlisted {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #2563eb;
-            border: 1px solid #3b82f6;
-        }
-        
-        .status-cancelled {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #dc2626;
-            border: 1px solid #ef4444;
-        }
-        
-        .status-blacklisted {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-            color: #ffffff;
-            border: 1px solid #111827;
-        }
-    </style>
 
     <!-- Registration Details Modal -->
     <div id="detailsModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s ease;">
         <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 95%; max-width: 800px; height: 85%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); transform: scale(0.9); transition: transform 0.3s ease;">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600;">
-                    <i class="fas fa-user-graduate" style="color: #3b82f6; margin-right: 8px;"></i>
+                    <i class="fas fa-user-graduate" style="color: #111111; margin-right: 8px;"></i>
                     Registration Details
                 </h3>
                 <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 20px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
@@ -460,7 +409,7 @@ if ($pdo) {
         <div class="modal-content" style="background-color: white; margin: 10% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); transform: scale(0.9); transition: transform 0.3s ease;">
             <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600;">
-                    <i class="fas fa-edit" style="color: #3b82f6; margin-right: 8px;"></i>
+                    <i class="fas fa-edit" style="color: #111111; margin-right: 8px;"></i>
                     Update Registration Status
                 </h3>
                 <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 20px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
@@ -472,7 +421,7 @@ if ($pdo) {
                 <input type="hidden" name="registration_id" id="registrationId">
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Status</label>
-                    <select name="status" id="statusSelect" required style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background-color: white; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                    <select name="status" id="statusSelect" class="form-control" required>
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="waitlisted">Waitlisted</option>
@@ -484,7 +433,7 @@ if ($pdo) {
                     <button type="button" class="btn btn-secondary" onclick="closeModal()" style="background: #6b7280; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                    <button type="submit" class="btn btn-primary" style="background: #111111; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
                         Update Status
                     </button>
                 </div>
@@ -506,7 +455,7 @@ if ($pdo) {
             
             detailsContent.innerHTML = `
                 <div style="text-align: center; padding: 40px 20px;">
-                    <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                    <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top: 3px solid #111111; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
                     <p style="color: #6b7280; margin: 0;">Loading registration details...</p>
                 </div>
             `;
@@ -631,7 +580,7 @@ if ($pdo) {
             
             modal.innerHTML = `
                 <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #3b82f6; margin-right: 12px; font-size: 20px;"></i>
+                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
                     <h3 style="margin: 0; color: #1e293b;">Export Registrations</h3>
                 </div>
                 
@@ -641,7 +590,7 @@ if ($pdo) {
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
-                    <select id="exportFormat" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white;">
+                    <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
                         <option value="sql">SQL (Database Script)</option>
@@ -652,7 +601,7 @@ if ($pdo) {
                     <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         <i class="fas fa-download" style="margin-right: 4px;"></i>
                         Export
                     </button>
@@ -671,7 +620,7 @@ if ($pdo) {
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="position: fixed"]');
+            const overlay = document.querySelector('[style*="z-index: 10000"]');
             if (overlay) {
                 overlay.remove();
             }
@@ -711,5 +660,6 @@ if ($pdo) {
             }, 1000);
         }
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

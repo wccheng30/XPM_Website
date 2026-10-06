@@ -172,25 +172,18 @@ if ($trainer['credentials']) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Trainer - XpressPoint Admin</title>
-    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-motion="admin">
+    <?php include_once 'includes/header.php'; renderAdminHeader('Edit Trainer', 'fas fa-edit', ['url' => 'trainers.php', 'label' => 'Trainers']); ?>
     <div class="admin-container">
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('trainers'); ?>
 
-        <!-- Header -->
-        <header class="admin-header">
-            <div class="header-content">
-                <h1><i class="fas fa-edit"></i> Edit Trainer</h1>
-                <div class="header-actions">
-                    <a href="trainers.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Trainers
-                    </a>
-                </div>
-            </div>
-        </header>
 
         <!-- Main Content -->
         <main class="admin-main">
@@ -377,5 +370,6 @@ if ($trainer['credentials']) {
             }
         });
     </script>
+    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>
