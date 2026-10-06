@@ -318,7 +318,10 @@ $month_names = [
         function showBookingDetails(bookingId) {
             // This would typically fetch booking details via AJAX
             // For now, we'll show a simple alert
-            alert('Booking ID: ' + bookingId + '\n\nThis would show detailed booking information including:\n- Customer details\n- Facility type\n- Time and date\n- Programme information\n- Booking status');
+            xpmAlert({
+                title: 'Booking ' + bookingId,
+                message: 'Detailed booking information would appear here, including customer details, facility type, time and date, programme information, and booking status.'
+            });
         }
         
         function closeModal() {

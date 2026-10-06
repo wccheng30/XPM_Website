@@ -449,7 +449,7 @@ if ($pdo) {
             
             if (!detailsModal || !detailsContent) {
                 console.error('Modal elements not found!');
-                alert('Error: Modal elements not found. Please refresh the page.');
+                xpmAlert('Modal elements were not found. Please refresh the page.');
                 return;
             }
             

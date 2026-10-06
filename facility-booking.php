@@ -733,23 +733,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             switch (currentStep) {
                 case 1:
                     if (!selectedFacility) {
-                        alert('Please select a facility first.');
+                        xpmAlert('Please select a facility first.');
                         return false;
                     }
                     break;
                 case 2:
                     if (!selectedDate) {
-                        alert('Please select a date.');
+                        xpmAlert('Please select a date.');
                         return false;
                     }
                     const startTime = document.getElementById('start_time').value;
                     const endTime = document.getElementById('end_time').value;
                     if (!startTime || !endTime) {
-                        alert('Please select both start and end times.');
+                        xpmAlert('Please select both start and end times.');
                         return false;
                     }
                     if (startTime >= endTime) {
-                        alert('End time must be after start time.');
+                        xpmAlert('End time must be after start time.');
                         return false;
                     }
                     break;
@@ -758,7 +758,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     for (let field of requiredFields) {
                         const input = document.getElementById(field);
                         if (!input.value.trim()) {
-                            alert(`Please fill in the ${input.previousElementSibling.textContent.replace('*', '').trim()}.`);
+                            xpmAlert(`Please fill in the ${input.previousElementSibling.textContent.replace('*', '').trim()}.`);
                             input.focus();
                             return false;
                         }
@@ -766,7 +766,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                 case 4:
                     if (!document.getElementById('agreeTerms').checked) {
-                        alert('Please agree to the terms and conditions.');
+                        xpmAlert('Please agree to the terms and conditions.');
                         return false;
                     }
                     break;
@@ -888,7 +888,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (attendeesCount > maxCapacity) {
                 attendeesInput.style.borderColor = '#ef4444';
-                alert(`Maximum capacity for ${facilities[selectedFacility].name} is ${maxCapacity} people.`);
+                xpmAlert(`Maximum capacity for ${facilities[selectedFacility].name} is ${maxCapacity} people.`);
                 attendeesInput.value = maxCapacity;
             }
             
@@ -1011,7 +1011,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (startTime && endTime && startTime >= endTime) {
                 this.style.borderColor = '#ef4444';
-                alert('End time must be after start time');
+                xpmAlert('End time must be after start time');
                 this.value = '';
             } else {
                 this.style.borderColor = '#10b981';
@@ -1026,7 +1026,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (startTime && endTime && startTime >= endTime) {
                 this.style.borderColor = '#ef4444';
-                alert('End time must be after start time');
+                xpmAlert('End time must be after start time');
                 this.value = '';
             } else {
                 this.style.borderColor = '#10b981';

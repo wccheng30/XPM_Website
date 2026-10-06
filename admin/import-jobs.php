@@ -481,7 +481,7 @@ function formatTime($time) {
                     <?php endforeach; ?>
                     
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure you want to import these jobs?')">
+                        <button type="submit" class="btn btn-success" data-confirm-title="Import these jobs?" data-confirm="The jobs in this file will be added to the site." data-confirm-ok="Import" data-confirm-icon="fas fa-upload">
                             <i class="fas fa-upload"></i>
                             Import Jobs
                         </button>

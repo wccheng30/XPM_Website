@@ -44,6 +44,7 @@ function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null
             </a>
         </div>
     </header>
+    <script src="../assets/js/xpm-dialog.js?v=20261006-5"></script>
     <script>
         (function () {
             function applyTheme(dark) {

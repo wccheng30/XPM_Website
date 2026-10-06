@@ -830,7 +830,7 @@ if ($pdo) {
              
              if (!detailsModal || !detailsContent) {
                  console.error('Modal elements not found!');
-                 alert('Error: Modal elements not found. Please refresh the page.');
+                 xpmAlert('Modal elements were not found. Please refresh the page.');
                  return;
              }
              
@@ -983,7 +983,7 @@ if ($pdo) {
              
              if (!resumeModal || !resumeContent) {
                  console.error('Resume modal elements not found!');
-                 alert('Error: Resume modal elements not found. Please refresh the page.');
+                 xpmAlert('Resume preview could not be opened. Please refresh the page.');
                  return;
              }
              
@@ -1051,7 +1051,7 @@ if ($pdo) {
              
              if (!coverLetterModal || !coverLetterContent) {
                  console.error('Cover letter modal elements not found!');
-                 alert('Error: Cover letter modal elements not found. Please refresh the page.');
+                 xpmAlert('Cover letter preview could not be opened. Please refresh the page.');
                  return;
              }
              

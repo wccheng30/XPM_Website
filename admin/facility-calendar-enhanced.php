@@ -410,7 +410,7 @@ $month_names = [
                 })
                 .catch(error => {
                     console.error('Error fetching booking details:', error);
-                    alert('Error loading booking details');
+                    xpmAlert('Booking details could not be loaded.');
                 });
         }
         

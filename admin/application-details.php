@@ -517,6 +517,7 @@ if (!$application) {
     </div>
 </div>
 
+<script src="../assets/js/xpm-dialog.js?v=20261006-5"></script>
 <script>
 function updateStatus(applicationId, currentStatus) {
     document.getElementById('applicationId').value = applicationId;
@@ -547,7 +548,7 @@ function previewResume(resumePath, candidateName) {
     
     if (!resumeModal || !resumeContent) {
         console.error('Resume modal elements not found!');
-        alert('Error: Resume modal elements not found. Please refresh the page.');
+        xpmAlert('Resume preview could not be opened. Please refresh the page.');
         return;
     }
     
@@ -611,7 +612,7 @@ function previewCoverLetter(coverLetterPath, candidateName) {
     
     if (!coverLetterModal || !coverLetterContent) {
         console.error('Cover letter modal elements not found!');
-        alert('Error: Cover letter modal elements not found. Please refresh the page.');
+        xpmAlert('Cover letter preview could not be opened. Please refresh the page.');
         return;
     }
     
@@ -700,7 +701,13 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
         window.parent.deleteApplication(applicationId, applicantName);
     } else {
         // Fallback: confirm dialog and form submit
-        if (confirm('Are you sure you want to delete the application from ' + applicantName + '? This action cannot be undone.')) {
+        xpmConfirm({
+            title: 'Delete this application?',
+            message: 'Delete the application from ' + applicantName + '? This action cannot be undone.',
+            confirmText: 'Delete',
+            icon: 'fas fa-trash'
+        }).then(function (ok) {
+            if (!ok) return;
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = 'applications.php';
@@ -719,7 +726,7 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
             
             document.body.appendChild(form);
             form.submit();
-        }
+        });
     }
 }
 </script>

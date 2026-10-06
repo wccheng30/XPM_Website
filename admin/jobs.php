@@ -266,7 +266,7 @@ if ($pdo) {
                                     <form method="POST" action="job-actions.php" style="display: inline;">
                                         <input type="hidden" name="action" value="duplicate">
                                         <input type="hidden" name="job_id" value="<?php echo $job['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Duplicate this job posting? A copy will be created as inactive.')">
+                                        <button type="submit" class="btn btn-sm btn-info" data-confirm-title="Duplicate this job?" data-confirm="A copy will be created as inactive." data-confirm-ok="Duplicate" data-confirm-icon="fas fa-copy">
                                             <i class="fas fa-copy"></i>
                                             Duplicate
                                         </button>
@@ -275,7 +275,7 @@ if ($pdo) {
                                         <form method="POST" action="job-actions.php" style="display: inline;">
                                             <input type="hidden" name="action" value="deactivate">
                                             <input type="hidden" name="job_id" value="<?php echo $job['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this job posting?')">
+                                            <button type="submit" class="btn btn-sm btn-warning" data-confirm-title="Deactivate this job?" data-confirm="This job posting will be marked inactive." data-confirm-ok="Deactivate" data-confirm-icon="fas fa-pause">
                                                 <i class="fas fa-pause"></i>
                                                 Deactivate
                                             </button>
@@ -294,7 +294,7 @@ if ($pdo) {
                                     <form method="POST" action="job-actions.php" style="display: inline;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="job_id" value="<?php echo $job['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this job posting? This action cannot be undone.')">
+                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Delete this job?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
                                             <i class="fas fa-trash"></i>
                                             Delete
                                         </button>

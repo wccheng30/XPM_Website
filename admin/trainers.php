@@ -274,10 +274,10 @@ $total_pages = ceil($total_trainers / $per_page);
                                         </form>
                                         
                                         <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this trainer? This action cannot be undone.');">
+                                        <form method="POST" style="display: inline;">
                                             <input type="hidden" name="trainer_id" value="<?php echo $trainer['id']; ?>">
                                             <input type="hidden" name="action" value="delete">
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Delete this trainer?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
                                         </form>

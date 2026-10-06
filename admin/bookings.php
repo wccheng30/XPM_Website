@@ -357,7 +357,13 @@ $status_options = [
     
     <script>
         function confirmBooking(bookingId) {
-            if (confirm('Are you sure you want to confirm this booking?')) {
+            xpmConfirm({
+                title: 'Confirm this booking?',
+                message: 'The booking status will change to confirmed.',
+                confirmText: 'Confirm',
+                icon: 'fas fa-check'
+            }).then(function (ok) {
+                if (!ok) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -366,7 +372,7 @@ $status_options = [
                 `;
                 document.body.appendChild(form);
                 form.submit();
-            }
+            });
         }
         
         function cancelBooking(bookingId) {
@@ -375,7 +381,13 @@ $status_options = [
         }
         
         function completeBooking(bookingId) {
-            if (confirm('Are you sure you want to mark this booking as completed?')) {
+            xpmConfirm({
+                title: 'Mark this booking as completed?',
+                message: 'The booking status will change to completed.',
+                confirmText: 'Mark completed',
+                icon: 'fas fa-check-double'
+            }).then(function (ok) {
+                if (!ok) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -384,7 +396,7 @@ $status_options = [
                 `;
                 document.body.appendChild(form);
                 form.submit();
-            }
+            });
         }
         
         function closeModal() {

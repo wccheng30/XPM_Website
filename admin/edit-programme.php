@@ -930,7 +930,13 @@ function handleFileUpload(input) {
 
         // Function to remove image
         function removeImage(imageType) {
-            if (confirm('Are you sure you want to remove this image?')) {
+            xpmConfirm({
+                title: 'Remove this image?',
+                message: 'The image will be removed when you save the form.',
+                confirmText: 'Remove',
+                icon: 'fas fa-trash'
+            }).then(function (ok) {
+                if (!ok) return;
                 // Set the remove flag
                 document.getElementById('remove_' + imageType).value = '1';
                 
@@ -956,7 +962,7 @@ function handleFileUpload(input) {
                         message.remove();
                     }
                 }, 3000);
-            }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {

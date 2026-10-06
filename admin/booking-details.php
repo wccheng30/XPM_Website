@@ -253,48 +253,66 @@ $status_options = [
     </div>
     
     <script>
-        function confirmBooking(bookingId) {
-            if (confirm('Are you sure you want to confirm this booking?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'bookings.php';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="confirm">
-                    <input type="hidden" name="booking_id" value="${bookingId}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
+        function postBookingAction(bookingId, action, extra) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'bookings.php';
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = action;
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'booking_id';
+            idInput.value = bookingId;
+            form.appendChild(actionInput);
+            form.appendChild(idInput);
+            if (extra) {
+                Object.keys(extra).forEach(function (name) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = extra[name];
+                    form.appendChild(input);
+                });
             }
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function confirmBooking(bookingId) {
+            xpmConfirm({
+                title: 'Confirm this booking?',
+                message: 'The booking status will change to confirmed.',
+                confirmText: 'Confirm',
+                icon: 'fas fa-check'
+            }).then(function (ok) {
+                if (ok) postBookingAction(bookingId, 'confirm');
+            });
         }
         
         function cancelBooking(bookingId) {
-            const reason = prompt('Please provide a reason for cancellation:');
-            if (reason !== null) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'bookings.php';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="cancel">
-                    <input type="hidden" name="booking_id" value="${bookingId}">
-                    <input type="hidden" name="cancellation_reason" value="${reason}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
+            xpmPrompt({
+                title: 'Cancel this booking?',
+                message: 'Please provide a reason for cancellation.',
+                placeholder: 'Reason',
+                confirmText: 'Cancel booking',
+                icon: 'fas fa-xmark'
+            }).then(function (reason) {
+                if (reason === null) return;
+                postBookingAction(bookingId, 'cancel', { cancellation_reason: reason });
+            });
         }
         
         function completeBooking(bookingId) {
-            if (confirm('Are you sure you want to mark this booking as completed?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'bookings.php';
-                form.innerHTML = `
-                    <input type="hidden" name="action" value="complete">
-                    <input type="hidden" name="booking_id" value="${bookingId}">
-                `;
-                document.body.appendChild(form);
-                form.submit();
-            }
+            xpmConfirm({
+                title: 'Mark this booking as completed?',
+                message: 'The booking status will change to completed.',
+                confirmText: 'Mark completed',
+                icon: 'fas fa-check-double'
+            }).then(function (ok) {
+                if (ok) postBookingAction(bookingId, 'complete');
+            });
         }
     </script>
     <script src="../assets/js/motion.js?v=20261002-10"></script>

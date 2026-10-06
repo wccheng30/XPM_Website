@@ -270,10 +270,10 @@ $total_pages = ceil($total_trainers / $per_page);
                                                         Edit
                                                     </a>
                                                     <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
-                                                    <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Are you sure you want to delete this person from the blacklist? This action cannot be undone.');">
+                                                    <form method="POST" style="margin: 0; display: inline;">
                                                         <input type="hidden" name="trainer_id" value="<?php echo $person['id']; ?>">
                                                         <input type="hidden" name="action" value="delete">
-                                                        <button type="submit" class="btn btn-sm btn-danger" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
+                                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Remove from blacklist?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
                                                             <i class="fas fa-trash" style="font-size: 11px;"></i>
                                                             Delete
                                                         </button>

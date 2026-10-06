@@ -316,7 +316,13 @@ $facility_types = [
     
     <script>
         function createFacilityBooking(programmeId) {
-            if (confirm('Create facility booking for this programme?')) {
+            xpmConfirm({
+                title: 'Create facility booking?',
+                message: 'A facility booking will be created for this programme.',
+                confirmText: 'Create',
+                icon: 'fas fa-calendar-plus'
+            }).then(function (ok) {
+                if (!ok) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -325,7 +331,7 @@ $facility_types = [
                 `;
                 document.body.appendChild(form);
                 form.submit();
-            }
+            });
         }
         
         function editFacilityBooking(programmeId) {
@@ -336,7 +342,13 @@ $facility_types = [
         }
         
         function deleteFacilityBooking(programmeId) {
-            if (confirm('Delete facility booking for this programme? This action cannot be undone.')) {
+            xpmConfirm({
+                title: 'Delete facility booking?',
+                message: 'This action cannot be undone.',
+                confirmText: 'Delete',
+                icon: 'fas fa-trash'
+            }).then(function (ok) {
+                if (!ok) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -345,12 +357,18 @@ $facility_types = [
                 `;
                 document.body.appendChild(form);
                 form.submit();
-            }
+            });
         }
         
         function toggleFacilityRequirement(programmeId, requiresFacility) {
             const action = requiresFacility ? 'Enable' : 'Disable';
-            if (confirm(`${action} facility requirement for this programme?`)) {
+            xpmConfirm({
+                title: action + ' facility requirement?',
+                message: action + ' the facility requirement for this programme.',
+                confirmText: action,
+                icon: 'fas fa-building'
+            }).then(function (ok) {
+                if (!ok) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -360,7 +378,7 @@ $facility_types = [
                 `;
                 document.body.appendChild(form);
                 form.submit();
-            }
+            });
         }
         
         function closeModal() {

@@ -211,10 +211,10 @@ $xpm_status_badges = [
                                         <i class="fas fa-envelope"></i> Contact support
                                     </a>
                                     <?php if ($booking['status'] === 'pending'): ?>
-                                    <form method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                    <form method="POST">
                                         <input type="hidden" name="booking_id" value="<?php echo $booking['id']; ?>">
                                         <input type="hidden" name="customer_email" value="<?php echo htmlspecialchars($booking['customer_email']); ?>">
-                                        <button type="submit" name="cancel_booking" class="btn btn-danger btn-sm">
+                                        <button type="submit" name="cancel_booking" class="btn btn-danger btn-sm" data-confirm-title="Cancel this booking?" data-confirm="This booking will be cancelled." data-confirm-ok="Cancel booking" data-confirm-icon="fas fa-xmark">
                                             <i class="fas fa-xmark"></i> Cancel booking
                                         </button>
                                     </form>

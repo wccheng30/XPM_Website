@@ -552,7 +552,7 @@ function performBlacklistImport($data, $mapping) {
                     <?php endforeach; ?>
                     
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="return confirm('Are you sure you want to import <?php echo count($import_data); ?> blacklist entries?')">
+                        <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;" data-confirm-title="Import blacklist entries?" data-confirm="Import <?php echo count($import_data); ?> blacklist entries?" data-confirm-ok="Import" data-confirm-icon="fas fa-upload">
                             <i class="fas fa-upload"></i>
                             Import <?php echo count($import_data); ?> Entries
                         </button>
@@ -604,7 +604,7 @@ function performBlacklistImport($data, $mapping) {
             if (file) {
                 // Validate file type
                 if (!file.name.toLowerCase().endsWith('.csv')) {
-                    alert('Please select a CSV file.');
+                    xpmAlert('Please select a CSV file.');
                     return;
                 }
                 

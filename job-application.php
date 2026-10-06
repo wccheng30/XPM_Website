@@ -1284,7 +1284,7 @@ if ($pdo) {
                     
                         // Validate type by extension (MIME is unreliable across OS/browsers)
                         if (!isAllowedApplicationDoc(file)) {
-                            alert('Please select a PDF or Word file (.pdf, .doc, .docx).');
+                            xpmAlert('Please select a PDF or Word file (.pdf, .doc, .docx).');
                             clearFileSelection();
                             return;
                         }
@@ -1292,7 +1292,7 @@ if ($pdo) {
                         // Validate file size (5MB)
                         const maxSize = 5 * 1024 * 1024; // 5MB in bytes
                         if (file.size > maxSize) {
-                            alert('File size must be less than 5MB.');
+                            xpmAlert('File size must be less than 5MB.');
                             clearFileSelection();
                             return;
                         }
@@ -1379,7 +1379,7 @@ if ($pdo) {
                     coverLetterUploadIcon.style.color = '#2563eb';
                     
                     if (!isAllowedApplicationDoc(file)) {
-                        alert('Please select a PDF or Word file (.pdf, .doc, .docx).');
+                        xpmAlert('Please select a PDF or Word file (.pdf, .doc, .docx).');
                         clearCoverLetterFileSelection();
                         return;
                     }
@@ -1387,7 +1387,7 @@ if ($pdo) {
                     // Validate file size (5MB)
                     const maxSize = 5 * 1024 * 1024; // 5MB in bytes
                     if (file.size > maxSize) {
-                        alert('Cover letter file size must be less than 5MB.');
+                        xpmAlert('Cover letter file size must be less than 5MB.');
                         clearCoverLetterFileSelection();
                         return;
                     }
@@ -1440,13 +1440,13 @@ if ($pdo) {
                         const file = fileInput.files[0];
                         if (!file) {
                             e.preventDefault();
-                            alert('Please select a resume file to upload.');
+                            xpmAlert('Please select a resume file to upload.');
                             fileInput.focus();
                             return false;
                         }
                         if (!isAllowedApplicationDoc(file)) {
                             e.preventDefault();
-                            alert('Please upload a resume as PDF or Word (.pdf, .doc, .docx).');
+                            xpmAlert('Please upload a resume as PDF or Word (.pdf, .doc, .docx).');
                             fileInput.focus();
                             return false;
                         }

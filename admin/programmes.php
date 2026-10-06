@@ -311,7 +311,7 @@ if ($pdo) {
                                     <form method="POST" action="programme-actions.php" style="display: contents;">
                                         <input type="hidden" name="action" value="duplicate">
                                         <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-info" onclick="return confirm('Duplicate this training programme? A copy will be created as inactive.')">
+                                        <button type="submit" class="btn btn-sm btn-info" data-confirm-title="Duplicate this programme?" data-confirm="A copy will be created as inactive." data-confirm-ok="Duplicate" data-confirm-icon="fas fa-copy">
                                             <i class="fas fa-copy"></i>
                                             Duplicate
                                         </button>
@@ -320,7 +320,7 @@ if ($pdo) {
                                         <form method="POST" action="programme-actions.php" style="display: contents;">
                                             <input type="hidden" name="action" value="deactivate">
                                             <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this training programme?')">
+                                            <button type="submit" class="btn btn-sm btn-warning" data-confirm-title="Deactivate this programme?" data-confirm="This training programme will be marked inactive." data-confirm-ok="Deactivate" data-confirm-icon="fas fa-pause">
                                                 <i class="fas fa-pause"></i>
                                                 Deactivate
                                             </button>
@@ -339,7 +339,7 @@ if ($pdo) {
                                     <form method="POST" action="programme-actions.php" style="margin: 0;">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this training programme? This action cannot be undone.')">
+                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Delete this programme?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
                                             <i class="fas fa-trash"></i>
                                             Delete
                                         </button>

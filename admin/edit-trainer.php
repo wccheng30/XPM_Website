@@ -328,7 +328,7 @@ if ($trainer['credentials']) {
                         <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
                         <a href="trainers.php?action=delete&id=<?php echo $trainer['id']; ?>" 
                            class="btn btn-danger" 
-                           onclick="return confirm('Are you sure you want to delete this trainer? This action cannot be undone.');">
+                           data-confirm-title="Delete this trainer?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
                             <i class="fas fa-trash"></i> Delete Trainer
                         </a>
                         <?php endif; ?>
