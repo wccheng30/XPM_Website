@@ -21,7 +21,7 @@
                 <span class="eyebrow" data-reveal><i class="fas fa-shield-halved"></i> Legal</span>
                 <h1 data-split>Privacy Policy</h1>
                 <p class="lead" data-reveal>How we collect, use, disclose and protect your personal data.</p>
-                <p class="page-hero-meta" data-reveal>Last updated: 30 September 2026</p>
+                <p class="page-hero-meta" data-reveal>Last updated: 8 October 2026</p>
             </div>
         </header>
 
@@ -57,7 +57,7 @@
                 <h2>3. How We Collect Your Data</h2>
                 <ul>
                     <li>Directly from you when you fill in forms, register for programmes, apply for jobs, book facilities, or contact us.</li>
-                    <li>Automatically through cookies, similar technologies, and server logs when you browse our website.</li>
+                    <li>From server logs when you browse our website, and from cookies or browser local storage only where our <a href="cookie-policy.php">Cookie Policy</a> says so. Most public pages do not set a cookie.</li>
                     <li>From third parties where permitted by law (for example, referees you provide for recruitment).</li>
                 </ul>
 
@@ -69,6 +69,7 @@
                     <li>Process job applications and manage recruitment.</li>
                     <li>Manage facility bookings and related operational arrangements.</li>
                     <li>Send service-related notices, confirmations, and updates.</li>
+                    <li>Send marketing and promotional communications about our services, training programmes, events, and offers, where you have asked us to contact you or where the law allows it. You can opt out at any time by contacting <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a>.</li>
                     <li>Improve website performance, security, and user experience.</li>
                     <li>Comply with legal, regulatory, and audit obligations.</li>
                     <li>Protect our rights, prevent fraud, and maintain the integrity of our systems.</li>
@@ -104,7 +105,7 @@
                 <p>To exercise these rights, contact us at <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a> or the address above. We may need to verify your identity before responding.</p>
 
                 <h2>10. Cookies</h2>
-                <p>Our website may use cookies and similar technologies. For details, please read our <a href="cookie-policy.php">Cookie Policy</a>.</p>
+                <p>We do not use cookies for marketing or promotion. Cookies and browser local storage are used only as described in our <a href="cookie-policy.php">Cookie Policy</a>.</p>
 
                 <h2>11. Third-Party Links</h2>
                 <p>Our website may contain links to third-party sites (for example LinkedIn, Facebook, Instagram, or WhatsApp). We are not responsible for the privacy practices of those sites. Please review their policies separately.</p>

@@ -9,6 +9,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 // Handle AJAX search suggestions
 if (isset($_GET['ajax_search']) && $_GET['ajax_search']) {
@@ -65,6 +66,7 @@ $offset = ($page - 1) * $per_page;
 
 $pdo = get_db_connection();
 $contacts = [];
+$blacklist_lookup = [];
 $total_contacts = 0;
 $total_pages = 0;
 
@@ -103,6 +105,7 @@ if ($pdo) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $contacts = $stmt->fetchAll();
+        $blacklist_lookup = load_blacklist_lookup($pdo);
         
     } catch (PDOException $e) {
         // Handle error silently for demo
@@ -136,8 +139,8 @@ $status_labels = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/contacts.css?v=20260930-4">
+    <link rel="stylesheet" href="admin-styles.css?v=20261006-3">
+    <link rel="stylesheet" href="css/contacts.css?v=20261006-3">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Contacts', 'fas fa-users'); ?>
@@ -255,15 +258,25 @@ $status_labels = [
         <!-- Contacts List -->
             <?php if (!empty($contacts)): ?>
             <div style="display: grid; gap: 20px;">
-                <?php foreach ($contacts as $contact): ?>
-                    <div class="card contact-card">
+                <?php foreach ($contacts as $contact):
+                    $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
+                    $is_blacklisted = (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null;
+                ?>
+                    <div class="card contact-card<?php echo $is_blacklisted ? ' is-blacklisted' : ''; ?>">
                         <div class="card-body">
                             <!-- Contact Header -->
                             <div class="contact-info" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                 <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600;">
-                                        <i class="fas fa-user" style="color: #111111; margin-right: 8px;"></i>
-                                        <?php echo htmlspecialchars($contact['name']); ?>
+                                    <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <span>
+                                            <i class="fas fa-<?php echo $is_blacklisted ? 'user-slash' : 'user'; ?>" style="color: <?php echo $is_blacklisted ? '#b91c1c' : '#111111'; ?>; margin-right: 8px;"></i>
+                                            <?php echo htmlspecialchars($contact['name']); ?>
+                                        </span>
+                                        <?php if ($is_blacklisted): ?>
+                                        <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">
+                                            <i class="fas fa-ban"></i> Blacklisted
+                                        </span>
+                                        <?php endif; ?>
                                     </h3>
                                     <div class="contact-meta" style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
                                         <div style="color: #64748b; font-size: 14px;">

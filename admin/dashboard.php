@@ -9,6 +9,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 // Include shared database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 // Get statistics
 $pdo = get_db_connection();
@@ -37,6 +38,7 @@ $stats = [
 $recent_contacts = [];
 $recent_custom_requests = [];
 $interest_breakdown = [];
+$blacklist_lookup = [];
 
 if ($pdo) {
     try {
@@ -127,6 +129,7 @@ if ($pdo) {
         $stmt = $pdo->query("SELECT COUNT(*) FROM trainers WHERE is_active = 1");
         $stats['active_trainers'] = $stmt->fetchColumn();
         
+        $blacklist_lookup = load_blacklist_lookup($pdo);
     } catch (PDOException $e) {
         // Handle error silently for demo
     }
@@ -157,7 +160,7 @@ foreach ($interest_breakdown as $interest_row) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <link rel="stylesheet" href="admin-styles.css?v=20261006-3">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Dashboard', 'fas fa-tachometer-alt'); ?>
@@ -302,13 +305,21 @@ foreach ($interest_breakdown as $interest_row) {
                     </h3>
                     <?php if (!empty($recent_contacts)): ?>
                         <div class="recent-list">
-                            <?php foreach ($recent_contacts as $contact): ?>
-                                <div class="recent-item">
+                            <?php foreach ($recent_contacts as $contact):
+                                $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
+                                $is_blacklisted = (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null;
+                            ?>
+                                <div class="recent-item<?php echo $is_blacklisted ? ' is-blacklisted' : ''; ?>">
                                     <div class="recent-avatar">
                                         <i class="fas fa-user"></i>
                                     </div>
                                     <div class="recent-info">
-                                        <div class="recent-name"><?php echo htmlspecialchars($contact['name']); ?></div>
+                                        <div class="recent-name">
+                                            <?php echo htmlspecialchars($contact['name']); ?>
+                                            <?php if ($is_blacklisted): ?>
+                                            <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">Blacklisted</span>
+                                            <?php endif; ?>
+                                        </div>
                                         <div class="recent-email"><?php echo htmlspecialchars($contact['email']); ?></div>
                                         <?php if ($contact['company']): ?>
                                             <div class="recent-company"><?php echo htmlspecialchars($contact['company']); ?></div>
@@ -345,13 +356,21 @@ foreach ($interest_breakdown as $interest_row) {
                             Custom Requests
                         </h3>
                         <div class="custom-list">
-                            <?php foreach ($recent_custom_requests as $contact): ?>
-                                <div class="custom-item">
+                            <?php foreach ($recent_custom_requests as $contact):
+                                $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
+                                $is_blacklisted = (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null;
+                            ?>
+                                <div class="custom-item<?php echo $is_blacklisted ? ' is-blacklisted' : ''; ?>">
                                     <div class="custom-avatar">
                                         <i class="fas fa-user"></i>
                                     </div>
                                     <div class="custom-info">
-                                        <div class="custom-name"><?php echo htmlspecialchars($contact['name']); ?></div>
+                                        <div class="custom-name">
+                                            <?php echo htmlspecialchars($contact['name']); ?>
+                                            <?php if ($is_blacklisted): ?>
+                                            <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">Blacklisted</span>
+                                            <?php endif; ?>
+                                        </div>
                                         <div class="custom-email"><?php echo htmlspecialchars($contact['email']); ?></div>
                                         <div class="custom-date"><?php echo date('M j', strtotime($contact['created_at'])); ?></div>
                                     </div>

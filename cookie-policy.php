@@ -21,7 +21,7 @@
                 <span class="eyebrow" data-reveal><i class="fas fa-cookie-bite"></i> Legal</span>
                 <h1 data-split>Cookie Policy</h1>
                 <p class="lead" data-reveal>How we use cookies and similar technologies on our website.</p>
-                <p class="page-hero-meta" data-reveal>Last updated: 30 September 2026</p>
+                <p class="page-hero-meta" data-reveal>Last updated: 8 October 2026</p>
             </div>
         </header>
 
@@ -38,69 +38,39 @@
                 <p>Cookies are small text files placed on your device when you visit a website. They help websites function properly, remember preferences, and understand how visitors use the site. Similar technologies include local storage, session storage, and pixels.</p>
 
                 <h2>2. How We Use Cookies</h2>
-                <p>We use cookies and similar technologies to:</p>
+                <p>Ordinary browsing of our public website does not set a cookie. We set a cookie only where a page needs a short-lived session:</p>
                 <ul>
-                    <li>Enable core website features and secure form submissions.</li>
-                    <li>Maintain session state for browsing, bookings, and administrative access where applicable.</li>
-                    <li>Remember preferences that improve your experience.</li>
-                    <li>Measure website performance and usage (including optional analytics tools if enabled).</li>
-                    <li>Support content delivery from trusted third-party providers such as fonts and icon libraries.</li>
+                    <li>Programme registration uses a session cookie so the page can keep a temporary server session while you use that form.</li>
+                    <li>The admin area uses a session cookie to keep staff signed in.</li>
                 </ul>
+                <p>We do not use marketing, promotional, or advertising cookies. We do not use analytics cookies.</p>
 
-                <h2>3. Types of Cookies We Use</h2>
-
-                <h3>Essential / Strictly Necessary Cookies</h3>
-                <p>These cookies are required for the website to operate. They enable navigation, security, form processing, and session management. The website may not function properly without them.</p>
-
-                <h3>Functional Cookies</h3>
-                <p>These cookies remember choices you make (such as interface preferences) and help provide enhanced, more personalized features.</p>
-
-                <h3>Performance / Analytics Cookies</h3>
-                <p>If analytics tools are enabled on our website, these cookies help us understand how visitors interact with pages so we can improve content and usability. Data collected through analytics is typically aggregated or pseudonymized.</p>
-
-                <h3>Third-Party Cookies</h3>
-                <p>Some cookies may be set by third-party services integrated into our site, including:</p>
-                <ul>
-                    <li><strong>Google Fonts</strong> – to load website typography.</li>
-                    <li><strong>Font Awesome / CDN providers</strong> – to deliver icons and static assets.</li>
-                    <li><strong>Social media platforms</strong> – if you click links to LinkedIn, Facebook, Instagram, WhatsApp, or similar services.</li>
-                </ul>
-                <p>These third parties may process data under their own privacy and cookie policies.</p>
-
-                <h2>4. Cookies We May Set</h2>
+                <h2>3. Cookies We Set</h2>
                 <div class="legal-table-wrap">
                     <table class="legal-table">
                         <thead>
                             <tr>
-                                <th>Category</th>
+                                <th>Name</th>
+                                <th>Where it is set</th>
                                 <th>Purpose</th>
-                                <th>Typical Duration</th>
+                                <th>Duration</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Session / essential</td>
-                                <td>Maintain active browsing sessions, form continuity, and site security</td>
-                                <td>Session or short-term</td>
-                            </tr>
-                            <tr>
-                                <td>Functional</td>
-                                <td>Store user interface preferences and similar settings</td>
-                                <td>Session to persistent</td>
-                            </tr>
-                            <tr>
-                                <td>Analytics (if enabled)</td>
-                                <td>Measure page views, traffic sources, and engagement</td>
-                                <td>Persistent (varies by provider)</td>
-                            </tr>
-                            <tr>
-                                <td>Third-party content</td>
-                                <td>Support fonts, icons, CDNs, and linked social platforms</td>
-                                <td>As set by the third party</td>
+                                <td>PHPSESSID</td>
+                                <td>Programme registration and the admin area</td>
+                                <td>Essential session cookie for that page or signed-in admin session</td>
+                                <td>Browser session</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <p>If you block this cookie, programme registration and admin sign-in may not work. The rest of the public website does not need it.</p>
+
+                <h2>4. What We Do Not Use</h2>
+                <p>We do not place cookies to measure advertising, build marketing profiles, or track you across other websites. We also do not place analytics cookies.</p>
+                <p>Fonts are loaded from Google Fonts and icons from the Font Awesome CDN. Those requests do not place cookies on this website. Links to LinkedIn, Facebook, Instagram, and WhatsApp take you to those services. Any cookies they set are on their own sites and are covered by their policies, not ours.</p>
 
                 <h2>5. Managing Cookies</h2>
                 <p>Most browsers allow you to control cookies through settings. You can usually:</p>
@@ -110,11 +80,11 @@
                     <li>Block cookies from all or specific websites.</li>
                     <li>Set preferences before accepting cookies.</li>
                 </ul>
-                <p>If you disable essential cookies, some parts of our website (such as forms, registrations, or bookings) may not work correctly.</p>
+                <p>If you disable the session cookie, programme registration and admin sign-in may not work. Other public pages do not rely on cookies.</p>
                 <p>Browser help pages typically explain cookie controls for Chrome, Firefox, Safari, Edge, and other browsers.</p>
 
-                <h2>6. Local Storage and Similar Technologies</h2>
-                <p>In addition to cookies, our website may use browser local storage, session storage, or service workers to improve performance and functionality. These technologies are managed by your browser settings in a similar way to cookies.</p>
+                <h2>6. Local Storage</h2>
+                <p>Programme registration and job application pages can save an unfinished form in your browser's local storage. That draft stays on your device until you submit the form or the draft is cleared. It is not a cookie and it is not sent to our server until you submit the form. You can remove it by clearing site data in your browser.</p>
 
                 <h2>7. Updates to This Policy</h2>
                 <p>We may update this Cookie Policy from time to time to reflect changes in technology, law, or our practices. The "Last updated" date at the top of this page will show the latest revision.</p>

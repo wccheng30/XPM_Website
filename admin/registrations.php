@@ -9,9 +9,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 $pdo = get_db_connection();
 $registrations = [];
+$blacklist_lookup = [];
 $stats = [
     'total' => 0,
     'pending' => 0,
@@ -83,6 +85,7 @@ if ($pdo) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $registrations = $stmt->fetchAll();
+        $blacklist_lookup = load_blacklist_lookup($pdo);
         
     } catch (PDOException $e) {
         $error_message = "Error loading registrations.";
@@ -98,9 +101,9 @@ if ($pdo) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/registrations.css?v=20260930-4">
-    <link rel="stylesheet" href="css/registration-details.css?v=20260930-4">
+    <link rel="stylesheet" href="admin-styles.css?v=20261006-3">
+    <link rel="stylesheet" href="css/registrations.css?v=20261006-3">
+    <link rel="stylesheet" href="css/registration-details.css?v=20261006-3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body data-motion="admin">
@@ -204,6 +207,7 @@ if ($pdo) {
                             <option value="confirmed" <?php echo ($_GET['filter'] ?? '') === 'confirmed' ? 'selected' : ''; ?>>Confirmed</option>
                             <option value="waitlisted" <?php echo ($_GET['filter'] ?? '') === 'waitlisted' ? 'selected' : ''; ?>>Waitlisted</option>
                             <option value="cancelled" <?php echo ($_GET['filter'] ?? '') === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                            <option value="blacklisted" <?php echo ($_GET['filter'] ?? '') === 'blacklisted' ? 'selected' : ''; ?>>Blacklisted</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -270,16 +274,24 @@ if ($pdo) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($registrations as $registration): ?>
-                                    <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
+                                <?php foreach ($registrations as $registration):
+                                    $bl_info = blacklist_match($blacklist_lookup, $registration['name'], $registration['phone'] ?? '');
+                                    $is_blacklisted = ($registration['status'] === 'blacklisted') || $bl_info !== null;
+                                ?>
+                                    <tr class="<?php echo $is_blacklisted ? 'is-blacklisted' : ''; ?>" style="border-bottom: 1px solid #f1f5f9;" <?php if (!$is_blacklisted): ?>onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'"<?php endif; ?>>
                                         <td style="padding: 16px 12px;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
-                                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #111111 0%, #111111 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
-                                                    <i class="fas fa-user-graduate"></i>
+                                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, <?php echo $is_blacklisted ? '#ef4444 0%, #b91c1c 100%' : '#111111 0%, #111111 100%'; ?>); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
+                                                    <i class="fas fa-<?php echo $is_blacklisted ? 'user-slash' : 'user-graduate'; ?>"></i>
                                                 </div>
                                                 <div>
-                                                    <div style="font-weight: 600; color: #1f2937; font-size: 15px; margin-bottom: 2px;">
+                                                    <div style="font-weight: 600; color: #1f2937; font-size: 15px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px;">
                                                         <?php echo htmlspecialchars($registration['name']); ?>
+                                                        <?php if ($is_blacklisted): ?>
+                                                        <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">
+                                                            <i class="fas fa-ban"></i> Blacklisted
+                                                        </span>
+                                                        <?php endif; ?>
                                                     </div>
                                                     <div style="font-size: 13px; color: #6b7280;">
                                                         ID: #<?php echo $registration['id']; ?>

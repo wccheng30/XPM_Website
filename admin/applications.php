@@ -9,9 +9,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 $pdo = get_db_connection();
 $applications = [];
+$blacklist_lookup = [];
 $stats = [
     'total' => 0,
     'pending' => 0,
@@ -196,23 +198,7 @@ if ($pdo) {
         $stmt->execute($params);
         $applications = $stmt->fetchAll();
         
-        // Build blacklist lookup (by name + phone)
-        $blacklist_lookup = [];
-        try {
-            $bl_stmt = $pdo->query("SELECT id, name, phone_number, reason FROM blacklist");
-            $bl_rows = $bl_stmt->fetchAll();
-            foreach ($bl_rows as $bl) {
-                $key = strtolower(trim($bl['name'])) . '|' . trim($bl['phone_number']);
-                $blacklist_lookup[$key] = $bl;
-                // Also add name-only lookup for candidates without phone
-                $name_key = strtolower(trim($bl['name']));
-                if (!isset($blacklist_lookup[$name_key])) {
-                    $blacklist_lookup[$name_key] = $bl;
-                }
-            }
-        } catch (PDOException $e) {
-            // Silently fail - blacklist check is non-critical
-        }
+        $blacklist_lookup = load_blacklist_lookup($pdo);
         
     } catch (PDOException $e) {
         $error_message = "Error loading applications.";
@@ -228,9 +214,9 @@ if ($pdo) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/applications.css?v=20260930-4">
-    <link rel="stylesheet" href="css/application-details.css?v=20260930-4">
+    <link rel="stylesheet" href="admin-styles.css?v=20261006-3">
+    <link rel="stylesheet" href="css/applications.css?v=20261006-3">
+    <link rel="stylesheet" href="css/application-details.css?v=20261006-3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body data-motion="admin">
@@ -352,6 +338,7 @@ if ($pdo) {
                                 <option value="rejected" <?php echo ($_GET['filter'] ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                                 <option value="waiting for interview" <?php echo ($_GET['filter'] ?? '') === 'waiting for interview' ? 'selected' : ''; ?>>Interview</option>
                                 <option value="hired" <?php echo ($_GET['filter'] ?? '') === 'hired' ? 'selected' : ''; ?>>Hired</option>
+                                <option value="blacklisted" <?php echo ($_GET['filter'] ?? '') === 'blacklisted' ? 'selected' : ''; ?>>Blacklisted</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -429,13 +416,10 @@ if ($pdo) {
                              </thead>
                                                          <tbody>
                                  <?php foreach ($applications as $application): 
-                                     // Check if this candidate is blacklisted
-                                     $bl_key = strtolower(trim($application['name'])) . '|' . trim($application['phone'] ?? '');
-                                     $bl_name_key = strtolower(trim($application['name']));
-                                     $is_blacklisted = isset($blacklist_lookup[$bl_key]) || isset($blacklist_lookup[$bl_name_key]);
-                                     $bl_info = $blacklist_lookup[$bl_key] ?? $blacklist_lookup[$bl_name_key] ?? null;
+                                     $bl_info = blacklist_match($blacklist_lookup, $application['name'], $application['phone'] ?? '');
+                                     $is_blacklisted = ($application['status'] === 'blacklisted') || $bl_info !== null;
                                  ?>
-                                     <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s; <?php echo $is_blacklisted ? 'background-color: #fef2f2;' : ''; ?>" onmouseover="this.style.backgroundColor='<?php echo $is_blacklisted ? '#fee2e2' : '#f8fafc'; ?>'" onmouseout="this.style.backgroundColor='<?php echo $is_blacklisted ? '#fef2f2' : 'white'; ?>'">
+                                     <tr class="<?php echo $is_blacklisted ? 'is-blacklisted' : ''; ?>" style="border-bottom: 1px solid #f1f5f9;" <?php if (!$is_blacklisted): ?>onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'"<?php endif; ?>>
                                          <td style="padding: 16px 12px;">
                                              <div style="display: flex; align-items: center; gap: 12px;">
                                                  <div style="width: 40px; height: 40px; background: linear-gradient(135deg, <?php echo $is_blacklisted ? '#ef4444 0%, #b91c1c 100%' : '#111111 0%, #111111 100%'; ?>); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
@@ -445,8 +429,8 @@ if ($pdo) {
                                                      <div style="font-weight: 600; color: #1f2937; font-size: 15px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px;">
                                                          <?php echo htmlspecialchars($application['name']); ?>
                                                          <?php if ($is_blacklisted): ?>
-                                                         <span style="display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'No reason'); ?>">
-                                                             <i class="fas fa-ban" style="font-size: 8px;"></i> Blacklisted
+                                                         <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">
+                                                             <i class="fas fa-ban"></i> Blacklisted
                                                          </span>
                                                          <?php endif; ?>
                                                      </div>

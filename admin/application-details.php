@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 $pdo = get_db_connection();
 $application = null;
@@ -76,6 +77,9 @@ if (!$application) {
     echo "Application not found.";
     exit;
 }
+
+$bl_info = $pdo ? blacklist_match(load_blacklist_lookup($pdo), $application['name'], $application['phone'] ?? '') : null;
+$is_blacklisted = ($application['status'] === 'blacklisted') || $bl_info !== null;
 ?>
 
 <?php if (isset($success_message)): ?>
@@ -93,6 +97,17 @@ if (!$application) {
 <?php endif; ?>
 
 <div class="application-details" style="padding: 0;">
+    <?php if ($is_blacklisted): ?>
+    <div class="blacklist-banner" role="status">
+        <i class="fas fa-ban"></i>
+        <div>
+            <strong>This candidate is blacklisted</strong>
+            <?php if (!empty($bl_info['reason'])): ?>
+            <p><?php echo htmlspecialchars($bl_info['reason']); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
     <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
         <!-- Candidate Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
@@ -876,10 +891,10 @@ function deleteApplicationFromDetails(applicationId, applicantName) {
         color: #dc2626;
     }
     
-    /* Blacklisted - Black */
     .status-blacklisted {
-        background: rgba(31, 41, 55, 0.1);
-        color: #111827;
+        background: #b91c1c;
+        color: #ffffff;
+        border: 1px solid #991b1b;
     }
 
     /* Hired - Green */

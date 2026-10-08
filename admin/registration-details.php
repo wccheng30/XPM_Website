@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 // Helper function to safely display prices
 function formatPrice($price) {
@@ -67,6 +68,9 @@ if (!$registration) {
     echo "Registration not found.";
     exit;
 }
+
+$bl_info = $pdo ? blacklist_match(load_blacklist_lookup($pdo), $registration['name'], $registration['phone'] ?? '') : null;
+$is_blacklisted = ($registration['status'] === 'blacklisted') || $bl_info !== null;
 ?>
 
 <?php if (isset($success_message)): ?>
@@ -84,6 +88,17 @@ if (!$registration) {
 <?php endif; ?>
 
 <div class="registration-details" style="padding: 0;">
+    <?php if ($is_blacklisted): ?>
+    <div class="blacklist-banner" role="status">
+        <i class="fas fa-ban"></i>
+        <div>
+            <strong>This participant is blacklisted</strong>
+            <?php if (!empty($bl_info['reason'])): ?>
+            <p><?php echo htmlspecialchars($bl_info['reason']); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
     <div class="details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
         <!-- Participant Information -->
         <div class="detail-section" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
@@ -522,8 +537,9 @@ document.addEventListener('keydown', function(e) {
     }
     
     .status-blacklisted {
-        background: rgba(31, 41, 55, 0.1);
-        color: #111827;
+        background: #b91c1c;
+        color: #ffffff;
+        border: 1px solid #991b1b;
     }
     
     .text-muted {

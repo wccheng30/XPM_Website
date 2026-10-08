@@ -48,8 +48,13 @@
     color: var(--text-tertiary, var(--text-secondary));
 }
 
-[data-theme="dark"] .modal .registration-details .status-waitlisted,
-[data-theme="dark"] .modal .registration-details .status-blacklisted {
+[data-theme="dark"] .modal .registration-details .status-waitlisted {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal .registration-details .status-blacklisted {
+    background: #7f1d1d;
+    color: #fecaca;
+    border: 1px solid #ef4444;
 }

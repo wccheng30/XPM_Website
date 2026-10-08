@@ -12,6 +12,7 @@ error_log
 
 # Secrets / local config
 /includes/database.php
+/config/form-spam.key
 /wp-config.php
 .env
 .env.*

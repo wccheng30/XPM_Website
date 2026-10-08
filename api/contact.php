@@ -49,6 +49,7 @@ function validate_phone($phone) {
 // Include shared database connection
 require_once '../includes/database.php';
 require_once '../includes/phone-field.php';
+require_once '../includes/form-spam.php';
 
 function create_tables($pdo) {
     try {
@@ -206,13 +207,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // Check for spam/bot indicators
         if (!empty($input['honeypot']) || !empty($input['website'])) {
             $errors[] = 'Invalid form submission';
         }
         
         // Rate limiting disabled for production use
         // Uncomment and configure rate limiting as needed
+        
         
         if (!empty($errors)) {
             http_response_code(400);

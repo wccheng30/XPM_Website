@@ -1,12 +1,12 @@
 -- ===== XPRESSPOINT HR TRAINING DATABASE SCHEMA =====
--- Create this database manually if auto-creation doesn't work
+-- Database name matches includes/database.example.php (xpresspo_db).
+-- Create this database manually if auto-creation doesn't work.
 
--- Create database
-CREATE DATABASE IF NOT EXISTS xpresspoint_db
+CREATE DATABASE IF NOT EXISTS xpresspo_db
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE xpresspoint_db;
+USE xpresspo_db;
 
 -- ===== CONTACTS TABLE =====
 CREATE TABLE IF NOT EXISTS contacts (
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default admin user (password: xpresspoint2024)
-INSERT INTO users (username, password, email, role) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@xpresspoint.com', 'admin')
+INSERT INTO users (username, password, email, role) VALUES
+('admin', '$2y$10$K4qYAoRQFAOUVddAiM24vemorAhhGuVBvkmJ/YaAIQ8QiMX2CM8mq', 'admin@xpresspoint.com', 'admin')
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ===== PROGRAMMES TABLE =====
@@ -46,6 +46,9 @@ CREATE TABLE IF NOT EXISTS programmes (
     description TEXT,
     duration VARCHAR(100),
     price DECIMAL(10,2),
+    tax_inclusive TINYINT(1) DEFAULT 0,
+    tax_amount DECIMAL(10,2) DEFAULT 0.00,
+    original_price DECIMAL(10,2) DEFAULT NULL,
     category VARCHAR(100),
     max_participants INT DEFAULT 25,
     certification VARCHAR(255) DEFAULT 'HRD Corp Certified',
@@ -53,18 +56,24 @@ CREATE TABLE IF NOT EXISTS programmes (
     programme_badge VARCHAR(100) DEFAULT 'Popular',
     location VARCHAR(100) DEFAULT 'Online',
     poster_image VARCHAR(500),
+    poster_image_2 VARCHAR(500) DEFAULT NULL,
+    banner_image VARCHAR(500) DEFAULT NULL,
     modules TEXT,
     schedule_type VARCHAR(100) DEFAULT 'single_day',
     start_date DATE,
     end_date DATE,
     start_time TIME,
     end_time TIME,
+    requires_facility TINYINT(1) DEFAULT 0,
+    facility_type VARCHAR(50) DEFAULT NULL,
+    auto_create_facility_booking TINYINT(1) DEFAULT 0,
+    facility_booking_id INT DEFAULT NULL,
+    is_featured TINYINT(1) DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
+    registration_status ENUM('open', 'closed', 'full') DEFAULT 'open',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Sample programmes data removed - add your own programmes here
 
 -- ===== JOBS TABLE =====
 CREATE TABLE IF NOT EXISTS jobs (
@@ -72,9 +81,10 @@ CREATE TABLE IF NOT EXISTS jobs (
     title VARCHAR(255) NOT NULL,
     location VARCHAR(255),
     type VARCHAR(100),
+    employment_type VARCHAR(100) DEFAULT NULL,
     description TEXT,
     requirements TEXT,
-    company_name VARCHAR(255) DEFAULT 'HR Training',
+    company_name VARCHAR(255) DEFAULT 'Xpress Point Management',
     job_icon VARCHAR(100) DEFAULT 'fas fa-briefcase',
     job_badge VARCHAR(100) DEFAULT 'New',
     poster_image VARCHAR(500),
@@ -86,8 +96,6 @@ CREATE TABLE IF NOT EXISTS jobs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Sample jobs data removed - add your own job postings here
 
 -- ===== APPLICATIONS TABLE =====
 CREATE TABLE IF NOT EXISTS applications (
@@ -149,14 +157,49 @@ CREATE TABLE IF NOT EXISTS programme_registrations (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
+    ic_number VARCHAR(50) DEFAULT NULL,
     company VARCHAR(255),
     position VARCHAR(255),
+    billing_address TEXT DEFAULT NULL,
+    billing_contact_no VARCHAR(50) DEFAULT NULL,
+    vehicle_type VARCHAR(50) DEFAULT NULL,
+    vehicle_type_other VARCHAR(100) DEFAULT NULL,
+    plate_number VARCHAR(50) DEFAULT NULL,
+    payment_method VARCHAR(50) DEFAULT NULL,
+    how_did_you_hear VARCHAR(100) DEFAULT NULL,
+    how_did_you_hear_other VARCHAR(255) DEFAULT NULL,
+    spicy_preference VARCHAR(50) DEFAULT NULL,
+    allergies VARCHAR(100) DEFAULT NULL,
+    allergies_other VARCHAR(255) DEFAULT NULL,
+    dietary_preference VARCHAR(100) DEFAULT NULL,
+    dietary_restrictions TEXT DEFAULT NULL,
+    interested_programs VARCHAR(255) DEFAULT NULL,
+    interested_programs_other VARCHAR(255) DEFAULT NULL,
     experience_level ENUM('beginner', 'intermediate', 'advanced') DEFAULT 'beginner',
     preferred_schedule ENUM('weekday', 'weekend', 'evening', 'flexible') DEFAULT 'flexible',
     additional_notes TEXT,
     status ENUM('pending', 'confirmed', 'waitlisted', 'cancelled', 'blacklisted') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (programme_id) REFERENCES programmes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== PROGRAMME REGISTRATION QUESTIONS =====
+CREATE TABLE IF NOT EXISTS programme_registration_questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    programme_id INT NOT NULL,
+    field_key VARCHAR(100) NOT NULL,
+    field_label VARCHAR(255) NOT NULL,
+    input_type ENUM('text', 'email', 'tel', 'textarea', 'select') NOT NULL DEFAULT 'text',
+    field_options TEXT NULL,
+    is_required TINYINT(1) NOT NULL DEFAULT 0,
+    is_enabled TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_programme_field (programme_id, field_key),
+    INDEX idx_programme_enabled (programme_id, is_enabled),
+    CONSTRAINT fk_programme_registration_questions_programme
+        FOREIGN KEY (programme_id) REFERENCES programmes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ===== CLIENTS TABLE (TESTIMONIALS) =====
@@ -189,9 +232,38 @@ CREATE TABLE IF NOT EXISTS bookings (
     confirmed_by INT,
     confirmed_at TIMESTAMP NULL,
     cancellation_reason TEXT,
+    programme_id INT DEFAULT NULL,
+    is_programme_booking TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (programme_id) REFERENCES programmes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== TRAINERS TABLE =====
+CREATE TABLE IF NOT EXISTS trainers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) DEFAULT NULL,
+    experience_years INT DEFAULT 0,
+    image_path VARCHAR(500) DEFAULT NULL,
+    description TEXT,
+    specialties TEXT,
+    credentials TEXT,
+    is_active TINYINT(1) DEFAULT 1,
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== BLACKLIST TABLE =====
+CREATE TABLE IF NOT EXISTS blacklist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+    position_applied VARCHAR(255) NOT NULL DEFAULT '',
+    phone_number VARCHAR(255) NOT NULL DEFAULT '',
+    date VARCHAR(255) NOT NULL DEFAULT '',
+    reason TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create indexes for better performance
@@ -219,45 +291,44 @@ CREATE INDEX idx_programme_registrations_status ON programme_registrations(statu
 CREATE INDEX idx_clients_featured ON clients(is_featured);
 
 -- ===== VIEWS FOR COMMON QUERIES =====
-CREATE VIEW recent_contacts AS
-SELECT * FROM contacts 
+CREATE OR REPLACE VIEW recent_contacts AS
+SELECT * FROM contacts
 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
 ORDER BY created_at DESC;
 
-CREATE VIEW active_jobs AS
-SELECT * FROM jobs 
+CREATE OR REPLACE VIEW active_jobs AS
+SELECT * FROM jobs
 WHERE is_active = 1
 ORDER BY created_at DESC;
 
-CREATE VIEW featured_testimonials AS
-SELECT * FROM clients 
+CREATE OR REPLACE VIEW featured_testimonials AS
+SELECT * FROM clients
 WHERE is_featured = 1 AND rating >= 4
 ORDER BY created_at DESC;
 
--- ===== SAMPLE DATA FOR TESTING =====
--- Sample contact submissions removed - add your own contact data here
-
 -- ===== GRANT PERMISSIONS (ADJUST AS NEEDED) =====
--- GRANT ALL PRIVILEGES ON xpresspoint_db.* TO 'your_username'@'localhost';
+-- GRANT ALL PRIVILEGES ON xpresspo_db.* TO 'your_username'@'localhost';
 -- FLUSH PRIVILEGES;
 
 -- ===== DATABASE STATISTICS =====
-SELECT 
-    'contacts' as table_name, COUNT(*) as record_count 
-FROM contacts
+SELECT 'contacts' AS table_name, COUNT(*) AS record_count FROM contacts
 UNION ALL
-SELECT 
-    'users' as table_name, COUNT(*) as record_count 
-FROM users
+SELECT 'users', COUNT(*) FROM users
 UNION ALL
-SELECT 
-    'programmes' as table_name, COUNT(*) as record_count 
-FROM programmes
+SELECT 'programmes', COUNT(*) FROM programmes
 UNION ALL
-SELECT 
-    'jobs' as table_name, COUNT(*) as record_count 
-FROM jobs
+SELECT 'jobs', COUNT(*) FROM jobs
 UNION ALL
-SELECT 
-    'clients' as table_name, COUNT(*) as record_count 
-FROM clients; 
+SELECT 'applications', COUNT(*) FROM applications
+UNION ALL
+SELECT 'programme_registrations', COUNT(*) FROM programme_registrations
+UNION ALL
+SELECT 'programme_registration_questions', COUNT(*) FROM programme_registration_questions
+UNION ALL
+SELECT 'clients', COUNT(*) FROM clients
+UNION ALL
+SELECT 'bookings', COUNT(*) FROM bookings
+UNION ALL
+SELECT 'trainers', COUNT(*) FROM trainers
+UNION ALL
+SELECT 'blacklist', COUNT(*) FROM blacklist;

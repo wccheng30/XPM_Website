@@ -70,9 +70,9 @@
         }
         
         .status-blacklisted {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            background: #b91c1c;
             color: #ffffff;
-            border: 1px solid #111827;
+            border: 1px solid #991b1b;
         }
         
         .suggestion-icon {
