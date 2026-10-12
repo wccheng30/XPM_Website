@@ -1,11 +1,8 @@
 <?php
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    http_response_code(403);
-    exit('Unauthorized');
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager'], '403');
 
 // Get resume path from query parameter
 $resume_path = $_GET['path'] ?? '';

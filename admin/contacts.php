@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager']);
 
 // Include database connection
 require_once '../includes/database.php';
@@ -36,6 +31,21 @@ if (isset($_GET['ajax_search']) && $_GET['ajax_search']) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+    $contact_id = (int) ($_POST['contact_id'] ?? 0);
+    if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
+        $error_message = 'The form expired. Please try again.';
+    } elseif ($contact_id > 0) {
+        $pdo = get_db_connection();
+        if ($pdo) {
+            $pdo->prepare("DELETE FROM contacts WHERE id = ?")->execute([$contact_id]);
+            header('Location: contacts.php?removed=1');
+            exit;
+        }
+        $error_message = 'Database connection failed.';
+    }
+}
+
 // Handle status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
     $contact_id = $_POST['contact_id'] ?? null;
@@ -45,8 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $pdo = get_db_connection();
         if ($pdo) {
             try {
+                $previous = $pdo->prepare("SELECT status FROM contacts WHERE id = ?");
+                $previous->execute([$contact_id]);
+                $previous_status = (string)$previous->fetchColumn();
                 $stmt = $pdo->prepare("UPDATE contacts SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $contact_id]);
+                blacklist_sync_status($pdo, 'contact', (int)$contact_id, $previous_status, (string)$new_status);
                 $success_message = "Contact status updated successfully!";
             } catch (PDOException $e) {
                 $error_message = "Error updating contact status.";
@@ -167,6 +181,13 @@ $status_labels = [
         </div>
         </div>
         
+        <?php if (isset($_GET['removed'])): ?>
+            <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                Contact removed.
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($success_message)): ?>
             <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-check-circle" style="color: #10b981;"></i>
@@ -257,7 +278,7 @@ $status_labels = [
             
         <!-- Contacts List -->
             <?php if (!empty($contacts)): ?>
-            <div style="display: grid; gap: 20px;">
+            <div class="dense-list">
                 <?php foreach ($contacts as $contact):
                     $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
                     $is_blacklisted = (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null;
@@ -306,7 +327,7 @@ $status_labels = [
                             </div>
                             
                             <!-- Contact Details -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
+                            <div class="record-extra" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
                                         <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
@@ -364,10 +385,23 @@ $status_labels = [
                                         <i class="fas fa-tag" style="margin-right: 6px;"></i>
                                         <strong>Interest:</strong> <?php echo htmlspecialchars($interest_labels[$contact['interest']] ?? $contact['interest']); ?>
                                     </div>
+                                    <a href="contact-details.php?id=<?php echo (int) $contact['id']; ?>" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
                                     <button onclick="updateStatus(<?php echo $contact['id']; ?>, '<?php echo $contact['status'] ?? 'new'; ?>')" class="btn btn-secondary" style="background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
                                         <i class="fas fa-edit"></i>
                                         Update Status
                                     </button>
+                                    <form method="POST" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="contact_id" value="<?php echo (int) $contact['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Remove this contact?" data-confirm="This inquiry will be deleted." data-confirm-ok="Remove" data-confirm-icon="fas fa-trash">
+                                            <i class="fas fa-trash"></i>
+                                            Remove
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

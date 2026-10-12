@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
 
 // Include shared database connection
 require_once '../includes/database.php';
@@ -29,34 +24,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "New password must be at least 8 characters long.";
     } else {
         try {
-            // Check current password
-            $stmt = $pdo->prepare("SELECT password FROM users WHERE username = 'admin'");
-            $stmt->execute();
+            $account = auth_user();
+            $userId = (int) ($account['id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT id, username, password FROM users WHERE id = ? OR username = ? LIMIT 1");
+            $stmt->execute([$userId, $account['username'] ?? '']);
             $user = $stmt->fetch();
-            
+
             if ($user) {
-                // For existing installations, check against hardcoded password first
-                if ($current_password === 'xpresspoint2024' || password_verify($current_password, $user['password'])) {
-                    // Update password
+                $matches = password_verify($current_password, $user['password']);
+                if (!$matches && $user['username'] === 'admin' && $current_password === 'xpresspoint2024') {
+                    $matches = true;
+                }
+                if ($matches) {
                     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE username = 'admin'");
-                    $stmt->execute([$hashed_password]);
-                    
+                    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                    $stmt->execute([$hashed_password, $user['id']]);
                     $success_message = "Password changed successfully!";
-                    
-                    // Clear form
                     $_POST = [];
                 } else {
                     $error_message = "Current password is incorrect.";
                 }
-            } else {
-                // Create admin user if doesn't exist
+            } elseif (($account['username'] ?? '') === 'admin' && $current_password === 'xpresspoint2024') {
                 $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password, role, created_at) VALUES ('admin', ?, 'admin', NOW())");
+                $stmt = $pdo->prepare("INSERT INTO users (username, password, email, display_name, role, created_at) VALUES ('admin', ?, 'admin@xpresspoint.com', 'Admin', 'admin', NOW())");
                 $stmt->execute([$hashed_password]);
-                
                 $success_message = "Admin account created and password set successfully!";
                 $_POST = [];
+            } else {
+                $error_message = "Current password is incorrect.";
             }
         } catch (PDOException $e) {
             $error_message = "Error updating password. Please try again.";

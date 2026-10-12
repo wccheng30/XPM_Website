@@ -1,14 +1,10 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager']);
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/blacklist-lookup.php';
 
 $pdo = get_db_connection();
 $blacklisted = [];
@@ -31,9 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     break;
                     
                 case 'delete':
+                    $existing = $pdo->prepare("SELECT name, phone_number FROM blacklist WHERE id = ?");
+                    $existing->execute([$trainer_id]);
+                    $person = $existing->fetch(PDO::FETCH_ASSOC);
+                    if ($person) {
+                        blacklist_clear_marked($pdo, (string)$person['name'], (string)$person['phone_number']);
+                    }
                     $stmt = $pdo->prepare("DELETE FROM blacklist WHERE id = ?");
                     $stmt->execute([$trainer_id]);
-                    $success_message = "Trainer deleted successfully!";
+                    $success_message = "Removed from the blacklist.";
                     break;
             }
         } catch (PDOException $e) {
@@ -52,6 +54,8 @@ $offset = ($page - 1) * $per_page;
 // Get blacklist with filtering and pagination
 if ($pdo) {
     try {
+        blacklist_import_marked($pdo);
+
         // Build query
         $where_conditions = [];
         $params = [];
@@ -217,7 +221,7 @@ $total_pages = ceil($total_trainers / $per_page);
                         </div>
                     <?php else: ?>
                         <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <table class="record-table">
                                 <thead>
                                     <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                                         <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Person</th>

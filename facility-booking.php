@@ -5,6 +5,7 @@ date_default_timezone_set('Asia/Kuala_Lumpur');
 // Include shared database connection
 require_once 'includes/database.php';
 require_once 'includes/phone-field.php';
+require_once 'includes/facility-booking-service.php';
 require_once 'includes/email-notifications.php';
 
 $pdo = get_db_connection();
@@ -63,18 +64,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             
             $conflict = $stmt->fetch();
-            
+
             if ($conflict['conflict_count'] > 0) {
                 $error_message = "This facility is already booked for the selected time. Please choose a different time or facility.";
             } else {
-                // Insert booking
+                $reserved = xpm_day_reservation_conflict($pdo, $booking_date, $booking_date, null, false);
+                if ($reserved) {
+                    $error_message = $reserved;
+                }
+            }
+
+            if ($error_message === '') {
                 $stmt = $pdo->prepare("
                     INSERT INTO bookings 
                     (customer_name, customer_email, customer_phone, company, facility_type, 
                      booking_date, start_time, end_time, attendees_count, purpose, special_requirements) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                
+
                 $stmt->execute([
                     $customer_name,
                     $customer_email,
@@ -88,23 +95,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $purpose,
                     $special_requirements
                 ]);
-                
+
                 $booking_id = $pdo->lastInsertId();
-                
-                // Send confirmation email
+
                 $emailNotifications = new EmailNotifications();
                 $emailSent = $emailNotifications->sendBookingConfirmation($booking_id);
-                
+
                 $success_message = "Booking submitted successfully! We'll confirm your reservation within 2 hours.";
                 if ($emailSent) {
                     $success_message .= " A confirmation email has been sent to your email address.";
                 }
-                
-                // Clear form data
+
                 $_POST = [];
             }
-            
         } catch (PDOException $e) {
+            error_log('Facility booking failed: ' . $e->getMessage());
             $error_message = "Error submitting booking. Please try again.";
         }
     }
@@ -231,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 $imageFile = "simulation-center.jpg";
                                                 break;
                                             case 'breakout_area':
-                                                $imageFile = "breakout-area.jpg";
+                                                $imageFile = "breakout-area.jpeg";
                                                 break;
                                             default:
                                                 $imageFile = "conference-room.jpg";

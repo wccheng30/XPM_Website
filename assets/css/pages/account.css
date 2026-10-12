@@ -1,0 +1,117 @@
+.auth-main {
+    min-height: calc(100vh - var(--nav-h));
+    display: grid;
+    align-items: start;
+    justify-items: center;
+    padding: calc(var(--nav-h) + clamp(1.5rem, 4vw, 2.5rem)) 1rem clamp(2.5rem, 6vw, 4rem);
+    background: var(--c-surface);
+}
+
+.auth-card {
+    width: min(440px, 100%);
+}
+
+.auth-card h1 {
+    margin-bottom: 0.4rem;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.auth-card .lead {
+    margin-bottom: 1.25rem;
+    color: var(--c-text-2);
+}
+
+.auth-card .form-control {
+    min-height: 48px;
+}
+
+.auth-card .alert {
+    margin-bottom: 1rem;
+}
+
+.auth-card {
+    padding: var(--sp-6);
+}
+
+.auth-card h2 {
+    margin: var(--sp-6) 0 var(--sp-4);
+    font-size: 1.25rem;
+}
+
+.auth-switch {
+    margin-top: var(--sp-5);
+    color: var(--c-text-3);
+}
+
+.auth-switch a {
+    color: var(--c-charcoal);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.destination-choice {
+    display: grid;
+    gap: var(--sp-4);
+}
+
+.form-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    color: var(--c-text-3);
+}
+
+.auth-switch a:hover {
+    color: #000;
+    text-decoration-thickness: 2px;
+}
+
+.account-photo {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-5);
+}
+
+.account-photo .nav-avatar {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+    flex: 0 0 64px;
+    font-size: 1.4rem;
+    line-height: 64px;
+}
+
+.account-photo .nav-avatar img {
+    width: 64px;
+    height: 64px;
+    max-width: 64px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.account-facts {
+    display: grid;
+    gap: var(--sp-4);
+    margin: 0 0 var(--sp-5);
+}
+
+.account-facts div {
+    padding-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.account-facts dt {
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-3);
+}
+
+.account-facts dd {
+    margin: 0.25rem 0 0;
+    font-size: 1.05rem;
+}
+

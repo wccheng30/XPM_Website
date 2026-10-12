@@ -33,6 +33,16 @@ if ($pdo) {
         // Get active programmes (including those with closed registration)
         $stmt = $pdo->query("SELECT * FROM programmes WHERE is_active = 1 ORDER BY start_date ASC, created_at DESC");
         $programmes = $stmt->fetchAll();
+
+        $programme_type_filter = $_GET['type'] ?? 'all';
+        if (!in_array($programme_type_filter, ['all', 'webinar', 'training'], true)) {
+            $programme_type_filter = 'all';
+        }
+        if ($programme_type_filter !== 'all') {
+            $programmes = array_values(array_filter($programmes, function ($programme) use ($programme_type_filter) {
+                return ($programme['programme_type'] ?? 'training') === $programme_type_filter;
+            }));
+        }
         
         // Get active trainers for the preview section
         $trainers_stmt = $pdo->query("SELECT * FROM trainers WHERE is_active = 1 ORDER BY display_order ASC, name ASC LIMIT 3");
@@ -148,6 +158,19 @@ if ($pdo) {
 
         <section id="programme" class="section">
             <div class="container">
+            <?php
+                $programme_type_filter = $programme_type_filter ?? 'all';
+                $type_links = [
+                    'all' => 'All',
+                    'webinar' => 'Webinar',
+                    'training' => 'Training Programme',
+                ];
+            ?>
+            <div class="programme-filters" data-reveal="fade">
+                <?php foreach ($type_links as $type_key => $type_label): ?>
+                    <a class="btn btn-outline btn-sm<?php echo $programme_type_filter === $type_key ? ' is-active' : ''; ?>" href="programmes.php<?php echo $type_key === 'all' ? '' : '?type=' . $type_key; ?>#programme"><?php echo $type_label; ?></a>
+                <?php endforeach; ?>
+            </div>
             <?php if (!empty($programmes_by_month)): ?>
                 <?php foreach ($programmes_by_month as $month_key => $month_data): ?>
                 <div class="month-block">
@@ -174,6 +197,7 @@ if ($pdo) {
 
                             <div class="listing-top">
                                 <span class="icon-box"><i class="<?php echo htmlspecialchars($programme['programme_icon'] ?? 'fas fa-graduation-cap'); ?>"></i></span>
+                                <span class="badge"><?php echo htmlspecialchars((($programme['programme_type'] ?? 'training') === 'webinar') ? 'Webinar' : 'Training Programme'); ?></span>
                                 <span class="badge"><?php echo htmlspecialchars($programme['programme_badge'] ?? $programme['category']); ?></span>
                             </div>
 

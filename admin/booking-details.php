@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
 
 // Include database connection
 require_once '../includes/database.php';
@@ -20,9 +15,10 @@ $booking_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($booking_id && $pdo) {
     try {
         $stmt = $pdo->prepare("
-            SELECT b.*, u.username as confirmed_by_name
+            SELECT b.*, u.username as confirmed_by_name, p.owner_user_id
             FROM bookings b
             LEFT JOIN users u ON b.confirmed_by = u.id
+            LEFT JOIN programmes p ON b.programme_id = p.id
             WHERE b.id = ?
         ");
         $stmt->execute([$booking_id]);
@@ -74,13 +70,13 @@ $status_options = [
     
 </head>
 <body data-motion="admin">
-    <?php include_once 'includes/header.php'; renderAdminHeader('Booking Details', 'fas fa-calendar-check', ['url' => 'bookings.php', 'label' => 'Bookings']); ?>
+    <?php include_once 'includes/header.php'; renderAdminHeader('Booking Details', 'fas fa-calendar-check', ['url' => 'facilities.php', 'label' => 'Facilities']); ?>
     
     <div class="admin-container">
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('bookings'); ?>
     
-        <a href="bookings.php" class="back-link">
+        <a href="facilities.php" class="back-link">
             <i class="fas fa-arrow-left"></i>
             Back to Bookings
         </a>
@@ -226,12 +222,12 @@ $status_options = [
                     <h3 class="actions-title">Actions</h3>
                     
                     <div class="action-buttons">
-                        <a href="bookings.php" class="btn-action btn-back">
+                        <a href="facilities.php" class="btn-action btn-back">
                             <i class="fas fa-arrow-left"></i>
-                            Back to Bookings
+                            Back to Facilities
                         </a>
-                        
-                        <?php if ($booking['status'] === 'pending'): ?>
+                        <?php $canChangeBooking = auth_can_change_booking(auth_user(), $booking['owner_user_id'] ?? null, $booking['programme_id'] ?? null); ?>
+                        <?php if ($canChangeBooking && $booking['status'] === 'pending'): ?>
                             <button onclick="confirmBooking(<?php echo $booking['id']; ?>)" class="btn-action btn-confirm">
                                 <i class="fas fa-check"></i>
                                 Confirm Booking
@@ -240,7 +236,7 @@ $status_options = [
                                 <i class="fas fa-times"></i>
                                 Cancel Booking
                             </button>
-                        <?php elseif ($booking['status'] === 'confirmed'): ?>
+                        <?php elseif ($canChangeBooking && $booking['status'] === 'confirmed'): ?>
                             <button onclick="completeBooking(<?php echo $booking['id']; ?>)" class="btn-action btn-complete">
                                 <i class="fas fa-check-double"></i>
                                 Mark as Completed
@@ -256,7 +252,7 @@ $status_options = [
         function postBookingAction(bookingId, action, extra) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'bookings.php';
+            form.action = 'facilities.php';
             const actionInput = document.createElement('input');
             actionInput.type = 'hidden';
             actionInput.name = 'action';

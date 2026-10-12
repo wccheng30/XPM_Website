@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager']);
 
 // Include database connection
 require_once '../includes/database.php';
@@ -29,8 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     if ($registration_id && $new_status) {
         try {
+            $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
+            $previous->execute([$registration_id]);
+            $previous_status = (string)$previous->fetchColumn();
             $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $registration_id]);
+            blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
             $success_message = "Registration status updated successfully!";
         } catch (PDOException $e) {
             $error_message = "Error updating registration status.";
@@ -262,7 +261,7 @@ if ($pdo) {
                     </div>
                 <?php else: ?>
                     <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <table class="record-table">
                             <thead>
                                 <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                                     <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Participant</th>

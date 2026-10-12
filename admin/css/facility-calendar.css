@@ -147,7 +147,188 @@
         }
         
         .booking-item.programme {
-            background: #ef4444;
+            background: #b31b01;
+            white-space: normal;
+        }
+
+        .booking-item.programme-webinar {
+            background: #1f6a6e;
+        }
+
+        .booking-item.programme-training {
+            background: #b31b01;
+        }
+
+        .booking-item .booking-type,
+        .booking-item .booking-name,
+        .booking-item .booking-time {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .booking-item .booking-type {
+            font-size: 0.62rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .booking-item .booking-time {
+            font-size: 0.7rem;
+            opacity: 0.85;
+        }
+
+        form.booking-item {
+            display: block;
+            margin: 0 0 4px;
+            border: 0;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+        }
+
+        form.booking-item button {
+            display: block;
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            background: transparent;
+            color: inherit;
+            border: 0;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .calendar-day.day-slot {
+            cursor: pointer;
+        }
+
+        .calendar-day.day-slot:hover {
+            background: #f8fafc;
+        }
+
+        .slot-panel {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem;
+            background: rgba(17, 17, 17, 0.45);
+        }
+
+        .slot-panel[hidden] {
+            display: none;
+        }
+
+        .slot-card {
+            width: min(420px, 100%);
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+            position: relative;
+        }
+
+        .slot-close {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            border: 0;
+            background: transparent;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .slot-kicker {
+            margin: 0 0 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #b31b01;
+        }
+
+        .slot-card h2 {
+            margin: 0 0 1rem;
+            font-size: 1.35rem;
+            line-height: 1.25;
+        }
+
+        .slot-form {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .slot-form label,
+        .slot-times label {
+            display: grid;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slot-times {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .slot-form input,
+        .slot-form select {
+            min-height: 42px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 0.45rem 0.7rem;
+            font: inherit;
+        }
+
+        .slot-cancel {
+            margin-top: 0.75rem;
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: #b91c1c;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 0.15em;
+        }
+
+        .calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem 1rem;
+            margin: 0 0 1rem;
+        }
+
+        .legend-swatch {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .legend-swatch.programme-webinar {
+            background: #1f6a6e;
+        }
+
+        .legend-swatch.programme-training {
+            background: #b31b01;
+        }
+
+        .legend-note {
+            color: #6a737a;
+            font-size: 0.85rem;
         }
         
         .other-month {

@@ -1,9 +1,8 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
+if (auth_is_trainer()) {
+    header('Location: facilities.php');
     exit;
 }
 
@@ -39,11 +38,16 @@ if (isset($_GET['ajax_search']) && $_GET['ajax_search']) {
     if ($pdo && $search_term) {
         try {
             $sql = "SELECT DISTINCT title, category, duration FROM programmes 
-                    WHERE title LIKE ? OR category LIKE ? OR duration LIKE ? 
-                    LIMIT 10";
+                    WHERE (title LIKE ? OR category LIKE ? OR duration LIKE ?)";
             $search_param = "%$search_term%";
+            $search_params = [$search_param, $search_param, $search_param];
+            if (auth_is_trainer()) {
+                $sql .= " AND owner_user_id = ?";
+                $search_params[] = (int) (auth_user()['id'] ?? 0);
+            }
+            $sql .= " LIMIT 10";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$search_param, $search_param, $search_param]);
+            $stmt->execute($search_params);
             $suggestions = $stmt->fetchAll();
         } catch (PDOException $e) {
             // Handle error silently
@@ -56,6 +60,7 @@ if (isset($_GET['ajax_search']) && $_GET['ajax_search']) {
 }
 
 $pdo = get_db_connection();
+$isTrainerList = auth_is_trainer();
 $programmes = [];
 $error = '';
 $message = '';
@@ -74,10 +79,15 @@ if ($pdo) {
         $where_conditions = [];
         $params = [];
         
+        if (auth_is_trainer()) {
+            $where_conditions[] = "programmes.owner_user_id = ?";
+            $params[] = (int) (auth_user()['id'] ?? 0);
+        }
+
         // Search filter
         if (!empty($_GET['search'])) {
             $search_term = $_GET['search'];
-            $where_conditions[] = "(title LIKE ? OR category LIKE ? OR duration LIKE ? OR description LIKE ?)";
+            $where_conditions[] = "(programmes.title LIKE ? OR programmes.category LIKE ? OR programmes.duration LIKE ? OR programmes.description LIKE ?)";
             $search_param = "%$search_term%";
             $params[] = $search_param;
             $params[] = $search_param;
@@ -88,18 +98,22 @@ if ($pdo) {
         // Status filter
         if (!empty($_GET['filter'])) {
             if ($_GET['filter'] === 'active') {
-                $where_conditions[] = "is_active = 1";
+                $where_conditions[] = "programmes.is_active = 1";
             } elseif ($_GET['filter'] === 'inactive') {
-                $where_conditions[] = "is_active = 0";
+                $where_conditions[] = "programmes.is_active = 0";
+            } elseif ($_GET['filter'] === 'webinar') {
+                $where_conditions[] = "programmes.programme_type = 'webinar'";
+            } elseif ($_GET['filter'] === 'training') {
+                $where_conditions[] = "programmes.programme_type = 'training'";
             }
         }
         
         // Build the final query
-        $sql = "SELECT * FROM programmes";
+        $sql = "SELECT programmes.*, users.display_name AS owner_name, users.email AS owner_email FROM programmes LEFT JOIN users ON users.id = programmes.owner_user_id";
         if (!empty($where_conditions)) {
             $sql .= " WHERE " . implode(" AND ", $where_conditions);
         }
-        $sql .= " ORDER BY created_at DESC";
+        $sql .= " ORDER BY programmes.created_at DESC";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -228,12 +242,14 @@ if ($pdo) {
                         <div style="font-size: 14px; color: #64748b;">
                             Total Programmes
                         </div>
+                        <?php if (!$isTrainerList): ?>
                         <div style="margin-top: 12px;">
                             <button onclick="exportProgrammes()" class="btn btn-secondary" style="background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
                                 <i class="fas fa-download" style="margin-right: 4px;"></i>
                                 Export
                             </button>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -241,7 +257,7 @@ if ($pdo) {
 
         <!-- Programmes List -->
         <?php if (!empty($programmes)): ?>
-            <div style="display: grid; gap: 20px;">
+            <div class="dense-list">
                 <?php foreach ($programmes as $programme): ?>
                     <div class="card" id="programme-<?php echo $programme['id']; ?>">
                         <div class="card-body">
@@ -255,8 +271,14 @@ if ($pdo) {
                                     <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
                                         <span class="badge primary">
                                             <i class="fas fa-tag" style="margin-right: 4px;"></i>
-                                            <?php echo htmlspecialchars($programme['category']); ?>
+                                            <?php echo htmlspecialchars(auth_programme_type_label($programme['programme_type'] ?? 'training')); ?>
                                         </span>
+                                        <?php if (!$isTrainerList && !empty($programme['owner_name'])): ?>
+                                        <span class="badge">
+                                            <i class="fas fa-user" style="margin-right: 4px;"></i>
+                                            <?php echo htmlspecialchars($programme['owner_name']); ?>
+                                        </span>
+                                        <?php endif; ?>
                                         <div style="color: #64748b; font-size: 14px;">
                                             <i class="fas fa-clock" style="margin-right: 6px;"></i>
                                             <?php echo htmlspecialchars($programme['duration']); ?>
@@ -349,7 +371,7 @@ if ($pdo) {
                             </div>
                             
                             <!-- Programme Details -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
+                            <div class="record-extra" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
                                         <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
@@ -457,7 +479,7 @@ if ($pdo) {
                             </div>
                             
                             <!-- Programme Footer -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                            <div class="record-extra" style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
                                 <div style="color: #64748b; font-size: 14px;">
                                     <i class="fas fa-calendar" style="margin-right: 6px;"></i>
                                     <strong>Created:</strong> <?php echo date('F j, Y \a\t g:i A', strtotime($programme['created_at'])); ?>

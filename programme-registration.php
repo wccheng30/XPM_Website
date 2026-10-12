@@ -1,5 +1,9 @@
 <?php
-session_start();
+require_once 'includes/auth.php';
+auth_start();
+$xpm_account = auth_user();
+$xpm_guest = !$xpm_account || empty($xpm_account['id']);
+$xpm_login_next = auth_login_next_from_request();
 
 // Include shared database connection
 require_once 'includes/database.php';
@@ -7,6 +11,7 @@ require_once 'config/email_config.php';
 require_once 'includes/programme-question-config.php';
 require_once 'includes/programme-pricing.php';
 require_once 'includes/phone-field.php';
+require_once 'includes/form-prefill.php';
 
 // Helper function to safely display prices
 function formatPrice($price) {
@@ -149,7 +154,9 @@ if (isset($_GET['programme_id'])) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
+    $error_message = 'Log in or create an account before you register.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $programme_id = $_POST['programme_id'] ?? null;
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -278,6 +285,8 @@ if ($pdo) {
         // Handle error silently
     }
 }
+
+$xpm_prefilled = $pdo ? xpm_apply_account_prefill($pdo, 'programme') : false;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -406,7 +415,17 @@ if ($pdo) {
                             <p>Please fill out the form below to register for this programme. Fields marked * are required.</p>
                         </div>
 
-                        <form method="POST" class="form application-form" id="programme-registration-form">
+                        <?php if ($xpm_guest): ?>
+                            <?php auth_guest_banner('You can look through this registration, but the fields stay locked until you sign in. Then you can fill in the details and register.', $xpm_login_next); ?>
+                        <?php endif; ?>
+                        <?php if (!empty($xpm_prefilled)): ?>
+                            <div class="alert alert-success" role="status">
+                                <i class="fas fa-circle-check"></i>
+                                <span>We filled in details we already have for you. Change anything before you send it.</span>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" class="form application-form<?php echo $xpm_guest ? ' form-locked' : ''; ?>" id="programme-registration-form">
+                            <?php if ($xpm_guest): ?><fieldset class="guest-fieldset" disabled><?php endif; ?>
                             <input type="hidden" name="programme_id" value="<?php echo $programme ? $programme['id'] : ''; ?>">
 
                             <fieldset class="form-section">
@@ -678,12 +697,13 @@ if ($pdo) {
                                 </div>
                             </fieldset>
 
+                            <?php if ($xpm_guest): ?></fieldset><?php endif; ?>
                             <div class="form-actions">
                                 <a href="programmes.php" class="btn btn-outline">
                                     <i class="fas fa-arrow-left"></i>
                                     <span>Back to Programmes</span>
                                 </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-lg"<?php echo $xpm_guest ? ' disabled' : ''; ?>>
                                     <i class="fas fa-paper-plane"></i>
                                     <span>Submit Registration</span>
                                 </button>

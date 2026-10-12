@@ -7,11 +7,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    http_response_code(403);
-    exit('Unauthorized');
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager'], '403');
 
 // Include database connection
 require_once '../includes/database.php';

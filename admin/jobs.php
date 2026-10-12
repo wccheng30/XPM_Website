@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager']);
 
 // Include database connection
 require_once '../includes/database.php';
@@ -226,7 +221,7 @@ if ($pdo) {
 
         <!-- Jobs List -->
         <?php if (!empty($jobs)): ?>
-            <div style="display: grid; gap: 20px;">
+            <div class="dense-list">
                 <?php foreach ($jobs as $job): ?>
                     <div class="card" id="job-<?php echo $job['id']; ?>">
                         <div class="card-body">
@@ -304,7 +299,7 @@ if ($pdo) {
                             </div>
                             
                             <!-- Job Details -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
+                            <div class="record-extra" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
                                 <div>
                                     <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
                                         <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
@@ -326,7 +321,7 @@ if ($pdo) {
                             </div>
                             
                             <!-- Job Footer -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                            <div class="record-extra" style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
                                 <div style="color: #64748b; font-size: 14px;">
                                     <i class="fas fa-calendar" style="margin-right: 6px;"></i>
                                     <strong>Posted:</strong> <?php echo date('F j, Y \a\t g:i A', strtotime($job['created_at'])); ?>

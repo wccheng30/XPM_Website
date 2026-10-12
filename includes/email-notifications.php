@@ -287,6 +287,52 @@ class EmailNotifications {
     }
     
     /**
+     * Tell every admin that a trainer reserved days on the calendar.
+     */
+    public function sendTrainerDayBooking($trainerName, $typeLabel, $startDate, $startTime, $endDate, $endTime, $kind = 'booked') {
+        if (!$this->pdo) {
+            return false;
+        }
+
+        $stmt = $this->pdo->query("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL AND email <> ''");
+        $emails = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        if (!$emails) {
+            return false;
+        }
+
+        $trainerName = trim((string) $trainerName) ?: 'A trainer';
+        $typeLabel = trim((string) $typeLabel) ?: 'Training Programme';
+        $from = date('M j, Y', strtotime($startDate)) . ' at ' . date('g:i A', strtotime($startTime));
+        $to = date('M j, Y', strtotime($endDate)) . ' at ' . date('g:i A', strtotime($endTime));
+        $kind = $kind ?? 'booked';
+        if ($kind === 'cancelled') {
+            $subject = 'Trainer cancelled a day - ' . $trainerName;
+            $lead = 'cancelled';
+            $note = 'Those days are free again.';
+        } elseif ($kind === 'updated') {
+            $subject = 'Trainer changed a booking - ' . $trainerName;
+            $lead = 'changed';
+            $note = 'Those days stay reserved. Edit the programme and post it when it is ready.';
+        } else {
+            $subject = 'Trainer booked a day - ' . $trainerName;
+            $lead = 'booked';
+            $note = 'Those days are reserved. Edit the programme and post it when it is ready.';
+        }
+        $message = '<p><strong>' . htmlspecialchars($trainerName) . '</strong> ' . $lead . ' a '
+            . htmlspecialchars($typeLabel) . '.</p>'
+            . '<p>From ' . htmlspecialchars($from) . ' to ' . htmlspecialchars($to) . '.</p>'
+            . '<p>' . htmlspecialchars($note) . '</p>';
+
+        $sent = false;
+        foreach ($emails as $email) {
+            if ($this->sendEmail($email, $subject, $message)) {
+                $sent = true;
+            }
+        }
+        return $sent;
+    }
+
+    /**
      * Send daily booking reminders
      */
     public function sendDailyReminders() {

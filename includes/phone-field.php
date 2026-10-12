@@ -24,6 +24,27 @@ function phone_country_codes() {
     ];
 }
 
+function split_phone($stored) {
+    $stored = trim((string) $stored);
+    if ($stored === '') {
+        return ['+60', ''];
+    }
+
+    $codes = array_keys(phone_country_codes());
+    usort($codes, function ($a, $b) {
+        return strlen($b) - strlen($a);
+    });
+
+    foreach ($codes as $code) {
+        if (strpos($stored, $code) === 0) {
+            $local = ltrim(preg_replace('/\D+/', '', trim(substr($stored, strlen($code)))), '0');
+            return [$code, $local];
+        }
+    }
+
+    return ['+60', ltrim(preg_replace('/\D+/', '', $stored), '0')];
+}
+
 function combine_phone($code, $local) {
     $codes = phone_country_codes();
     $code = trim((string) $code);

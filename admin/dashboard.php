@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
 
 // Include shared database connection
 require_once '../includes/database.php';
@@ -40,7 +35,17 @@ $recent_custom_requests = [];
 $interest_breakdown = [];
 $blacklist_lookup = [];
 
-if ($pdo) {
+$is_trainer_view = auth_is_trainer();
+$trainer_programme_count = 0;
+if ($pdo && $is_trainer_view) {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM programmes WHERE owner_user_id = ?");
+        $stmt->execute([(int) (auth_user()['id'] ?? 0)]);
+        $trainer_programme_count = (int) $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        $trainer_programme_count = 0;
+    }
+} elseif ($pdo) {
     try {
         // Total contacts
         $stmt = $pdo->query("SELECT COUNT(*) FROM contacts");
@@ -168,6 +173,19 @@ foreach ($interest_breakdown as $interest_row) {
     <div class="admin-container">
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('dashboard'); ?>
+
+        <?php if (!empty($is_trainer_view)): ?>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 style="margin-bottom: 8px;">Your calendar</h2>
+                <p style="color: #64748b;">Book a webinar or training programme on an open day. The first booking keeps that day.</p>
+                <p style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <a class="btn btn-primary" href="facilities.php">Book a day</a>
+                    <a class="btn btn-secondary" href="my-profile.php">Edit trainer profile</a>
+                </p>
+            </div>
+        </div>
+        <?php else: ?>
         
         <!-- Welcome Section -->
         <div class="card mb-3">
@@ -258,7 +276,7 @@ foreach ($interest_breakdown as $interest_row) {
                 <div class="pending-item">
                     <div class="pending-count"><?php echo $stats['pending_bookings']; ?></div>
                     <div class="pending-label">Facility Bookings</div>
-                    <a href="bookings.php" class="pending-action">Review</a>
+                    <a href="facilities.php" class="pending-action">Review</a>
                 </div>
             </div>
         </div>
@@ -411,38 +429,12 @@ foreach ($interest_breakdown as $interest_row) {
                 <?php endif; ?>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
 <!-- Modern JavaScript for Enhanced UX -->
 <script>
-// Theme Toggle Functionality
-function toggleTheme() {
-    const body = document.body;
-    const themeIcon = document.getElementById('theme-icon');
-    const themeText = document.getElementById('theme-text');
-    
-    if (body.getAttribute('data-theme') === 'dark') {
-        body.removeAttribute('data-theme');
-        themeIcon.className = 'fas fa-moon';
-        themeText.textContent = 'Dark Mode';
-        localStorage.setItem('theme', 'light');
-    } else {
-        body.setAttribute('data-theme', 'dark');
-        themeIcon.className = 'fas fa-sun';
-        themeText.textContent = 'Light Mode';
-        localStorage.setItem('theme', 'dark');
-    }
-}
-
-// Load saved theme
 document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.body.setAttribute('data-theme', 'dark');
-        document.getElementById('theme-icon').className = 'fas fa-sun';
-        document.getElementById('theme-text').textContent = 'Light Mode';
-    }
-    
     // Add smooth animations to stat cards
     const statCards = document.querySelectorAll('.stat-card');
     statCards.forEach((card, index) => {

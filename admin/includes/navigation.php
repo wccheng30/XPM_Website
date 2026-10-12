@@ -5,6 +5,26 @@
  */
 
 function renderAdminNavigation($current_page = '') {
+    $role = $_SESSION['admin_role'] ?? ($_SESSION['user_role'] ?? 'admin');
+    if ($role === 'trainer') {
+        $nav_items = [
+            'dashboard' => [
+                'url' => 'dashboard.php',
+                'icon' => 'fas fa-home',
+                'label' => 'Dashboard'
+            ],
+            'facilities' => [
+                'url' => 'facilities.php',
+                'icon' => 'fas fa-calendar-alt',
+                'label' => 'Calendar'
+            ],
+            'my_profile' => [
+                'url' => 'my-profile.php',
+                'icon' => 'fas fa-id-badge',
+                'label' => 'My Profile'
+            ],
+        ];
+    } else {
     $nav_items = [
         'dashboard' => [
             'url' => 'dashboard.php',
@@ -36,20 +56,10 @@ function renderAdminNavigation($current_page = '') {
             'icon' => 'fas fa-chalkboard-teacher',
             'label' => 'Training Programmes'
         ],
-        'bookings' => [
-            'url' => 'bookings.php',
-            'icon' => 'fas fa-calendar-alt',
-            'label' => 'Bookings'
-        ],
-        'facility_calendar' => [
-            'url' => 'facility-calendar.php',
-            'icon' => 'fas fa-calendar',
-            'label' => 'Facility Calendar'
-        ],
-        'facility_management' => [
-            'url' => 'programme-facility-management.php',
+        'facilities' => [
+            'url' => 'facilities.php',
             'icon' => 'fas fa-building',
-            'label' => 'Facility Management'
+            'label' => 'Facilities'
         ],
         'trainers' => [
             'url' => 'trainers.php',
@@ -62,6 +72,18 @@ function renderAdminNavigation($current_page = '') {
             'label' => 'Blacklist'
         ]
     ];
+        if ($role === 'admin') {
+            $nav_items = array_merge(
+                array_slice($nav_items, 0, 1, true),
+                ['users' => [
+                    'url' => 'users.php',
+                    'icon' => 'fas fa-user-shield',
+                    'label' => 'Users'
+                ]],
+                array_slice($nav_items, 1, null, true)
+            );
+        }
+    }
     
     echo '<div class="admin-nav-sentinel" aria-hidden="true"></div>';
     echo '<nav class="admin-nav" aria-label="Admin sections">';

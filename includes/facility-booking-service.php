@@ -4,6 +4,81 @@
  * Handles integration between programmes and facility bookings
  */
 
+function xpm_reservation_bounds($startDate, $endDate = null) {
+    $start = substr(trim((string) $startDate), 0, 10);
+    if ($start === '' || $start === '0000-00-00' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
+        return null;
+    }
+    $end = substr(trim((string) $endDate), 0, 10);
+    if ($end === '' || $end === '0000-00-00' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+        $end = $start;
+    }
+    if ($end < $start) {
+        return ['error' => 'The end date has to be on or after the start date.'];
+    }
+    return ['start' => $start, 'end' => $end];
+}
+
+function xpm_day_reservation_conflict(PDO $pdo, $startDate, $endDate = null, $excludeProgrammeId = null, $includeRoomBookings = true) {
+    $bounds = xpm_reservation_bounds($startDate, $endDate);
+    if ($bounds === null) {
+        return null;
+    }
+    if (!empty($bounds['error'])) {
+        return $bounds['error'];
+    }
+
+    $excludeProgrammeId = (int) $excludeProgrammeId;
+    $params = [$bounds['end'], $bounds['start']];
+    $sql = "SELECT id, title, start_date, end_date
+            FROM programmes
+            WHERE start_date IS NOT NULL
+              AND start_date <> '0000-00-00'
+              AND start_date <= ?
+              AND COALESCE(NULLIF(end_date, '0000-00-00'), start_date) >= ?";
+    if ($excludeProgrammeId > 0) {
+        $sql .= ' AND id <> ?';
+        $params[] = $excludeProgrammeId;
+    }
+    $sql .= ' ORDER BY start_date LIMIT 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $programme = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($programme) {
+        $title = trim((string) ($programme['title'] ?? '')) ?: 'Another programme';
+        $rangeStart = date('M j, Y', strtotime($programme['start_date']));
+        $rangeEnd = substr((string) ($programme['end_date'] ?? ''), 0, 10);
+        $when = ($rangeEnd !== '' && $rangeEnd !== '0000-00-00' && $rangeEnd > substr((string) $programme['start_date'], 0, 10))
+            ? $rangeStart . ' to ' . date('M j, Y', strtotime($rangeEnd))
+            : $rangeStart;
+        return $title . ' already reserves ' . $when . '. That day is taken.';
+    }
+
+    if (!$includeRoomBookings) {
+        return null;
+    }
+
+    $params = [$bounds['start'], $bounds['end']];
+    $sql = "SELECT booking_date, customer_name
+            FROM bookings
+            WHERE status IN ('pending', 'confirmed')
+              AND booking_date BETWEEN ? AND ?";
+    if ($excludeProgrammeId > 0) {
+        $sql .= ' AND (programme_id IS NULL OR programme_id <> ?)';
+        $params[] = $excludeProgrammeId;
+    }
+    $sql .= ' ORDER BY booking_date LIMIT 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($booking) {
+        $when = date('M j, Y', strtotime($booking['booking_date']));
+        return 'A room booking on ' . $when . ' already reserves that day.';
+    }
+
+    return null;
+}
+
 class FacilityBookingService {
     private $pdo;
     
@@ -52,6 +127,16 @@ class FacilityBookingService {
             
             if (!$programme) {
                 throw new Exception("Programme not found or doesn't require facility");
+            }
+
+            $reserved = xpm_day_reservation_conflict(
+                $this->pdo,
+                $programme['start_date'],
+                $programme['end_date'] ?: $programme['start_date'],
+                (int) $programmeId
+            );
+            if ($reserved) {
+                throw new Exception($reserved);
             }
             
             // Check for existing facility booking
@@ -174,6 +259,11 @@ class FacilityBookingService {
             $date = $newDate ?? $programme['current_date'];
             $startTime = $newStartTime ?? $programme['current_start_time'];
             $endTime = $newEndTime ?? $programme['current_end_time'];
+
+            $reserved = xpm_day_reservation_conflict($this->pdo, $date, $date, (int) $programmeId);
+            if ($reserved) {
+                throw new Exception($reserved);
+            }
             
             // Check for conflicts (excluding current booking)
             $stmt = $this->pdo->prepare("
@@ -403,7 +493,7 @@ class FacilityBookingService {
             $this->checkDatabaseSchema();
             
             $stmt = $this->pdo->prepare("
-                SELECT p.id as programme_id, p.title, p.requires_facility, p.facility_type,
+                SELECT p.id as programme_id, p.title, p.requires_facility, p.facility_type, p.owner_user_id,
                        b.id as booking_id, b.status, b.booking_date, b.start_time, b.end_time,
                        b.customer_name, b.purpose
                 FROM programmes p

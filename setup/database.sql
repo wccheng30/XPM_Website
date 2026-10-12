@@ -26,10 +26,12 @@ CREATE TABLE IF NOT EXISTS contacts (
 -- ===== USERS TABLE (ADMIN AUTHENTICATION) =====
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    role ENUM('admin', 'manager') DEFAULT 'admin',
+    display_name VARCHAR(255) NULL,
+    avatar_path VARCHAR(500) NULL,
+    role ENUM('admin', 'manager', 'trainer', 'user') NOT NULL DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -42,6 +44,7 @@ ON DUPLICATE KEY UPDATE id=id;
 -- ===== PROGRAMMES TABLE =====
 CREATE TABLE IF NOT EXISTS programmes (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    owner_user_id INT DEFAULT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     duration VARCHAR(100),
@@ -50,6 +53,7 @@ CREATE TABLE IF NOT EXISTS programmes (
     tax_amount DECIMAL(10,2) DEFAULT 0.00,
     original_price DECIMAL(10,2) DEFAULT NULL,
     category VARCHAR(100),
+    programme_type ENUM('webinar', 'training') NOT NULL DEFAULT 'training',
     max_participants INT DEFAULT 25,
     certification VARCHAR(255) DEFAULT 'HRD Corp Certified',
     programme_icon VARCHAR(100) DEFAULT 'fas fa-graduation-cap',
@@ -243,6 +247,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 -- ===== TRAINERS TABLE =====
 CREATE TABLE IF NOT EXISTS trainers (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT DEFAULT NULL,
     name VARCHAR(255) NOT NULL,
     title VARCHAR(255) DEFAULT NULL,
     experience_years INT DEFAULT 0,
@@ -253,7 +258,8 @@ CREATE TABLE IF NOT EXISTS trainers (
     is_active TINYINT(1) DEFAULT 1,
     display_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_trainers_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ===== BLACKLIST TABLE =====
@@ -286,6 +292,8 @@ CREATE INDEX idx_contacts_email ON contacts(email);
 CREATE INDEX idx_contacts_status ON contacts(status);
 CREATE INDEX idx_jobs_active ON jobs(is_active);
 CREATE INDEX idx_programmes_active ON programmes(is_active);
+CREATE INDEX idx_programmes_owner ON programmes(owner_user_id);
+CREATE INDEX idx_programmes_type ON programmes(programme_type);
 CREATE INDEX idx_applications_status ON applications(status);
 CREATE INDEX idx_programme_registrations_status ON programme_registrations(status);
 CREATE INDEX idx_clients_featured ON clients(is_featured);

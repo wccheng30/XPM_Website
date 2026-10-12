@@ -1,7 +1,14 @@
 <?php
+require_once 'includes/auth.php';
+auth_start();
+$xpm_account = auth_user();
+$xpm_guest = !$xpm_account || empty($xpm_account['id']);
+$xpm_login_next = auth_login_next_from_request();
+
 // Include shared database connection
 require_once 'includes/database.php';
 require_once 'includes/phone-field.php';
+require_once 'includes/form-prefill.php';
 require_once 'config/email_config.php';
 
 $pdo = get_db_connection();
@@ -182,7 +189,9 @@ if (isset($_GET['job_id']) && is_numeric($_GET['job_id'])) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
+    $error = 'Log in or create an account before you apply.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $job_id = $_POST['job_id'] ?? null;
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -393,6 +402,13 @@ if ($pdo) {
         // Handle error silently
     }
 }
+
+$xpm_prefilled = $pdo ? xpm_apply_account_prefill($pdo, 'job') : false;
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    $name = $_POST['name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $ic_number = $_POST['ic_number'] ?? '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -504,7 +520,17 @@ if ($pdo) {
                             <p>Please fill out the form below to apply for this position. Fields marked * are required.</p>
                         </div>
 
-                        <form method="POST" enctype="multipart/form-data" class="form application-form" id="job-application-form">
+                        <?php if ($xpm_guest): ?>
+                            <?php auth_guest_banner('You can look through this application, but the fields stay locked until you sign in. Then you can fill in the details and apply.', $xpm_login_next); ?>
+                        <?php endif; ?>
+                        <?php if (!empty($xpm_prefilled)): ?>
+                            <div class="alert alert-success" role="status">
+                                <i class="fas fa-circle-check"></i>
+                                <span>We filled in details we already have for you. Change anything before you send it.</span>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" enctype="multipart/form-data" class="form application-form<?php echo $xpm_guest ? ' form-locked' : ''; ?>" id="job-application-form">
+                            <?php if ($xpm_guest): ?><fieldset class="guest-fieldset" disabled><?php endif; ?>
                             <?php if ($job): ?>
                                 <input type="hidden" name="job_id" value="<?php echo $job['id']; ?>">
                             <?php endif; ?>
@@ -572,7 +598,7 @@ if ($pdo) {
                                     <span class="form-label">Application Type *</span>
                                     <div class="application-type-selection">
                                         <label class="application-type-option">
-                                            <input type="radio" name="application_type" value="with_resume" checked onchange="toggleApplicationType()">
+                                            <input type="radio" name="application_type" value="with_resume" <?php echo ($_POST['application_type'] ?? 'with_resume') !== 'without_resume' ? 'checked' : ''; ?> onchange="toggleApplicationType()">
                                             <span class="type-icon"><i class="fas fa-file-pdf"></i></span>
                                             <span class="type-text">
                                                 <strong>I have a Resume/CV</strong>
@@ -581,7 +607,7 @@ if ($pdo) {
                                         </label>
 
                                         <label class="application-type-option">
-                                            <input type="radio" name="application_type" value="without_resume" onchange="toggleApplicationType()">
+                                            <input type="radio" name="application_type" value="without_resume" <?php echo ($_POST['application_type'] ?? '') === 'without_resume' ? 'checked' : ''; ?> onchange="toggleApplicationType()">
                                             <span class="type-icon"><i class="fas fa-pen-to-square"></i></span>
                                             <span class="type-text">
                                                 <strong>I don't have a Resume/CV</strong>
@@ -650,12 +676,12 @@ if ($pdo) {
                                                 <i class="fas fa-certificate"></i>
                                                 <select id="education_level" name="education_level">
                                                     <option value="">Select your education level</option>
-                                                    <option value="high_school">High School</option>
-                                                    <option value="diploma">Diploma</option>
-                                                    <option value="bachelor">Bachelor's Degree</option>
-                                                    <option value="master">Master's Degree</option>
-                                                    <option value="phd">PhD</option>
-                                                    <option value="other">Other</option>
+                                                    <option value="high_school" <?php echo ($_POST['education_level'] ?? '') === 'high_school' ? 'selected' : ''; ?>>High School</option>
+                                                    <option value="diploma" <?php echo ($_POST['education_level'] ?? '') === 'diploma' ? 'selected' : ''; ?>>Diploma</option>
+                                                    <option value="bachelor" <?php echo ($_POST['education_level'] ?? '') === 'bachelor' ? 'selected' : ''; ?>>Bachelor's Degree</option>
+                                                    <option value="master" <?php echo ($_POST['education_level'] ?? '') === 'master' ? 'selected' : ''; ?>>Master's Degree</option>
+                                                    <option value="phd" <?php echo ($_POST['education_level'] ?? '') === 'phd' ? 'selected' : ''; ?>>PhD</option>
+                                                    <option value="other" <?php echo ($_POST['education_level'] ?? '') === 'other' ? 'selected' : ''; ?>>Other</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -664,7 +690,7 @@ if ($pdo) {
                                             <label for="education_details">Education Details</label>
                                             <div class="input-wrapper">
                                                 <i class="fas fa-university"></i>
-                                                <textarea id="education_details" name="education_details" rows="3" placeholder="Please provide details about your education, including institution names, degrees, and graduation years"></textarea>
+                                                <textarea id="education_details" name="education_details" rows="3" placeholder="Please provide details about your education, including institution names, degrees, and graduation years"><?php echo xpm_h('education_details'); ?></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -679,14 +705,14 @@ if ($pdo) {
                                                     <label for="reference1_name">Name *</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-user"></i>
-                                                        <input type="text" id="reference1_name" name="reference1_name" placeholder="Full name">
+                                                        <input type="text" id="reference1_name" name="reference1_name" placeholder="Full name" value="<?php echo xpm_h('reference1_name'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="reference1_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="reference1_position" name="reference1_position" placeholder="Job title">
+                                                        <input type="text" id="reference1_position" name="reference1_position" placeholder="Job title" value="<?php echo xpm_h('reference1_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -695,7 +721,7 @@ if ($pdo) {
                                                     <label for="reference1_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="reference1_company" name="reference1_company" placeholder="Company name">
+                                                        <input type="text" id="reference1_company" name="reference1_company" placeholder="Company name" value="<?php echo xpm_h('reference1_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
@@ -707,7 +733,7 @@ if ($pdo) {
                                                 <label for="reference1_email">Email</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-envelope"></i>
-                                                    <input type="email" id="reference1_email" name="reference1_email" placeholder="Email address">
+                                                    <input type="email" id="reference1_email" name="reference1_email" placeholder="Email address" value="<?php echo xpm_h('reference1_email'); ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -719,14 +745,14 @@ if ($pdo) {
                                                     <label for="reference2_name">Name</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-user"></i>
-                                                        <input type="text" id="reference2_name" name="reference2_name" placeholder="Full name">
+                                                        <input type="text" id="reference2_name" name="reference2_name" placeholder="Full name" value="<?php echo xpm_h('reference2_name'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="reference2_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="reference2_position" name="reference2_position" placeholder="Job title">
+                                                        <input type="text" id="reference2_position" name="reference2_position" placeholder="Job title" value="<?php echo xpm_h('reference2_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -735,7 +761,7 @@ if ($pdo) {
                                                     <label for="reference2_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="reference2_company" name="reference2_company" placeholder="Company name">
+                                                        <input type="text" id="reference2_company" name="reference2_company" placeholder="Company name" value="<?php echo xpm_h('reference2_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
@@ -747,7 +773,7 @@ if ($pdo) {
                                                 <label for="reference2_email">Email</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-envelope"></i>
-                                                    <input type="email" id="reference2_email" name="reference2_email" placeholder="Email address">
+                                                    <input type="email" id="reference2_email" name="reference2_email" placeholder="Email address" value="<?php echo xpm_h('reference2_email'); ?>">
                                                 </div>
                                             </div>
                                         </details>
@@ -759,14 +785,14 @@ if ($pdo) {
                                                     <label for="reference3_name">Name</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-user"></i>
-                                                        <input type="text" id="reference3_name" name="reference3_name" placeholder="Full name">
+                                                        <input type="text" id="reference3_name" name="reference3_name" placeholder="Full name" value="<?php echo xpm_h('reference3_name'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="reference3_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="reference3_position" name="reference3_position" placeholder="Job title">
+                                                        <input type="text" id="reference3_position" name="reference3_position" placeholder="Job title" value="<?php echo xpm_h('reference3_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -775,7 +801,7 @@ if ($pdo) {
                                                     <label for="reference3_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="reference3_company" name="reference3_company" placeholder="Company name">
+                                                        <input type="text" id="reference3_company" name="reference3_company" placeholder="Company name" value="<?php echo xpm_h('reference3_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
@@ -787,7 +813,7 @@ if ($pdo) {
                                                 <label for="reference3_email">Email</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-envelope"></i>
-                                                    <input type="email" id="reference3_email" name="reference3_email" placeholder="Email address">
+                                                    <input type="email" id="reference3_email" name="reference3_email" placeholder="Email address" value="<?php echo xpm_h('reference3_email'); ?>">
                                                 </div>
                                             </div>
                                         </details>
@@ -803,14 +829,14 @@ if ($pdo) {
                                                     <label for="employment1_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="employment1_company" name="employment1_company" placeholder="Company name">
+                                                        <input type="text" id="employment1_company" name="employment1_company" placeholder="Company name" value="<?php echo xpm_h('employment1_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="employment1_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="employment1_position" name="employment1_position" placeholder="Job title">
+                                                        <input type="text" id="employment1_position" name="employment1_position" placeholder="Job title" value="<?php echo xpm_h('employment1_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -818,14 +844,14 @@ if ($pdo) {
                                                 <label for="employment1_duration">Duration</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-calendar"></i>
-                                                    <input type="text" id="employment1_duration" name="employment1_duration" placeholder="e.g., Jan 2020 - Present">
+                                                    <input type="text" id="employment1_duration" name="employment1_duration" placeholder="e.g., Jan 2020 - Present" value="<?php echo xpm_h('employment1_duration'); ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="employment1_description">Job Description</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-tasks"></i>
-                                                    <textarea id="employment1_description" name="employment1_description" rows="3" placeholder="Describe your responsibilities and achievements"></textarea>
+                                                    <textarea id="employment1_description" name="employment1_description" rows="3" placeholder="Describe your responsibilities and achievements"><?php echo xpm_h('employment1_description'); ?></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -837,14 +863,14 @@ if ($pdo) {
                                                     <label for="employment2_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="employment2_company" name="employment2_company" placeholder="Company name">
+                                                        <input type="text" id="employment2_company" name="employment2_company" placeholder="Company name" value="<?php echo xpm_h('employment2_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="employment2_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="employment2_position" name="employment2_position" placeholder="Job title">
+                                                        <input type="text" id="employment2_position" name="employment2_position" placeholder="Job title" value="<?php echo xpm_h('employment2_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -852,14 +878,14 @@ if ($pdo) {
                                                 <label for="employment2_duration">Duration</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-calendar"></i>
-                                                    <input type="text" id="employment2_duration" name="employment2_duration" placeholder="e.g., Jan 2018 - Dec 2019">
+                                                    <input type="text" id="employment2_duration" name="employment2_duration" placeholder="e.g., Jan 2018 - Dec 2019" value="<?php echo xpm_h('employment2_duration'); ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="employment2_description">Job Description</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-tasks"></i>
-                                                    <textarea id="employment2_description" name="employment2_description" rows="3" placeholder="Describe your responsibilities and achievements"></textarea>
+                                                    <textarea id="employment2_description" name="employment2_description" rows="3" placeholder="Describe your responsibilities and achievements"><?php echo xpm_h('employment2_description'); ?></textarea>
                                                 </div>
                                             </div>
                                         </details>
@@ -871,14 +897,14 @@ if ($pdo) {
                                                     <label for="employment3_company">Company</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-building"></i>
-                                                        <input type="text" id="employment3_company" name="employment3_company" placeholder="Company name">
+                                                        <input type="text" id="employment3_company" name="employment3_company" placeholder="Company name" value="<?php echo xpm_h('employment3_company'); ?>">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="employment3_position">Position</label>
                                                     <div class="input-wrapper">
                                                         <i class="fas fa-briefcase"></i>
-                                                        <input type="text" id="employment3_position" name="employment3_position" placeholder="Job title">
+                                                        <input type="text" id="employment3_position" name="employment3_position" placeholder="Job title" value="<?php echo xpm_h('employment3_position'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
@@ -886,14 +912,14 @@ if ($pdo) {
                                                 <label for="employment3_duration">Duration</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-calendar"></i>
-                                                    <input type="text" id="employment3_duration" name="employment3_duration" placeholder="e.g., Jan 2016 - Dec 2017">
+                                                    <input type="text" id="employment3_duration" name="employment3_duration" placeholder="e.g., Jan 2016 - Dec 2017" value="<?php echo xpm_h('employment3_duration'); ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="employment3_description">Job Description</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-tasks"></i>
-                                                    <textarea id="employment3_description" name="employment3_description" rows="3" placeholder="Describe your responsibilities and achievements"></textarea>
+                                                    <textarea id="employment3_description" name="employment3_description" rows="3" placeholder="Describe your responsibilities and achievements"><?php echo xpm_h('employment3_description'); ?></textarea>
                                                 </div>
                                             </div>
                                         </details>
@@ -907,14 +933,14 @@ if ($pdo) {
                                                 <label for="technical_skills">Technical Skills</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-laptop-code"></i>
-                                                    <textarea id="technical_skills" name="technical_skills" rows="3" placeholder="List your technical skills, software proficiency, programming languages, etc."></textarea>
+                                                    <textarea id="technical_skills" name="technical_skills" rows="3" placeholder="List your technical skills, software proficiency, programming languages, etc."><?php echo xpm_h('technical_skills'); ?></textarea>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="soft_skills">Soft Skills</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-handshake"></i>
-                                                    <textarea id="soft_skills" name="soft_skills" rows="3" placeholder="List your soft skills like communication, leadership, teamwork, etc."></textarea>
+                                                    <textarea id="soft_skills" name="soft_skills" rows="3" placeholder="List your soft skills like communication, leadership, teamwork, etc."><?php echo xpm_h('soft_skills'); ?></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -923,14 +949,14 @@ if ($pdo) {
                                                 <label for="certifications">Certifications</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-certificate"></i>
-                                                    <textarea id="certifications" name="certifications" rows="3" placeholder="List any professional certifications, licenses, or training you have"></textarea>
+                                                    <textarea id="certifications" name="certifications" rows="3" placeholder="List any professional certifications, licenses, or training you have"><?php echo xpm_h('certifications'); ?></textarea>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="languages">Languages</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-language"></i>
-                                                    <textarea id="languages" name="languages" rows="3" placeholder="List languages you speak and your proficiency level"></textarea>
+                                                    <textarea id="languages" name="languages" rows="3" placeholder="List languages you speak and your proficiency level"><?php echo xpm_h('languages'); ?></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -944,14 +970,14 @@ if ($pdo) {
                                                 <label for="expected_salary">Expected Salary</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-money-bill-wave"></i>
-                                                    <input type="text" id="expected_salary" name="expected_salary" placeholder="e.g., RM 3000 - RM 4000">
+                                                    <input type="text" id="expected_salary" name="expected_salary" placeholder="e.g., RM 3000 - RM 4000" value="<?php echo xpm_h('expected_salary'); ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label for="availability_date">Availability Date</label>
                                                 <div class="input-wrapper">
                                                     <i class="fas fa-calendar-alt"></i>
-                                                    <input type="date" id="availability_date" name="availability_date">
+                                                    <input type="date" id="availability_date" name="availability_date" value="<?php echo xpm_h('availability_date'); ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -960,19 +986,20 @@ if ($pdo) {
                                             <label for="additional_notes">Additional Notes</label>
                                             <div class="input-wrapper">
                                                 <i class="fas fa-sticky-note"></i>
-                                                <textarea id="additional_notes" name="additional_notes" rows="4" placeholder="Any additional information you'd like to share about yourself, your goals, or why you're interested in this position"></textarea>
+                                                <textarea id="additional_notes" name="additional_notes" rows="4" placeholder="Any additional information you'd like to share about yourself, your goals, or why you're interested in this position"><?php echo xpm_h('additional_notes'); ?></textarea>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </fieldset>
 
+                            <?php if ($xpm_guest): ?></fieldset><?php endif; ?>
                             <div class="form-actions">
                                 <a href="jobs.php" class="btn btn-outline">
                                     <i class="fas fa-arrow-left"></i>
                                     <span>Back to Jobs</span>
                                 </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-lg"<?php echo $xpm_guest ? ' disabled' : ''; ?>>
                                     <i class="fas fa-paper-plane"></i>
                                     <span>Submit Application</span>
                                 </button>

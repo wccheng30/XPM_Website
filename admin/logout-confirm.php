@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
 
 // Handle logout
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
@@ -14,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
     session_destroy();
     
     // Redirect to login page
-    header('Location: index.php?logout=success');
+    header('Location: ../login.php');
     exit;
 }
 ?>
@@ -32,9 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
     <link rel="stylesheet" href="css/auth.css?v=20261005-1">
 </head>
 <body class="auth-center" data-motion="admin">
-    <script>
-        try { if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark'); } catch (e) {}
-    </script>
     <div class="logout-container" role="dialog" aria-labelledby="logout-title">
         <div class="logout-icon">
             <i class="fas fa-sign-out-alt"></i>

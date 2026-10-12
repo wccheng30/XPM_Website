@@ -1,4 +1,17 @@
 /* Programmes page */
+.programme-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: var(--sp-6);
+}
+
+.programme-filters .btn.is-active {
+    background: var(--c-charcoal);
+    color: #fff;
+    border-color: var(--c-charcoal);
+}
+
 .programme-listing .listing-media img {
     aspect-ratio: 4 / 5;
     object-fit: contain;

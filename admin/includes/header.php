@@ -1,21 +1,23 @@
 <?php
 /**
  * Admin Header Component
- * Markup only: brand, page title, theme toggle and account links.
+ * Markup only: brand, page title, and account links.
  *
  * @param string     $title Page title shown in the header
  * @param string     $icon  Font Awesome classes for the title icon
  * @param array|null $back  Optional ['url' => ..., 'label' => ...] back link
  */
 function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null) {
-    $username = $_SESSION['admin_username'] ?? 'Admin';
+    $username = $_SESSION['user_name'] ?? ($_SESSION['admin_username'] ?? 'Admin');
+    $brandKicker = (($_SESSION['admin_role'] ?? '') === 'trainer') ? 'Trainer workspace' : 'XpressPoint Admin';
     $initial = function_exists('mb_substr') ? mb_substr($username, 0, 1) : substr($username, 0, 1);
     ?>
+    <link rel="stylesheet" href="css/dense-list.css?v=20261008-3">
     <header class="admin-header">
         <a href="dashboard.php" class="admin-brand" aria-label="Admin dashboard">
             <span class="admin-brand-mark">XP</span>
             <span class="admin-brand-text">
-                <span class="admin-brand-kicker">XpressPoint Admin</span>
+                <span class="admin-brand-kicker"><?php echo htmlspecialchars($brandKicker); ?></span>
                 <h1><i class="<?php echo htmlspecialchars($icon); ?>"></i><?php echo htmlspecialchars($title); ?></h1>
             </span>
         </a>
@@ -26,14 +28,14 @@ function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null
                     <span><?php echo htmlspecialchars($back['label'] ?? 'Back'); ?></span>
                 </a>
             <?php endif; ?>
-            <button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
-                <i class="fas fa-moon" id="theme-icon"></i>
-                <span id="theme-text">Dark Mode</span>
-            </button>
             <span class="user-chip">
                 <span class="user-avatar"><?php echo htmlspecialchars($initial); ?></span>
                 <?php echo htmlspecialchars($username); ?>
             </span>
+            <a href="../index.html" class="logout-btn" title="Public site">
+                <i class="fas fa-home"></i>
+                <span>Main site</span>
+            </a>
             <a href="change-password.php" class="logout-btn" title="Change password">
                 <i class="fas fa-key"></i>
                 <span>Password</span>
@@ -45,28 +47,5 @@ function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null
         </div>
     </header>
     <script src="../assets/js/xpm-dialog.js?v=20261006-5"></script>
-    <script>
-        (function () {
-            function applyTheme(dark) {
-                var icon = document.getElementById('theme-icon');
-                var text = document.getElementById('theme-text');
-                if (dark) {
-                    document.body.setAttribute('data-theme', 'dark');
-                } else {
-                    document.body.removeAttribute('data-theme');
-                }
-                if (icon) icon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
-                if (text) text.textContent = dark ? 'Light Mode' : 'Dark Mode';
-            }
-            try { applyTheme(localStorage.getItem('theme') === 'dark'); } catch (e) {}
-            if (typeof window.toggleTheme !== 'function') {
-                window.toggleTheme = function () {
-                    var dark = document.body.getAttribute('data-theme') !== 'dark';
-                    applyTheme(dark);
-                    try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
-                };
-            }
-        })();
-    </script>
     <?php
 }

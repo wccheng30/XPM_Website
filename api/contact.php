@@ -46,10 +46,20 @@ function validate_phone($phone) {
     return strlen($phone) >= 10;
 }
 
+require_once '../includes/auth.php';
+$contactUser = auth_user();
+if (!$contactUser || empty($contactUser['id'])) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Log in to send a message.',
+    ]);
+    exit;
+}
+
 // Include shared database connection
 require_once '../includes/database.php';
 require_once '../includes/phone-field.php';
-require_once '../includes/form-spam.php';
 
 function create_tables($pdo) {
     try {

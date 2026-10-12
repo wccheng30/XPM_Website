@@ -871,6 +871,15 @@
     margin-bottom: var(--sp-5);
 }
 
+.contact-login-note {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.contact-login-note .btn {
+    justify-content: center;
+}
+
 .req {
     color: var(--c-danger);
 }

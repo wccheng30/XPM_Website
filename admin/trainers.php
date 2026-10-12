@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager']);
 
 // Include database connection
 require_once '../includes/database.php';
@@ -232,13 +227,13 @@ $total_pages = ceil($total_trainers / $per_page);
                                             <i class="fas fa-user"></i>
                                         </div>
                                     <?php endif; ?>
-                                    <div class="trainer-badges">
-                                        <?php if ($trainer['is_active']): ?>
-                                            <span class="badge badge-active">Active</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-inactive">Inactive</span>
-                                        <?php endif; ?>
-                                    </div>
+                                </div>
+                                <div class="trainer-badges">
+                                    <?php if ($trainer['is_active']): ?>
+                                        <span class="badge badge-active">Active</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-inactive">Inactive</span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="trainer-info">
                                     <h3><?php echo htmlspecialchars($trainer['name']); ?></h3>

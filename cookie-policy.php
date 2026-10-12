@@ -93,8 +93,8 @@
                 <p>If you have questions about our use of cookies, contact:</p>
                 <ul>
                     <li>Email: <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a></li>
-                    <li>Phone: 016 772 1113</li>
-                    <li>Address: No.6, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
+                    <li>Phone: 016 772 1113 / 016 772 3555</li>
+                    <li>Address: No.6 & 8, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
                 </ul>
 
                 <div class="legal-nav-links">

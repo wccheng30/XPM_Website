@@ -1,9 +1,8 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
+if (auth_is_trainer()) {
+    header('Location: facilities.php');
     exit;
 }
 
@@ -26,6 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($pdo) {
         try {
+            $ownerStmt = $pdo->prepare("SELECT * FROM programmes WHERE id = ?");
+            $ownerStmt->execute([$programme_id]);
+            $ownedProgramme = $ownerStmt->fetch();
+            if (!$ownedProgramme || !auth_owns_programme($ownedProgramme)) {
+                header('Location: programmes.php?error=' . urlencode('You can only change programmes you own.'));
+                exit;
+            }
+
             switch ($action) {
                 case 'activate':
                     $stmt = $pdo->prepare("UPDATE programmes SET is_active = 1, updated_at = NOW() WHERE id = ?");
@@ -79,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $duplicate_poster_image = $original_programme['poster_image'];
                         
                         // Insert the duplicate programme
-                        $insert_sql = "INSERT INTO programmes (title, description, duration, price, original_price, category, max_participants, certification, programme_icon, programme_badge, location, modules, schedule_type, poster_image, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())";
+                        $insert_sql = "INSERT INTO programmes (title, description, duration, price, original_price, category, programme_type, owner_user_id, max_participants, certification, programme_icon, programme_badge, location, modules, schedule_type, poster_image, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())";
                         $insert_stmt = $pdo->prepare($insert_sql);
                         $insert_stmt->execute([
                             $duplicate_title,
@@ -88,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $duplicate_price,
                             $duplicate_original_price,
                             $duplicate_category,
+                            $original_programme['programme_type'] ?? 'training',
+                            $original_programme['owner_user_id'] ?? null,
                             $duplicate_max_participants,
                             $duplicate_certification,
                             $duplicate_programme_icon,

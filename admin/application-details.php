@@ -1,11 +1,9 @@
 <?php
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    http_response_code(403);
-    exit('Unauthorized');
-}
+require_once '../includes/auth.php';
+require_once '../includes/blacklist-lookup.php';
+auth_require(['admin', 'manager'], '403');
 
 // Handle status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
@@ -16,8 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $pdo = get_db_connection();
         if ($pdo) {
             try {
+                $previous = $pdo->prepare("SELECT status FROM applications WHERE id = ?");
+                $previous->execute([$application_id]);
+                $previous_status = (string)$previous->fetchColumn();
                 $stmt = $pdo->prepare("UPDATE applications SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $application_id]);
+                blacklist_sync_status($pdo, 'application', (int)$application_id, $previous_status, (string)$new_status);
                 $success_message = "Application status updated successfully!";
             } catch (PDOException $e) {
                 $error_message = "Error updating application status.";

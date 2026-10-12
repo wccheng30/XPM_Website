@@ -38,8 +38,8 @@
                 <h2>1. Who We Are</h2>
                 <p><strong>Xpress Point Management Services</strong></p>
                 <ul>
-                    <li>Address: No.6, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
-                    <li>Phone: 016 772 1113</li>
+                    <li>Address: No.6 & 8, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
+                    <li>Phone: 016 772 1113 / 016 772 3555</li>
                     <li>Email: <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a></li>
                 </ul>
 
@@ -120,8 +120,8 @@
                 <p>If you have questions about this Privacy Policy or how we handle personal data, please contact:</p>
                 <ul>
                     <li>Email: <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a></li>
-                    <li>Phone: 016 772 1113</li>
-                    <li>Address: No.6, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
+                    <li>Phone: 016 772 1113 / 016 772 355</li>
+                    <li>Address: No.6 & 8, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
                 </ul>
 
                 <div class="legal-nav-links">

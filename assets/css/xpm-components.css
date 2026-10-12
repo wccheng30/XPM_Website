@@ -69,6 +69,69 @@
     gap: 0.15rem;
 }
 
+.nav-account {
+    position: relative;
+    margin-left: 0.4rem;
+}
+
+.nav-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    padding: 0;
+    border: 1px solid var(--c-border);
+    border-radius: 50%;
+    background: var(--c-charcoal);
+    color: #fff;
+    font-weight: 600;
+    line-height: 36px;
+    cursor: pointer;
+    overflow: hidden;
+    flex: 0 0 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-avatar img {
+    width: 36px;
+    height: 36px;
+    max-width: 36px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.nav-account-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 160px;
+    padding: 0.4rem;
+    background: #fff;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    z-index: 40;
+}
+
+.nav-account-menu a {
+    display: block;
+    padding: 0.45rem 0.7rem;
+    border-radius: var(--r-sm);
+    color: var(--c-text);
+    font-size: 0.875rem;
+}
+
+.nav-account-menu a:hover {
+    background: #f3f4f6;
+    color: var(--c-charcoal);
+    text-decoration: underline;
+}
+
 .nav-link {
     position: relative;
     padding: 0.5rem 0.7rem;
@@ -191,6 +254,16 @@
 
     .nav-link.active {
         font-weight: 600;
+    }
+
+    .nav-account {
+        margin: 1rem 0 0;
+    }
+
+    .nav-account-menu {
+        position: static;
+        box-shadow: none;
+        margin-top: 0.5rem;
     }
 
     .nav-menu.active .nav-link {
@@ -462,6 +535,56 @@
 .page-hero-center h1,
 .page-hero-center .lead {
     margin-inline: auto;
+}
+
+.guest-gate {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #f0d7a4;
+    background: var(--c-warning-bg);
+    border-radius: 16px;
+}
+
+.guest-gate-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    color: var(--c-warning);
+    flex: 0 0 auto;
+}
+
+.guest-gate strong {
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.guest-gate p {
+    margin: 0 0 0.85rem;
+    color: var(--c-text-2);
+    font-size: 0.95rem;
+}
+
+.guest-gate-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+fieldset.guest-fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-inline-size: 0;
+}
+
+.form-locked :is(input, select, textarea, button) {
+    cursor: not-allowed;
 }
 
 .breadcrumb {
@@ -2163,33 +2286,6 @@ form.loading {
 
 .video-close:hover {
     transform: rotate(90deg);
-}
-
-.admin-modal {
-    animation: xpmFade var(--dur) var(--ease-out) both;
-}
-
-.admin-modal-content {
-    font-family: var(--font-body);
-}
-
-.admin-modal-content h3 {
-    font-size: var(--fs-lg);
-    margin-bottom: var(--sp-3);
-}
-
-.admin-modal-content .form-group input {
-    width: 100%;
-    min-height: 44px;
-    padding: 0.6rem 0.85rem;
-    border: 1px solid var(--c-border-strong);
-    border-radius: var(--r-md);
-    outline: none;
-}
-
-.admin-modal-content .form-group input:focus {
-    border-color: var(--c-teal-deep);
-    box-shadow: 0 0 0 4px var(--c-focus);
 }
 
 /* ---------- Toast (job-detail) ---------- */

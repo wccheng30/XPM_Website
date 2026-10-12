@@ -1,14 +1,14 @@
 <?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
+require_once '../includes/auth.php';
+auth_require(['admin', 'manager', 'trainer']);
+if (auth_is_trainer()) {
+    header('Location: facilities.php');
     exit;
 }
 
 // Include database connection
 require_once '../includes/database.php';
+require_once '../includes/facility-booking-service.php';
 require_once '../includes/programme-question-config.php';
 
 $error = '';
@@ -32,6 +32,18 @@ if (!$pdo) {
     exit;
 }
 
+$ownerGuard = $pdo->prepare("SELECT id, owner_user_id FROM programmes WHERE id = ?");
+$ownerGuard->execute([$programme_id]);
+$ownerRow = $ownerGuard->fetch();
+if (!$ownerRow) {
+    header('Location: programmes.php?error=Programme not found');
+    exit;
+}
+if (!auth_owns_programme($ownerRow)) {
+    header('Location: programmes.php?error=' . urlencode('You can only change programmes you own.'));
+    exit;
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -46,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tax_amount = !empty($_POST['tax_amount']) ? trim($_POST['tax_amount']) : null;
         $original_price = !empty($_POST['programme_original_price']) ? trim($_POST['programme_original_price']) : null;
         $category = trim($_POST['category'] ?? '');
+        $programme_type = auth_normalize_programme_type($_POST['programme_type'] ?? 'training');
         $max_participants = intval($_POST['max_participants'] ?? 25);
         $certification = trim($_POST['certification'] ?? 'HRD Corp Certified');
                     // Handle custom icon selection
@@ -256,24 +269,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($requires_facility && (empty($start_time) || empty($end_time))) {
             $field_errors['start_time'] = 'Add a start and end time for the facility booking.';
         }
+
+        if (empty($field_errors) && !empty($start_date)) {
+            $existingDates = $pdo->prepare('SELECT start_date, end_date FROM programmes WHERE id = ?');
+            $existingDates->execute([$programme_id]);
+            $existing = $existingDates->fetch(PDO::FETCH_ASSOC) ?: [];
+            $oldBounds = xpm_reservation_bounds($existing['start_date'] ?? '', $existing['end_date'] ?? '');
+            $newBounds = xpm_reservation_bounds($start_date, $end_date ?: $start_date);
+            $oldKey = (is_array($oldBounds) && empty($oldBounds['error'])) ? $oldBounds['start'] . '|' . $oldBounds['end'] : '';
+            $newKey = (is_array($newBounds) && empty($newBounds['error'])) ? $newBounds['start'] . '|' . $newBounds['end'] : '';
+            if ($newKey !== $oldKey) {
+                $reserved = xpm_day_reservation_conflict($pdo, $start_date, $end_date ?: $start_date, (int) $programme_id);
+                if ($reserved) {
+                    $field_errors['start_date'] = $reserved;
+                }
+            }
+        }
         
         if (empty($field_errors)) {
             // Update programme in database
             $stmt = $pdo->prepare("
                 UPDATE programmes 
-                SET title = ?, description = ?, duration = ?, price = ?, tax_inclusive = ?, tax_amount = ?, original_price = ?, category = ?, 
+                SET title = ?, description = ?, duration = ?, price = ?, tax_inclusive = ?, tax_amount = ?, original_price = ?, category = ?, programme_type = ?,
                     max_participants = ?, certification = ?, programme_icon = ?, 
                     programme_badge = ?, location = ?, poster_image = ?, poster_image_2 = ?, banner_image = ?, modules = ?, schedule_type = ?, start_date = ?, 
                     end_date = ?, start_time = ?, end_time = ?, requires_facility = ?, facility_type = ?, auto_create_facility_booking = ?,
-                    is_active = ?, registration_status = ?, is_featured = ?, updated_at = NOW()
+                    is_active = ?, registration_status = ?, is_featured = ?, owner_user_id = ?, updated_at = NOW()
                 WHERE id = ?
             ");
+
+            if (auth_is_trainer()) {
+                $owner_user_id = (int) (auth_user()['id'] ?? 0);
+            } else {
+                $posted_owner = (int) ($_POST['owner_user_id'] ?? 0);
+                $owner_user_id = $posted_owner > 0 ? $posted_owner : null;
+            }
             
-            $stmt->execute([$title, $description, $duration, $price, $tax_inclusive, $tax_amount, $original_price, $category, 
+            $stmt->execute([$title, $description, $duration, $price, $tax_inclusive, $tax_amount, $original_price, $category, $programme_type,
                           $max_participants, $certification, $programme_icon, 
                           $programme_badge, $location, $poster_image, $poster_image_2, $banner_image, $modules, $schedule_type, $start_date, 
                           $end_date, $start_time, $end_time, $requires_facility, $facility_type, $auto_create_facility_booking,
-                          $is_active, $registration_status, $is_featured, $programme_id]);
+                          $is_active, $registration_status, $is_featured, $owner_user_id, $programme_id]);
             saveProgrammeQuestionConfigs($pdo, (int)$programme_id, $_POST['question_configs'] ?? getDefaultProgrammeQuestions());
             
             $success = 'Training programme updated successfully!';
@@ -296,9 +332,13 @@ try {
         header('Location: programmes.php?error=Programme not found');
         exit;
     }
+    if (!auth_owns_programme($programme)) {
+        header('Location: programmes.php?error=' . urlencode('You can only change programmes you own.'));
+        exit;
+    }
     $question_configs = getProgrammeQuestionConfigs($pdo, (int)$programme_id, false);
     if (!empty($field_errors) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        foreach (['title', 'description', 'duration', 'location', 'category', 'certification', 'programme_icon', 'programme_badge', 'modules', 'schedule_type', 'start_date', 'end_date', 'start_time', 'end_time', 'facility_type'] as $posted_key) {
+        foreach (['title', 'description', 'duration', 'location', 'category', 'programme_type', 'certification', 'programme_icon', 'programme_badge', 'modules', 'schedule_type', 'start_date', 'end_date', 'start_time', 'end_time', 'facility_type'] as $posted_key) {
             if (array_key_exists($posted_key, $_POST)) {
                 $programme[$posted_key] = $_POST[$posted_key];
             }
@@ -376,12 +416,36 @@ try {
                     <p class="form-intro">Fields with a star are required. You can add images and extras after the first save.</p>
                     <section class="form-section">
                         <h4 class="form-section-title">What people see</h4>
+                    <div class="form-row">
                     <div class="form-group">
                         <label for="title">Programme Title *</label>
                         <input type="text" id="title" name="title" class="form-control<?php echo isset($field_errors['title']) ? ' is-invalid' : ''; ?>" 
                                value="<?php echo htmlspecialchars($programme['title']); ?>" required>
                         <?php if (!empty($field_errors['title'])): ?><div class="invalid-feedback"><?php echo htmlspecialchars($field_errors['title']); ?></div><?php endif; ?>
                     </div>
+                    <div class="form-group">
+                        <label for="programme_type">Programme type *</label>
+                        <select id="programme_type" name="programme_type" class="form-control" required>
+                            <option value="training" <?php echo ($programme['programme_type'] ?? 'training') !== 'webinar' ? 'selected' : ''; ?>>Training Programme</option>
+                            <option value="webinar" <?php echo ($programme['programme_type'] ?? '') === 'webinar' ? 'selected' : ''; ?>>Webinar</option>
+                        </select>
+                    </div>
+                    </div>
+                    <?php if (!auth_is_trainer()): ?>
+                    <?php $trainer_choices = auth_trainer_choices($pdo); ?>
+                    <div class="form-group">
+                        <label for="owner_user_id">Trainer owner</label>
+                        <select id="owner_user_id" name="owner_user_id" class="form-control">
+                            <option value="">Admin owned</option>
+                            <?php foreach ($trainer_choices as $trainer_choice): ?>
+                                <option value="<?php echo (int) $trainer_choice['id']; ?>" <?php echo (string) ($programme['owner_user_id'] ?? '') === (string) $trainer_choice['id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($trainer_choice['display_name'] ?: $trainer_choice['email']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-text text-muted">Leave this as admin owned, or assign the programme to a trainer.</small>
+                    </div>
+                    <?php endif; ?>
                     
                     <div class="form-group">
                         <label for="description">Programme Description *</label>

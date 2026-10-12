@@ -271,7 +271,7 @@ async function initFounderContent() {
         ],
         story: [
             'iCoL Chua has a personality that empowers optimised employment and HR management. With over 20 years in the industry, iCoL possesses exemplary experience in employee welfare, recruitment, payroll, training, and employment-optimised management.',
-            'She maintains strong rapport with local authorities such as KWSP, PERKESO, LHDN, JTK and others allowing her to handle HR matters efficiently and in line with client expectations.',
+            'She maintains strong rapport with local authorities such as KWSP, PERKESO, LHDN, JTK, JKKP and others allowing her to handle HR matters efficiently and in line with client expectations.',
             'As a certified trainer, iCoL brings deep expertise in topics such as Employee Resolution, Conflict Management, Profile Regulation, and other critical HR areas. Through Xpress Points Training & Development division, she continues to lead impactful, certified programs that align with national standards.'
         ]
     };
@@ -427,8 +427,35 @@ function initStoryProgress() {
 }
 
 // ===== FORM HANDLING =====
+function requireContactLogin() {
+    if (!contactForm) return;
+    fetch('api/nav-user.php', { credentials: 'same-origin' })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (data && data.loggedIn) return;
+            var next = encodeURIComponent('index.html#contact');
+            contactForm.classList.add('form-locked');
+            contactForm.querySelectorAll('input, select, textarea, button').forEach(function (field) {
+                field.disabled = true;
+            });
+            var note = document.createElement('div');
+            note.className = 'guest-gate';
+            note.setAttribute('role', 'status');
+            note.innerHTML = '<div class="guest-gate-icon" aria-hidden="true"><i class="fas fa-lock"></i></div>' +
+                '<div><strong>Log in or create an account first.</strong>' +
+                '<p>You can look through this form, but the fields stay locked until you sign in. Then you can fill in the details and send a message.</p>' +
+                '<div class="guest-gate-actions">' +
+                '<a class="btn btn-primary" href="login.php?next=' + next + '">Log in</a>' +
+                '<a class="btn btn-outline" href="register.php?next=' + next + '">Create an account</a>' +
+                '</div></div>';
+            contactForm.parentElement.insertBefore(note, contactForm);
+        })
+        .catch(function () {});
+}
+
 function initFormHandling() {
     if (contactForm) {
+        requireContactLogin();
         contactForm.addEventListener('submit', handleFormSubmit);
         
         // Add real-time validation
@@ -550,6 +577,11 @@ function clearFieldError(e) {
 
 async function handleFormSubmit(e) {
     e.preventDefault();
+
+    if (contactForm && contactForm.classList.contains('form-locked')) {
+        showNotification('Log in or create an account before you send a message.', 'error');
+        return;
+    }
     
     if (!contactForm) {
         showNotification('Form not found. Please refresh the page.', 'error');
@@ -603,6 +635,11 @@ async function handleFormSubmit(e) {
             body: formData
         });
         
+        if (response.status === 401) {
+            showNotification('Log in or create an account before you send a message.', 'error');
+            return;
+        }
+
         if (response.ok) {
             const responseData = await response.json();
             
@@ -915,157 +952,6 @@ function initAccessibility() {
     });
 }
 
-// ===== ADMIN ACCESS SHORTCUT =====
-function initAdminShortcut() {
-    let keySequence = [];
-    let lastKeyTime = 0;
-    const sequenceTimeout = 3000; // 3 seconds to complete sequence
-    
-    document.addEventListener('keydown', (e) => {
-        const currentTime = Date.now();
-        
-        // Reset sequence if too much time has passed
-        if (currentTime - lastKeyTime > sequenceTimeout) {
-            keySequence = [];
-        }
-        
-        // Check if it's the X key with Ctrl+Alt+Shift modifiers
-        if (e.code === 'KeyX' && e.ctrlKey && e.altKey && e.shiftKey) {
-            // Show admin access prompt
-            showAdminPrompt();
-            keySequence = []; // Reset sequence
-            return;
-        }
-        
-        // Add current key to sequence
-        keySequence.push(e.code);
-        lastKeyTime = currentTime;
-        
-        // Keep only the last 4 keys
-        if (keySequence.length > 4) {
-            keySequence.shift();
-        }
-    });
-}
-
-function showAdminPrompt() {
-    // Create a modal for admin access
-    const modal = document.createElement('div');
-    modal.className = 'admin-modal';
-    modal.innerHTML = `
-        <div class="admin-modal-content">
-            <div class="admin-modal-header">
-                <h3>🔐 Admin Access</h3>
-            </div>
-            <div class="admin-modal-body">
-                <p>Enter admin credentials to access the admin panel:</p>
-                <form id="adminQuickForm">
-                    <div class="form-group">
-                        <label for="adminUsername">Username:</label>
-                        <input type="text" id="adminUsername" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password:</label>
-                        <input type="password" id="adminPassword" name="password" required>
-                    </div>
-                </form>
-            </div>
-            <div class="admin-modal-actions">
-                <button type="submit" form="adminQuickForm" class="btn btn-primary">Access Admin Panel</button>
-                <button type="button" class="btn btn-outline admin-modal-cancel">Cancel</button>
-            </div>
-        </div>
-    `;
-    
-    // Add styles
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        backdrop-filter: blur(10px);
-    `;
-    
-    const modalContent = modal.querySelector('.admin-modal-content');
-    modalContent.style.cssText = `
-        background: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        max-width: 400px;
-        width: 90%;
-        animation: modalSlideIn 0.3s ease;
-        display: flex;
-        flex-direction: column;
-    `;
-    
-    // Style the modal body to take up available space
-    const modalBody = modal.querySelector('.admin-modal-body');
-    modalBody.style.cssText = `
-        flex: 1;
-        margin-bottom: 1.5rem;
-    `;
-    
-    // Style the actions container to push buttons lower
-    const modalActions = modal.querySelector('.admin-modal-actions');
-    modalActions.style.cssText = `
-        margin-top: auto;
-        padding-top: 1.5rem;
-        border-top: 1px solid #e5e7eb;
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Handle form submission
-    const form = modal.querySelector('#adminQuickForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('adminUsername').value;
-        const password = document.getElementById('adminPassword').value;
-        
-        // Simple validation (in production, this should be server-side)
-        if (username === 'admin' && password === 'xpresspoint2024') {
-            window.location.href = './admin/index.php';
-        } else {
-            showNotification('Invalid credentials', 'error');
-        }
-    });
-    
-    // Handle cancel button
-    const cancelBtn = modal.querySelector('.admin-modal-cancel');
-    cancelBtn.addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    // Close on outside click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-    
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            modal.remove();
-        }
-    });
-    
-    // Focus on username field
-    setTimeout(() => {
-        document.getElementById('adminUsername').focus();
-    }, 100);
-}
-
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -1084,8 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initPerformanceOptimizations();
     
     initAccessibility();
-    
-    initAdminShortcut();
     
     loadJobs();
     

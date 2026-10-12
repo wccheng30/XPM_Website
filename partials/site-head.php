@@ -3,7 +3,7 @@
  * Shared <head> assets for public pages.
  * Optional before include: $xpm_page_styles = ['pages/jobs.css', ...]
  */
-$xpm_asset_version = '20261006-2';
+$xpm_asset_version = '20261008-12';
 $xpm_page_styles = isset($xpm_page_styles) && is_array($xpm_page_styles) ? $xpm_page_styles : [];
 ?>
     <script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.__xpmMotion)document.documentElement.classList.add('reveal-fallback');},2500);</script>

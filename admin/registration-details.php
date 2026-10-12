@@ -1,11 +1,9 @@
 <?php
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    http_response_code(403);
-    exit('Unauthorized');
-}
+require_once '../includes/auth.php';
+require_once '../includes/blacklist-lookup.php';
+auth_require(['admin', 'manager'], '403');
 
 // Handle status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
@@ -16,8 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $pdo = get_db_connection();
         if ($pdo) {
             try {
+                $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
+                $previous->execute([$registration_id]);
+                $previous_status = (string)$previous->fetchColumn();
                 $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $registration_id]);
+                blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
                 $success_message = "Registration status updated successfully!";
             } catch (PDOException $e) {
                 $error_message = "Error updating registration status.";
@@ -30,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Include database connection
 require_once '../includes/database.php';
-require_once '../includes/blacklist-lookup.php';
 
 // Helper function to safely display prices
 function formatPrice($price) {
