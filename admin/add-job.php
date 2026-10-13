@@ -113,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include_once 'includes/header.php'; renderAdminHeader('Add New Job', 'fas fa-plus', ['url' => 'jobs.php', 'label' => 'Jobs']); ?>
 
     <div class="admin-container">
+        <?php include 'includes/navigation.php'; renderAdminNavigation('jobs'); ?>
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Post New Career Opportunity</h2>

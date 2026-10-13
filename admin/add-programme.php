@@ -226,6 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include_once 'includes/header.php'; renderAdminHeader('Add Training Programme', 'fas fa-plus', ['url' => 'programmes.php', 'label' => 'Programmes']); ?>
     
     <div class="admin-container">
+        <?php include 'includes/navigation.php'; renderAdminNavigation('programmes'); ?>
         <!-- Page Header -->
             <div class="page-header">
             <h2 class="page-title">Add New Training Programme</h2>

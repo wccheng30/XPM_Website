@@ -255,7 +255,7 @@ function form_file(string $id, string $name, string $label, array $opts = []): v
     if (!empty($opts['before'])) {
         echo $opts['before'];
     }
-    echo '<div class="file-control' . ($error !== '' ? ' is-invalid' : '') . '" id="' . form_h($id) . '_upload">';
+    echo '<label class="file-control' . ($error !== '' ? ' is-invalid' : '') . '" id="' . form_h($id) . '_upload">';
     echo '<input class="file-control-input" type="file" id="' . form_h($id) . '" name="' . form_h($name) . '"';
     if (!empty($opts['accept'])) {
         echo ' accept="' . form_h($opts['accept']) . '"';
@@ -266,7 +266,7 @@ function form_file(string $id, string $name, string $label, array $opts = []): v
     echo form_described($id, $error, $hint) . '>';
     echo '<span class="file-control-button">Choose file</span>';
     echo '<span class="file-name" data-file-name>No file chosen</span>';
-    echo '</div>';
+    echo '</label>';
     if (!empty($opts['preview_id'])) {
         echo '<div id="' . form_h($opts['preview_id']) . '" class="file-preview-slot"></div>';
     }

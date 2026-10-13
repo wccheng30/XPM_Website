@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS applications (
     availability_date DATE DEFAULT NULL,
     additional_notes TEXT DEFAULT NULL,
     interviewer_comment TEXT DEFAULT NULL,
-    status ENUM('pending', 'reviewed', 'shortlisted', 'rejected', 'blacklisted') DEFAULT 'pending',
+    status ENUM('pending', 'reviewed', 'shortlisted', 'rejected', 'waiting for interview', 'hired', 'blacklisted') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

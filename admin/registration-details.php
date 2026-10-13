@@ -14,21 +14,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $new_status = $_POST['status'] ?? null;
     
     if ($registration_id && $new_status) {
-        $pdo = get_db_connection();
-        if ($pdo) {
-            try {
-                $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
-                $previous->execute([$registration_id]);
-                $previous_status = (string)$previous->fetchColumn();
-                $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
-                $stmt->execute([$new_status, $registration_id]);
-                blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
-                $success_message = "Registration status updated successfully!";
-            } catch (PDOException $e) {
-                $error_message = "Error updating registration status.";
-            }
+        if (!in_array((string) $new_status, registration_status_values(), true)) {
+            $error_message = "Choose a valid status.";
         } else {
-            $error_message = "Database connection failed.";
+            $pdo = get_db_connection();
+            if ($pdo) {
+                try {
+                    $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
+                    $previous->execute([$registration_id]);
+                    $previous_status = (string)$previous->fetchColumn();
+                    $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
+                    $stmt->execute([$new_status, $registration_id]);
+                    blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
+                    $success_message = "Registration status updated successfully!";
+                } catch (PDOException $e) {
+                    $error_message = "Error updating registration status.";
+                }
+            } else {
+                $error_message = "Database connection failed.";
+            }
         }
     }
 }
@@ -75,7 +79,7 @@ if (!$registration) {
 }
 
 $bl_info = $pdo ? blacklist_match(load_blacklist_lookup($pdo), $registration['name'], $registration['phone'] ?? '') : null;
-$is_blacklisted = ($registration['status'] === 'blacklisted') || $bl_info !== null;
+$is_blacklisted = ($registration['status'] === 'blacklisted');
 ?>
 
 <?php if (isset($success_message)): ?>

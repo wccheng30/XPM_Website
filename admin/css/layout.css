@@ -289,7 +289,6 @@ body[data-motion="admin"]:not(.auth-center) > .admin-container {
     margin: 0;
     min-width: 0;
     padding: calc(var(--admin-header-h) + 28px) clamp(16px, 3vw, 40px) 64px;
-    animation-name: xpmFade;
 }
 
 @media (min-width: 1024px) {
@@ -319,13 +318,17 @@ body[data-motion="admin"]:not(.auth-center) > .admin-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 28px clamp(16px, 3vw, 32px) 64px;
-    animation: xpmPageIn var(--dur-slow) var(--ease-out) backwards;
 }
 
-body.is-leaving .admin-container {
+/* Fade page content only. A transform on .admin-container would become the
+   containing block for the fixed sidebar and shift it during navigation. */
+.admin-container > :not(.admin-sidebar):not(.sidebar-overlay):not(.sidebar-tip):not(.back-to-top) {
+    animation: xpmFade var(--dur-slow) var(--ease-out) backwards;
+}
+
+body.is-leaving .admin-container > :not(.admin-sidebar):not(.sidebar-overlay):not(.sidebar-tip):not(.back-to-top) {
     opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 220ms var(--ease-in-out), transform 220ms var(--ease-in-out);
+    transition: opacity 220ms var(--ease-in-out);
 }
 
 .admin-main {
@@ -634,6 +637,7 @@ body.is-leaving .admin-container {
 
     .admin-header,
     .admin-container,
+    .admin-container > :not(.admin-sidebar):not(.sidebar-overlay):not(.sidebar-tip):not(.back-to-top),
     .admin-brand-mark,
     .stagger-rows > * {
         animation: none !important;

@@ -111,9 +111,44 @@ function blacklist_sync_status(PDO $pdo, string $source, int $id, string $previo
         return;
     }
 
-    if ($previousStatus === 'blacklisted' && !blacklist_still_marked($pdo, $record['name'], $record['phone'])) {
+    $wasBlacklisted = $previousStatus === 'blacklisted' || $previousStatus === '';
+    if ($wasBlacklisted && !blacklist_still_marked($pdo, $record['name'], $record['phone'])) {
         blacklist_remove_person($pdo, $record['name'], $record['phone']);
     }
+}
+
+function application_status_values(): array
+{
+    return ['pending', 'reviewed', 'shortlisted', 'rejected', 'waiting for interview', 'hired', 'blacklisted'];
+}
+
+function ensure_application_status_column(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM applications LIKE 'status'");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $type = (string) ($row['Type'] ?? '');
+        if ($type !== '' && stripos($type, 'enum(') === 0
+            && (stripos($type, 'waiting for interview') === false || stripos($type, "'hired'") === false)) {
+            $pdo->exec("ALTER TABLE applications MODIFY status ENUM('pending','reviewed','shortlisted','rejected','waiting for interview','hired','blacklisted') NOT NULL DEFAULT 'pending'");
+        }
+    } catch (PDOException $e) {
+    }
+}
+
+function registration_status_values(): array
+{
+    return ['pending', 'confirmed', 'waitlisted', 'cancelled', 'blacklisted'];
+}
+
+function contact_status_values(): array
+{
+    return ['new', 'contacted', 'qualified', 'blacklisted'];
 }
 
 function blacklist_import_marked(PDO $pdo): void

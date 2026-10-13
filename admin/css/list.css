@@ -235,6 +235,14 @@
     background: var(--surface-hover);
 }
 
+.list-table tbody tr.is-blacklisted td {
+    background: var(--danger-bg);
+}
+
+.list-table tbody tr.is-blacklisted:hover td {
+    background: color-mix(in srgb, var(--danger-bg) 72%, var(--danger-border));
+}
+
 .list-select {
     min-width: 44px;
 }

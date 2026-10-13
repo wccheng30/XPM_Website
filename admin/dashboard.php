@@ -4,7 +4,6 @@ auth_require(['admin', 'manager', 'trainer']);
 
 // Include shared database connection
 require_once '../includes/database.php';
-require_once '../includes/blacklist-lookup.php';
 
 // Get statistics
 $pdo = get_db_connection();
@@ -40,7 +39,6 @@ $recent_registrations = [];
 $upcoming_bookings = [];
 $month_booking_days = [];
 $interest_breakdown = [];
-$blacklist_lookup = [];
 $dash_loaded = false;
 
 $is_trainer_view = auth_is_trainer();
@@ -143,7 +141,6 @@ if ($pdo && $is_trainer_view) {
         $stmt = $pdo->query("SELECT COUNT(*) FROM trainers WHERE is_active = 1");
         $stats['active_trainers'] = $stmt->fetchColumn();
         
-        $blacklist_lookup = load_blacklist_lookup($pdo);
         $dash_loaded = true;
 
         try {
@@ -250,7 +247,6 @@ function dash_delta_class($count) {
 $dash_activity = [];
 if ($dash_loaded && empty($is_trainer_view)) {
     foreach ($recent_contacts as $contact) {
-        $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
         $dash_activity[] = [
             'type' => 'Contact',
             'icon' => 'fas fa-user',
@@ -258,11 +254,10 @@ if ($dash_loaded && empty($is_trainer_view)) {
             'meta' => $interest_labels[$contact['interest']] ?? ($contact['email'] ?? 'Contact'),
             'time' => $contact['created_at'],
             'href' => 'contact-details.php?id=' . (int) $contact['id'],
-            'blacklisted' => (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null,
+            'blacklisted' => (($contact['status'] ?? '') === 'blacklisted'),
         ];
     }
     foreach ($recent_applications as $row) {
-        $bl_info = blacklist_match($blacklist_lookup, $row['name'], $row['phone'] ?? '');
         $dash_activity[] = [
             'type' => 'Application',
             'icon' => 'fas fa-file-alt',
@@ -270,11 +265,10 @@ if ($dash_loaded && empty($is_trainer_view)) {
             'meta' => $row['subject'] ?: 'Job application',
             'time' => $row['created_at'],
             'href' => 'applications.php?search=' . rawurlencode($row['name']),
-            'blacklisted' => $bl_info !== null,
+            'blacklisted' => (($row['status'] ?? '') === 'blacklisted'),
         ];
     }
     foreach ($recent_registrations as $row) {
-        $bl_info = blacklist_match($blacklist_lookup, $row['name'], $row['phone'] ?? '');
         $dash_activity[] = [
             'type' => 'Registration',
             'icon' => 'fas fa-graduation-cap',
@@ -282,7 +276,7 @@ if ($dash_loaded && empty($is_trainer_view)) {
             'meta' => $row['subject'] ?: 'Programme registration',
             'time' => $row['created_at'],
             'href' => 'registrations.php?search=' . rawurlencode($row['name']),
-            'blacklisted' => $bl_info !== null,
+            'blacklisted' => (($row['status'] ?? '') === 'blacklisted'),
         ];
     }
     usort($dash_activity, function ($a, $b) {
@@ -455,14 +449,11 @@ $cal_month_count = array_sum($month_booking_days);
                     <?php else: ?>
                         <div class="dash-activity">
                             <?php foreach ($dash_activity as $event): ?>
-                            <a class="dash-activity-item" href="<?php echo htmlspecialchars($event['href']); ?>">
+                            <a class="dash-activity-item<?php echo !empty($event['blacklisted']) ? ' is-blacklisted' : ''; ?>" href="<?php echo htmlspecialchars($event['href']); ?>">
                                 <span class="dash-type-icon" aria-hidden="true"><i class="<?php echo htmlspecialchars($event['icon']); ?>" aria-hidden="true"></i></span>
                                 <span class="dash-activity-copy">
                                     <span class="dash-activity-title">
                                         <?php echo htmlspecialchars($event['title']); ?>
-                                        <?php if (!empty($event['blacklisted'])): ?>
-                                            <span class="blacklist-flag">Blacklisted</span>
-                                        <?php endif; ?>
                                     </span>
                                     <span class="dash-activity-meta"><?php echo htmlspecialchars($event['type'] . ' · ' . $event['meta']); ?></span>
                                 </span>

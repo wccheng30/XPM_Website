@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['
     } else {
         $pdo = get_db_connection();
         $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
-        $allowed = ['new', 'contacted', 'qualified', 'blacklisted'];
+        $allowed = contact_status_values();
         if ($pdo && ($_POST['action'] ?? '') === 'bulk_delete') {
             $stmt = $pdo->prepare("DELETE FROM contacts WHERE id = ?");
             foreach ($ids as $id) {
@@ -79,21 +79,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $new_status = $_POST['status'] ?? null;
     
     if ($contact_id && $new_status) {
-        $pdo = get_db_connection();
-        if ($pdo) {
-            try {
-                $previous = $pdo->prepare("SELECT status FROM contacts WHERE id = ?");
-                $previous->execute([$contact_id]);
-                $previous_status = (string)$previous->fetchColumn();
-                $stmt = $pdo->prepare("UPDATE contacts SET status = ? WHERE id = ?");
-                $stmt->execute([$new_status, $contact_id]);
-                blacklist_sync_status($pdo, 'contact', (int)$contact_id, $previous_status, (string)$new_status);
-                $success_message = "Contact status updated successfully!";
-            } catch (PDOException $e) {
-                $error_message = "Error updating contact status.";
-            }
+        if (!in_array((string) $new_status, contact_status_values(), true)) {
+            $error_message = "Choose a valid status.";
         } else {
-            $error_message = "Database connection failed.";
+            $pdo = get_db_connection();
+            if ($pdo) {
+                try {
+                    $previous = $pdo->prepare("SELECT status FROM contacts WHERE id = ?");
+                    $previous->execute([$contact_id]);
+                    $previous_status = (string)$previous->fetchColumn();
+                    $stmt = $pdo->prepare("UPDATE contacts SET status = ? WHERE id = ?");
+                    $stmt->execute([$new_status, $contact_id]);
+                    blacklist_sync_status($pdo, 'contact', (int)$contact_id, $previous_status, (string)$new_status);
+                    $success_message = "Contact status updated successfully!";
+                } catch (PDOException $e) {
+                    $error_message = "Error updating contact status.";
+                }
+            } else {
+                $error_message = "Database connection failed.";
+            }
         }
     }
 }

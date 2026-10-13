@@ -10,7 +10,6 @@ require_once __DIR__ . '/includes/ui.php';
 
 $pdo = get_db_connection();
 $registrations = [];
-$blacklist_lookup = [];
 $stats = [
     'total' => 0,
     'pending' => 0,
@@ -25,21 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $new_status = $_POST['status'] ?? null;
     
     if ($registration_id && $new_status) {
-        try {
-            $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
-            $previous->execute([$registration_id]);
-            $previous_status = (string)$previous->fetchColumn();
-            $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
-            $stmt->execute([$new_status, $registration_id]);
-            blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
-            $success_message = "Registration status updated successfully!";
-        } catch (PDOException $e) {
-            $error_message = "Error updating registration status.";
+        if (!in_array((string) $new_status, registration_status_values(), true)) {
+            $error_message = "Choose a valid status.";
+        } else {
+            try {
+                $previous = $pdo->prepare("SELECT status FROM programme_registrations WHERE id = ?");
+                $previous->execute([$registration_id]);
+                $previous_status = (string)$previous->fetchColumn();
+                $stmt = $pdo->prepare("UPDATE programme_registrations SET status = ? WHERE id = ?");
+                $stmt->execute([$new_status, $registration_id]);
+                blacklist_sync_status($pdo, 'registration', (int)$registration_id, $previous_status, (string)$new_status);
+                $success_message = "Registration status updated successfully!";
+            } catch (PDOException $e) {
+                $error_message = "Error updating registration status.";
+            }
         }
     }
 }
 
-$allowed_registration_statuses = ['pending', 'confirmed', 'waitlisted', 'cancelled', 'blacklisted'];
+$allowed_registration_statuses = registration_status_values();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_update_status') {
     $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
     $new_status = (string) ($_POST['status'] ?? '');
@@ -124,7 +127,6 @@ if ($pdo) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $registrations = $stmt->fetchAll();
-        $blacklist_lookup = load_blacklist_lookup($pdo);
         
     } catch (PDOException $e) {
         $error_message = "Error loading registrations.";
@@ -238,20 +240,16 @@ if ($pdo) {
                         </thead>
                         <tbody>
                             <?php foreach ($registrations as $registration):
-                                $bl_info = blacklist_match($blacklist_lookup, $registration['name'], $registration['phone'] ?? '');
-                                $is_blacklisted = ($registration['status'] === 'blacklisted') || $bl_info !== null;
+                                $is_blacklisted = ($registration['status'] === 'blacklisted');
                                 $safe_status = json_encode((string) $registration['status']);
                             ?>
-                            <tr>
+                            <tr<?php echo $is_blacklisted ? ' class="is-blacklisted"' : ''; ?>>
                                 <td class="list-select" data-label="">
                                     <input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $registration['id']; ?>" aria-label="Select <?php echo htmlspecialchars($registration['name']); ?>">
                                 </td>
                                 <td data-label="Participant">
                                     <div class="section-title">
                                         <?php echo htmlspecialchars($registration['name']); ?>
-                                        <?php if ($is_blacklisted): ?>
-                                            <span class="blacklist-flag"><i class="fas fa-ban" aria-hidden="true"></i> Blacklisted</span>
-                                        <?php endif; ?>
                                     </div>
                                     <div class="meta">ID #<?php echo (int) $registration['id']; ?></div>
                                 </td>

@@ -252,6 +252,14 @@
     border-radius: 10px;
 }
 
+.dash-activity-item.is-blacklisted {
+    background: var(--danger-bg);
+}
+
+.dash-activity-item.is-blacklisted:hover {
+    background: color-mix(in srgb, var(--danger-bg) 72%, var(--danger-border));
+}
+
 .dash-booking {
     grid-template-columns: 88px minmax(0, 1fr);
 }

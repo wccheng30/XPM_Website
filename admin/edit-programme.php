@@ -313,6 +313,7 @@ try {
     <?php include_once 'includes/header.php'; renderAdminHeader('Edit Training Programme', 'fas fa-edit', ['url' => 'programmes.php', 'label' => 'Programmes']); ?>
 
     <div class="admin-container">
+        <?php include 'includes/navigation.php'; renderAdminNavigation('programmes'); ?>
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Edit Training Programme</h2>

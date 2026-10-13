@@ -219,7 +219,7 @@ function exportSQL($data) {
     echo '    phone VARCHAR(50),' . "\n";
     echo '    resume_path VARCHAR(500),' . "\n";
     echo '    cover_letter_path VARCHAR(500),' . "\n";
-    echo '    status ENUM(\'pending\', \'reviewed\', \'shortlisted\', \'rejected\', \'blacklisted\') DEFAULT \'pending\',' . "\n";
+    echo '    status ENUM(\'pending\', \'reviewed\', \'shortlisted\', \'rejected\', \'waiting for interview\', \'hired\', \'blacklisted\') DEFAULT \'pending\',' . "\n";
     echo '    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,' . "\n";
     echo '    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL' . "\n";
     echo ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;' . "\n\n";

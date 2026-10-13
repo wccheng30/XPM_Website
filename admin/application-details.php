@@ -14,21 +14,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $new_status = $_POST['status'] ?? null;
     
     if ($application_id && $new_status) {
-        $pdo = get_db_connection();
-        if ($pdo) {
-            try {
-                $previous = $pdo->prepare("SELECT status FROM applications WHERE id = ?");
-                $previous->execute([$application_id]);
-                $previous_status = (string)$previous->fetchColumn();
-                $stmt = $pdo->prepare("UPDATE applications SET status = ? WHERE id = ?");
-                $stmt->execute([$new_status, $application_id]);
-                blacklist_sync_status($pdo, 'application', (int)$application_id, $previous_status, (string)$new_status);
-                $success_message = "Application status updated successfully!";
-            } catch (PDOException $e) {
-                $error_message = "Error updating application status.";
-            }
+        if (!in_array((string) $new_status, application_status_values(), true)) {
+            $error_message = "Choose a valid status.";
         } else {
-            $error_message = "Database connection failed.";
+            $pdo = get_db_connection();
+            if ($pdo) {
+                ensure_application_status_column($pdo);
+                try {
+                    $previous = $pdo->prepare("SELECT status FROM applications WHERE id = ?");
+                    $previous->execute([$application_id]);
+                    $previous_status = (string)$previous->fetchColumn();
+                    $stmt = $pdo->prepare("UPDATE applications SET status = ? WHERE id = ?");
+                    $stmt->execute([$new_status, $application_id]);
+                    blacklist_sync_status($pdo, 'application', (int)$application_id, $previous_status, (string)$new_status);
+                    $success_message = "Application status updated successfully!";
+                } catch (PDOException $e) {
+                    $error_message = "Error updating application status.";
+                }
+            } else {
+                $error_message = "Database connection failed.";
+            }
         }
     }
 }
@@ -85,7 +90,7 @@ if (!$application) {
 }
 
 $bl_info = $pdo ? blacklist_match(load_blacklist_lookup($pdo), $application['name'], $application['phone'] ?? '') : null;
-$is_blacklisted = ($application['status'] === 'blacklisted') || $bl_info !== null;
+$is_blacklisted = ($application['status'] === 'blacklisted');
 ?>
 
 <?php if (isset($success_message)): ?>

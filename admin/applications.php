@@ -9,8 +9,10 @@ require_once '../includes/blacklist-lookup.php';
 require_once __DIR__ . '/includes/ui.php';
 
 $pdo = get_db_connection();
+if ($pdo) {
+    ensure_application_status_column($pdo);
+}
 $applications = [];
-$blacklist_lookup = [];
 $stats = [
     'total' => 0,
     'pending' => 0,
@@ -27,16 +29,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $new_status = $_POST['status'] ?? null;
     
     if ($application_id && $new_status) {
-        try {
-            $previous = $pdo->prepare("SELECT status FROM applications WHERE id = ?");
-            $previous->execute([$application_id]);
-            $previous_status = (string)$previous->fetchColumn();
-            $stmt = $pdo->prepare("UPDATE applications SET status = ? WHERE id = ?");
-            $stmt->execute([$new_status, $application_id]);
-            blacklist_sync_status($pdo, 'application', (int)$application_id, $previous_status, (string)$new_status);
-            $success_message = "Application status updated successfully!";
-        } catch (PDOException $e) {
-            $error_message = "Error updating application status.";
+        if (!in_array((string) $new_status, application_status_values(), true)) {
+            $error_message = "Choose a valid status.";
+        } else {
+            try {
+                $previous = $pdo->prepare("SELECT status FROM applications WHERE id = ?");
+                $previous->execute([$application_id]);
+                $previous_status = (string)$previous->fetchColumn();
+                $stmt = $pdo->prepare("UPDATE applications SET status = ? WHERE id = ?");
+                $stmt->execute([$new_status, $application_id]);
+                blacklist_sync_status($pdo, 'application', (int)$application_id, $previous_status, (string)$new_status);
+                $success_message = "Application status updated successfully!";
+            } catch (PDOException $e) {
+                $error_message = "Error updating application status.";
+            }
         }
     }
 }
@@ -146,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $can_delete_applications = (($_SESSION['admin_role'] ?? 'admin') !== 'manager');
-$allowed_application_statuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'waiting for interview', 'hired', 'blacklisted'];
+$allowed_application_statuses = application_status_values();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['bulk_delete', 'bulk_update_status'], true)) {
     $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
@@ -252,8 +258,6 @@ if ($pdo) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $applications = $stmt->fetchAll();
-        
-        $blacklist_lookup = load_blacklist_lookup($pdo);
         
     } catch (PDOException $e) {
         $error_message = "Error loading applications.";
@@ -370,26 +374,20 @@ if ($pdo) {
                         </thead>
                         <tbody>
                             <?php foreach ($applications as $application):
-                                $bl_info = blacklist_match($blacklist_lookup, $application['name'], $application['phone'] ?? '');
-                                $is_blacklisted = ($application['status'] === 'blacklisted') || $bl_info !== null;
+                                $is_blacklisted = ($application['status'] === 'blacklisted');
                                 $safe_name = json_encode((string) $application['name']);
                                 $safe_phone = json_encode((string) ($application['phone'] ?? ''));
                                 $safe_job = json_encode((string) ($application['job_title'] ?? ''));
                                 $safe_comment = json_encode((string) ($application['interviewer_comment'] ?? ''));
                                 $safe_status = json_encode((string) $application['status']);
                             ?>
-                            <tr>
+                            <tr<?php echo $is_blacklisted ? ' class="is-blacklisted"' : ''; ?>>
                                 <td class="list-select" data-label="">
                                     <input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $application['id']; ?>" aria-label="Select <?php echo htmlspecialchars($application['name']); ?>">
                                 </td>
                                 <td data-label="Candidate">
                                     <div class="section-title">
                                         <?php echo htmlspecialchars($application['name']); ?>
-                                        <?php if ($is_blacklisted): ?>
-                                            <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">
-                                                <i class="fas fa-ban" aria-hidden="true"></i> Blacklisted
-                                            </span>
-                                        <?php endif; ?>
                                     </div>
                                     <div class="meta">ID #<?php echo (int) $application['id']; ?></div>
                                 </td>

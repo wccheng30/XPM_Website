@@ -110,10 +110,10 @@
     background: currentColor;
 }
 
-.legend-swatch.status-pending { background: var(--warning-solid); }
-.legend-swatch.status-confirmed { background: var(--success-solid); }
-.legend-swatch.status-cancelled { background: var(--danger-solid); }
-.legend-swatch.status-completed { background: var(--info-solid, var(--c-teal-deep)); }
+.legend-swatch.status-pending { background: var(--warning-solid); color: var(--text-on-solid); }
+.legend-swatch.status-confirmed { background: var(--success-solid); color: var(--text-on-solid); }
+.legend-swatch.status-cancelled { background: var(--danger-solid); color: var(--text-on-solid); }
+.legend-swatch.status-completed { background: var(--info-solid, var(--c-teal-deep)); color: var(--text-on-solid); }
 .legend-swatch.programme-webinar { background: var(--info-solid, var(--c-teal-deep)); }
 .legend-swatch.programme-training { background: var(--accent-primary); }
 .legend-swatch.conference_room { background: var(--success-solid); }
@@ -218,10 +218,10 @@
     outline-offset: 2px;
 }
 
-.booking-item.status-pending { background: var(--warning-solid); border-left-color: var(--warning-text); }
-.booking-item.status-confirmed { background: var(--success-solid); border-left-color: var(--success-text); }
-.booking-item.status-cancelled { background: var(--danger-solid); border-left-color: var(--danger-text); }
-.booking-item.status-completed { background: var(--info-solid, var(--c-teal-deep)); }
+.booking-item.status-pending { background: var(--warning-solid); border-left-color: var(--warning-text); color: var(--text-on-solid); }
+.booking-item.status-confirmed { background: var(--success-solid); border-left-color: var(--success-text); color: var(--text-on-solid); }
+.booking-item.status-cancelled { background: var(--danger-solid); border-left-color: var(--danger-text); color: var(--text-on-solid); }
+.booking-item.status-completed { background: var(--info-solid, var(--c-teal-deep)); color: var(--text-on-solid); }
 .booking-item.programme { background: var(--accent-primary); white-space: normal; }
 .booking-item.programme-webinar { background: var(--info-solid, var(--c-teal-deep)); }
 .booking-item.programme-training { background: var(--accent-primary); }

@@ -160,6 +160,7 @@ try {
     <?php include_once 'includes/header.php'; renderAdminHeader('Edit Job', 'fas fa-edit', ['url' => 'jobs.php', 'label' => 'Jobs']); ?>
 
     <div class="admin-container">
+        <?php include 'includes/navigation.php'; renderAdminNavigation('jobs'); ?>
         <!-- Page Header -->
         <div class="page-header">
             <h2 class="page-title">Edit Job Posting</h2>
