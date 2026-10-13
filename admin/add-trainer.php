@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
@@ -45,27 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Handle image upload
             $image_path = null;
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $upload_dir = '../assets/images/trainers/';
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0755, true);
+            if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $saved = auth_save_image($_FILES['image'], 'assets/images/trainers', 'trainer');
+                if (!$saved['ok']) {
+                    throw new Exception($saved['error'] ?: 'Failed to upload image.');
                 }
-                
-                $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-                $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                
-                if (!in_array($file_extension, $allowed_extensions)) {
-                    throw new Exception('Invalid file type. Only JPG, PNG, GIF, and WebP files are allowed.');
-                }
-                
-                $filename = 'trainer_' . time() . '_' . uniqid() . '.' . $file_extension;
-                $upload_path = $upload_dir . $filename;
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
-                    $image_path = 'assets/images/trainers/' . $filename;
-                } else {
-                    throw new Exception('Failed to upload image.');
-                }
+                $image_path = $saved['path'];
             }
             
             // Insert trainer
@@ -88,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST = [];
             
         } catch (Exception $e) {
-            $error = $e->getMessage();
+            $error = $e instanceof PDOException ? 'The trainer could not be saved.' : $e->getMessage();
         }
     } else {
         $error = "Database connection failed.";
@@ -105,8 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/forms.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Add Trainer', 'fas fa-plus', ['url' => 'trainers.php', 'label' => 'Trainers']); ?>
@@ -126,14 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Messages -->
                 <?php if ($error): ?>
                     <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($success): ?>
                     <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($success); ?>
                         <a href="trainers.php" class="btn btn-sm btn-primary" style="margin-left: 10px;">
                             View Trainers
@@ -143,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- Form Tips -->
                 <div class="form-tips">
-                    <h4><i class="fas fa-lightbulb"></i> Quick Tips</h4>
+                    <h4><i class="fas fa-lightbulb" aria-hidden="true"></i> Quick Tips</h4>
                     <ul>
                         <li>Use a professional headshot for the trainer image (300x300px recommended)</li>
                         <li>Separate specialties and credentials with commas</li>
@@ -153,101 +140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <!-- Form -->
-                <form method="POST" enctype="multipart/form-data" class="form-container">
-                    <div class="form-grid">
-                        <!-- Basic Information -->
-                        <div class="form-section">
-                            <h3><i class="fas fa-user"></i> Basic Information</h3>
-                            
-                            <div class="form-group">
-                                <label for="name">Trainer Name *</label>
-                                <input type="text" id="name" name="name" required 
-                                       value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>"
-                                       placeholder="Enter trainer's full name">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="title">Professional Title *</label>
-                                <input type="text" id="title" name="title" required 
-                                       value="<?php echo htmlspecialchars($_POST['title'] ?? ''); ?>"
-                                       placeholder="e.g., Senior HR Consultant">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="experience_years">Years of Experience</label>
-                                <input type="number" id="experience_years" name="experience_years" min="0" max="50"
-                                       value="<?php echo htmlspecialchars($_POST['experience_years'] ?? ''); ?>"
-                                       placeholder="e.g., 15">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="image">Profile Image</label>
-                                <input type="file" id="image" name="image" accept="image/*">
-                                <small class="form-help">Recommended size: 300x300px. Supported formats: JPG, PNG, GIF, WebP</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Professional Details -->
-                        <div class="form-section">
-                            <h3><i class="fas fa-briefcase"></i> Professional Details</h3>
-                            
-                            <div class="form-group">
-                                <label for="description">Professional Description</label>
-                                <textarea id="description" name="description" rows="4" 
-                                          placeholder="Describe the trainer's background, expertise, and achievements..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="specialties">Specialties</label>
-                                <input type="text" id="specialties" name="specialties" 
-                                       value="<?php echo htmlspecialchars($_POST['specialties'] ?? ''); ?>"
-                                       placeholder="Employee Relations, Training & Development, HR Compliance (comma-separated)">
-                                <small class="form-help">Separate multiple specialties with commas</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="credentials">Credentials & Certifications</label>
-                                <input type="text" id="credentials" name="credentials" 
-                                       value="<?php echo htmlspecialchars($_POST['credentials'] ?? ''); ?>"
-                                       placeholder="SPHR Certified, Master Trainer, HRD Corp Registered (comma-separated)">
-                                <small class="form-help">Separate multiple credentials with commas</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Display Settings -->
-                        <div class="form-section">
-                            <h3><i class="fas fa-cog"></i> Display Settings</h3>
-                            
-                            <div class="form-group">
-                                <label for="display_order">Display Order</label>
-                                <input type="number" id="display_order" name="display_order" min="0" max="999"
-                                       value="<?php echo htmlspecialchars($_POST['display_order'] ?? '0'); ?>"
-                                       placeholder="0 (appears first)">
-                                <small class="form-help">Lower numbers appear first in the list</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="is_active" value="1" 
-                                           <?php echo !isset($_POST['is_active']) || $_POST['is_active'] ? 'checked' : ''; ?>>
-                                    <span class="checkmark"></span>
-                                    Active Trainer
-                                </label>
-                                <small class="form-help">Only active trainers are displayed on the website</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Add Trainer
-                        </button>
-                        <a href="trainers.php" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </form>
+                <?php
+                $mode = 'add';
+                $field_errors = [];
+                if (!empty($error)) {
+                    if (stripos($error, 'title') !== false) { $field_errors['title'] = $error; }
+                    elseif (stripos($error, 'name') !== false) { $field_errors['name'] = $error; }
+                    elseif (stripos($error, 'file') !== false || stripos($error, 'upload') !== false || stripos($error, 'image') !== false) { $field_errors['image'] = $error; }
+                    else { $field_errors['_form'] = $error; }
+                }
+                $values = $_POST;
+                if (!array_key_exists('display_order', $values)) { $values['display_order'] = '0'; }
+                include __DIR__ . '/includes/forms/trainer-form.php';
+                ?>
+
             </div>
         </main>
     </div>
@@ -284,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+        <script defer src="<?php echo admin_asset('../assets/js/leave-guard.js'); ?>"></script>
+    <script defer src="<?php echo admin_asset('js/forms.js'); ?>"></script>
 </body>
 </html>

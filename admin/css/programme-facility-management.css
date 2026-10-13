@@ -1,15 +1,12 @@
 /* Admin page styles: programme-facility-management.php */
-        .facility-management-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        
         
         .programme-card {
-            background: white;
+            background: var(--bg-primary);
             border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+            box-shadow: var(--shadow-md);
             border-left: 4px solid var(--c-teal-deep);
         }
         
@@ -17,88 +14,44 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
         
         .programme-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary);
             margin: 0;
         }
         
-        .facility-status {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
         
-        .status-requires { background: #fef3c7; color: #92400e; }
-        .status-booked { background: #d1fae5; color: #065f46; }
-        .status-pending { background: #f4f4f5; color: var(--text-primary); }
-        .status-no-facility { background: #f3f4f6; color: #6b7280; }
         
-        .facility-details {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            border: 1px solid #e2e8f0;
-        }
+        .status-requires { background: var(--warning-bg); color: var(--warning-text); }
+        .status-booked { background: var(--success-bg); color: var(--success-text); }
+        .status-pending { background: var(--bg-tertiary); color: var(--text-primary); }
+        .status-no-facility { background: var(--bg-tertiary); color: var(--text-muted); }
         
-        .facility-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
         
-        .facility-info-item {
-            display: flex;
-            flex-direction: column;
-        }
         
-        .facility-info-label {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-bottom: 0.25rem;
-            font-weight: 600;
-        }
         
-        .facility-info-value {
-            font-weight: 600;
-            color: #1e293b;
-        }
         
-        .facility-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
         
-        .btn-facility {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
         
-        .btn-create { background: #10b981; color: white; }
-        .btn-edit { background: var(--accent-primary); color: white; }
-        .btn-delete { background: #ef4444; color: white; }
-        .btn-toggle { background: #6b7280; color: white; }
-        .btn-view { background: var(--accent-primary); color: white; }
         
-        .btn-facility:hover {
-            opacity: 0.9;
-        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         .modal {
             display: none;
@@ -107,7 +60,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: var(--overlay);
             z-index: 1000;
         }
         
@@ -116,9 +69,9 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: var(--bg-primary);
             border-radius: 12px;
-            padding: 2rem;
+            padding: var(--space-6);
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
@@ -129,77 +82,68 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--space-5);
         }
         
         .modal-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary);
             margin: 0;
         }
         
         .close-modal {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: var(--text-xl);
             cursor: pointer;
-            color: #64748b;
+            color: var(--text-muted);
         }
         
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
         
         .form-label {
             display: block;
             font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
         }
         
         .form-control {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
+            padding: var(--space-3);
+            border: 1px solid var(--border-secondary);
             border-radius: 6px;
-            font-size: 0.875rem;
+            font-size: var(--text-sm);
         }
         
         .form-control:focus {
             outline: none;
             border-color: var(--c-teal-deep);
-            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+            box-shadow: 0 0 0 4px var(--ring);
         }
         
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 1.5rem;
+        
+        
+        
+        
+        .btn-primary { background: var(--accent-primary); color: var(--text-on-solid); }
+        .btn-secondary { background: var(--neutral-solid); color: var(--text-on-solid); }
+        
+        
+        
+        
+
+        .record-actions .btn{
+            min-height: 44px;
         }
-        
-        .btn-modal {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .btn-primary { background: var(--accent-primary); color: white; }
-        .btn-secondary { background: #6b7280; color: white; }
-        
-        .conflict-warning {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-        
-        .conflict-warning i {
-            margin-right: 0.5rem;
+
+        @media (max-width: 767px) {
+            .programme-header{
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     

@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST = [];
             
         } catch (Exception $e) {
-            $error = $e->getMessage();
+            $error = $e instanceof PDOException ? 'The record could not be saved.' : $e->getMessage();
         }
     } else {
         $error = "Database connection failed.";
@@ -65,8 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/forms.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Add Blacklist Entry', 'fas fa-plus', ['url' => 'blacklist.php', 'label' => 'Blacklist']); ?>
@@ -86,14 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Messages -->
                 <?php if ($error): ?>
                     <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($success): ?>
                     <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($success); ?>
                         <a href="blacklist.php" class="btn btn-sm btn-primary" style="margin-left: 10px;">
                             View Blacklist
@@ -102,62 +104,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <!-- Form -->
-                <form method="POST" enctype="multipart/form-data" class="form-container">
-                    <div class="form-grid">
-                        <!-- Basic Information -->
-                        <div class="form-section">
-                            <h3><i class="fas fa-user-slash"></i> Person Details</h3>
-                            
-                            <div class="form-group">
-                                <label for="name">Name *</label>
-                                <input type="text" id="name" name="name" required 
-                                       value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>"
-                                       placeholder="Enter full name">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="position">Position Applied</label>
-                                <input type="text" id="position" name="position"
-                                       value="<?php echo htmlspecialchars($_POST['position'] ?? ''); ?>"
-                                       placeholder="e.g., Senior Developer">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="phone">Phone Number</label>
-                                <input type="text" id="phone" name="phone"
-                                       value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>"
-                                       placeholder="e.g., +60123456789">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="date">Date</label>
-                                <input type="date" id="date" name="date"
-                                       value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>">
-                            </div>
-                        </div>
-                        
-                        <!-- Additional Details -->
-                        <div class="form-section">
-                            <h3><i class="fas fa-info-circle"></i> Additional Info</h3>
-                            
-                            <div class="form-group">
-                                <label for="reason">Reason for Blacklist</label>
-                                <textarea id="reason" name="reason" rows="4" 
-                                          placeholder="Describe the reason for blacklisting..."><?php echo htmlspecialchars($_POST['reason'] ?? ''); ?></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Add to Blacklist
-                        </button>
-                        <a href="blacklist.php" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </form>
+                <?php
+                $mode = 'add';
+                $field_errors = [];
+                if (!empty($error)) {
+                    if (stripos($error, 'name') !== false) { $field_errors['name'] = $error; }
+                    elseif (stripos($error, 'phone') !== false) { $field_errors['phone'] = $error; }
+                    elseif (stripos($error, 'date') !== false) { $field_errors['date'] = $error; }
+                    else { $field_errors['_form'] = $error; }
+                }
+                $values = $_POST;
+                include __DIR__ . '/includes/forms/blacklist-form.php';
+                ?>
+
             </div>
         </main>
     </div>
@@ -174,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }, 5000);
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+        <script defer src="<?php echo admin_asset('../assets/js/leave-guard.js'); ?>"></script>
+    <script defer src="<?php echo admin_asset('js/forms.js'); ?>"></script>
 </body>
 </html>

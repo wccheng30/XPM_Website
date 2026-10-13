@@ -1,28 +1,10 @@
 /* Fragment styles: application-details.php (loaded into #applicationModal) */
-.modal .application-details .detail-section {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: 14px;
-    animation: xpmFadeUp var(--dur-slow) var(--ease-out) backwards;
-}
 
-.modal .application-details .detail-section:nth-child(2) { animation-delay: 60ms; }
-.modal .application-details .detail-section:nth-child(3) { animation-delay: 120ms; }
-.modal .application-details .detail-section:nth-child(4) { animation-delay: 180ms; }
-
-.modal .application-details .detail-section h4 {
-    color: var(--text-primary);
-    font-size: 15px;
-    letter-spacing: -0.01em;
-}
-
-.modal .application-details .detail-section h4 i,
-.modal .application-details .value a {
+.modal .application-details .value a{
     color: var(--text-primary);
 }
 
-.modal .application-details .detail-row,
-.modal .application-details .detail-actions {
+.modal .application-details .detail-actions{
     border-color: var(--border-primary);
 }
 
@@ -37,13 +19,6 @@
     overflow-wrap: anywhere;
 }
 
-.modal .application-details .cover-letter-content,
-.modal .application-details .job-description-content {
-    background: var(--bg-primary);
-    border-color: var(--border-primary);
-    color: var(--text-secondary);
-}
-
 .modal .application-details .file-info,
 .modal .application-details .text-muted {
     color: var(--text-tertiary, var(--text-secondary));
@@ -55,22 +30,94 @@
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .modal .application-details .status-shortlisted,
-[data-theme="dark"] .modal .application-details .status-interview,
-[data-theme="dark"] .modal .application-details .status-interviewed,
-[data-theme="dark"] .modal .application-details .status-waiting-for-interview,
-[data-theme="dark"] .modal .application-details .status-waiting_for_interview {
-    background: rgba(255, 255, 255, 0.1);
+.application-details { padding: var(--space-4); }
+
+.application-details .label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+.application-details .value {
+    color: var(--text-primary);
+    text-align: right;
+}
+.application-details .value a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+.application-details .value a:hover { text-decoration: underline; }
+
+.application-details .file-info {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+@media (max-width: 768px) {
+    
+}
+
+.pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pipeline li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 650;
+}
+
+.pipeline li:not(:last-child)::after {
+    content: "";
+    width: 28px;
+    height: 2px;
+    margin-right: 8px;
+    background: var(--border-primary);
+}
+
+.pipeline-mark {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border-primary);
+    border-radius: 999px;
+    font-size: 11px;
+}
+
+.pipeline li.is-complete {
+    color: var(--text-secondary);
+}
+
+.pipeline li.is-complete .pipeline-mark {
+    color: var(--on-accent);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.pipeline li.is-current {
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .modal .application-details .status-blacklisted {
-    background: #7f1d1d;
-    color: #fecaca;
-    border: 1px solid #ef4444;
+.pipeline li.is-current .pipeline-mark {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 28%, transparent);
+    border-color: var(--accent-primary);
 }
 
-[data-theme="dark"] .modal .application-details .status-hired {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
+.pipeline-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    color: var(--danger-text);
+    font-weight: 700;
 }
+

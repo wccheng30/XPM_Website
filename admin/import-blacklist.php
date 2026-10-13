@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
@@ -10,6 +11,7 @@ $success = '';
 $import_data = [];
 $column_mapping = [];
 $preview_data = [];
+$import_result = null;
 
 // Handle file upload and processing
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,13 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($_POST['action']) {
             case 'upload':
                 // Handle file upload
-                if (isset($_FILES['import_file']) && $_FILES['import_file']['error'] === UPLOAD_ERR_OK) {
+                if (isset($_FILES['import_file']) && ($_FILES['import_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
                     $file = $_FILES['import_file'];
-                    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                    
-                    // Validate file type
-                    if ($file_extension !== 'csv') {
-                        $error = 'Please upload a CSV file (.csv)';
+                    $importError = auth_import_file_error($file, ['csv']);
+                    if ($importError !== '') {
+                        $error = $importError;
                     } else {
                         try {
                             $import_data = processImportFile($file);
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $error = 'No data found in the file or the file is empty.';
                             }
                         } catch (Exception $e) {
-                            $error = 'Error processing file: ' . $e->getMessage();
+                            $error = 'The file could not be processed.';
                         }
                     }
                 } else {
@@ -71,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($import_result['duplicates'] > 0) {
                             $success .= " {$import_result['duplicates']} duplicate entries were skipped.";
                         }
-                        // Clear session data after successful import
+                        $_SESSION['blacklist_import_result'] = $import_result;
+                        $_SESSION['blacklist_import_report'] = $import_result['report'] ?? [];
                         unset($_SESSION['blacklist_import_data']);
                         unset($_SESSION['blacklist_column_mapping']);
                         $import_data = [];
@@ -92,6 +93,9 @@ if (empty($import_data) && isset($_SESSION['blacklist_import_data'])) {
 }
 if (empty($column_mapping) && isset($_SESSION['blacklist_column_mapping'])) {
     $column_mapping = $_SESSION['blacklist_column_mapping'];
+}
+if ($import_result === null && isset($_SESSION['blacklist_import_result'])) {
+    $import_result = $_SESSION['blacklist_import_result'];
 }
 
 function processImportFile($file) {
@@ -227,6 +231,7 @@ function performBlacklistImport($data, $mapping) {
     $imported = 0;
     $skipped = 0;
     $duplicates = 0;
+    $report = [];
     
     try {
         $pdo->beginTransaction();
@@ -257,6 +262,11 @@ function performBlacklistImport($data, $mapping) {
             $name = $mapped['name'] ?? '';
             if (empty($name)) {
                 $skipped++;
+                $report[] = [
+                    'name' => $name,
+                    'phone' => $mapped['phone_number'] ?? '',
+                    'reason' => 'Missing required name',
+                ];
                 continue;
             }
             
@@ -269,6 +279,11 @@ function performBlacklistImport($data, $mapping) {
             $check_stmt->execute([$name, $phone]);
             if ($check_stmt->fetchColumn() > 0) {
                 $duplicates++;
+                $report[] = [
+                    'name' => $name,
+                    'phone' => $phone,
+                    'reason' => 'Duplicate name and phone',
+                ];
                 continue;
             }
             
@@ -281,13 +296,46 @@ function performBlacklistImport($data, $mapping) {
             'success' => true,
             'imported' => $imported,
             'skipped' => $skipped,
-            'duplicates' => $duplicates
+            'failed' => $duplicates,
+            'duplicates' => $duplicates,
+            'report' => $report
         ];
         
     } catch (Exception $e) {
         $pdo->rollBack();
-        return ['success' => false, 'message' => 'Import failed: ' . $e->getMessage()];
+        return ['success' => false, 'message' => 'The import could not be completed.'];
     }
+}
+
+if (isset($_GET['template'])) {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="blacklist-import-template.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['Full Name', 'Position Applied', 'Phone Number', 'Date Added', 'Reason']);
+    fputcsv($out, ['Jane Example', 'HR Assistant', '+60123456789', date('Y-m-d'), 'Sample reason']);
+    fclose($out);
+    exit;
+}
+
+if (isset($_GET['error_report']) && !empty($_SESSION['blacklist_import_report'])) {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="blacklist-import-errors.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['name', 'phone', 'reason']);
+    foreach ($_SESSION['blacklist_import_report'] as $row) {
+        fputcsv($out, [$row['name'] ?? '', $row['phone'] ?? '', $row['reason'] ?? '']);
+    }
+    fclose($out);
+    exit;
+}
+
+$step = 1;
+if (!empty($import_result) && !empty($import_result['success'])) {
+    $step = 3;
+} elseif (!empty($preview_data)) {
+    $step = 3;
+} elseif (!empty($import_data)) {
+    $step = 2;
 }
 ?>
 
@@ -297,12 +345,12 @@ function performBlacklistImport($data, $mapping) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Import Blacklist - XpressPoint Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/import-blacklist.css?v=20260930-4">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/import.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Import Blacklist', 'fas fa-upload', ['url' => 'blacklist.php', 'label' => 'Blacklist']); ?>
@@ -312,74 +360,51 @@ function performBlacklistImport($data, $mapping) {
         <?php include 'includes/navigation.php'; renderAdminNavigation('blacklist'); ?>
         
         <div class="import-container">
-            <!-- Back Button -->
-            <div style="margin-bottom: 20px;">
-                <a href="blacklist.php" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Blacklist
-                </a>
-            </div>
-            
-            <!-- Alerts -->
+            <ol class="import-steps">
+                <li class="<?php echo $step === 1 ? 'is-current' : ($step > 1 ? 'is-done' : ''); ?>"><span class="step-index">1</span> Upload</li>
+                <li class="<?php echo $step === 2 ? 'is-current' : ($step > 2 ? 'is-done' : ''); ?>"><span class="step-index">2</span> Map and preview</li>
+                <li class="<?php echo $step === 3 ? 'is-current' : ''; ?>"><span class="step-index">3</span> Confirm</li>
+            </ol>
+
             <?php if ($error): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <?php echo htmlspecialchars($error); ?>
-                </div>
+                <div class="alert alert-error"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> <?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
-            
-            <?php if ($success): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <?php echo htmlspecialchars($success); ?>
-                    <?php if (strpos($success, 'Import completed') !== false): ?>
-                        <a href="blacklist.php" class="btn btn-sm btn-primary" style="margin-left: 10px;">
-                            View Blacklist
-                        </a>
-                    <?php endif; ?>
-                </div>
+            <?php if ($success && empty($import_result['success'])): ?>
+                <div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> <?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
-            
-            <!-- Step 1: File Upload -->
+
             <div class="import-step" id="step-upload">
                 <div class="step-header">
                     <div class="step-number">1</div>
-                    <div class="step-title">Upload Your CSV File</div>
+                    <h2 class="step-title">Upload</h2>
                 </div>
-                
+                <p class="step-help">Drop a CSV file, or choose one with the keyboard. A template is ready if you need the column names.</p>
                 <form method="POST" enctype="multipart/form-data" id="upload-form">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="upload">
-                    
-                    <div class="file-upload-area" id="file-upload-area">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #94a3b8; margin-bottom: 16px;"></i>
-                        <h3 style="margin-bottom: 8px; color: #374151;">Drop your CSV file here or click to browse</h3>
-                        <p style="color: #64748b; margin-bottom: 16px;">
-                            Supported format: CSV (.csv)
-                        </p>
-                        <input type="file" name="import_file" id="import_file" accept=".csv" style="display: none;">
-                        <button type="button" class="btn btn-primary" onclick="document.getElementById('import_file').click()" style="background: #ef4444; border-color: #ef4444;">
-                            <i class="fas fa-folder-open"></i>
-                            Choose File
+                    <div class="file-upload-area" id="file-upload-area" role="button" tabindex="0" aria-label="Upload a blacklist CSV. Drop a file here or press Enter to browse.">
+                        <i class="fas fa-cloud-upload-alt file-upload-icon" aria-hidden="true"></i>
+                        <h3>Drop your CSV file here or press Enter to browse</h3>
+                        <p>Supported format: CSV (.csv)</p>
+                        <input class="file-input" type="file" name="import_file" id="import_file" accept=".csv">
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('import_file').click()">
+                            <i class="fas fa-folder-open" aria-hidden="true"></i> Choose file
                         </button>
                     </div>
-                    
-                    <div id="file-info" class="hidden" style="margin-top: 16px; padding: 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-file-csv" style="color: #ef4444; font-size: 24px;"></i>
-                            <div>
-                                <div id="file-name" style="font-weight: 600; color: #1e293b;"></div>
-                                <div id="file-size" style="font-size: 14px; color: #64748b;"></div>
-                            </div>
+                    <div id="file-info" class="file-info" hidden>
+                        <i class="fas fa-file-csv" aria-hidden="true"></i>
+                        <div>
+                            <div id="file-name" class="file-info-name"></div>
+                            <div id="file-size" class="file-info-size"></div>
                         </div>
                     </div>
                 </form>
-
-                <div class="template-section">
-                    <h4><i class="fas fa-info-circle"></i> Expected CSV Columns</h4>
-                    <p>Your CSV file should contain some or all of these columns. You'll be able to map them in the next step.</p>
-                    <code style="display: block; background: white; padding: 10px; border-radius: 4px; font-size: 13px; color: #374151;">
-                        Full Name, Position Applied, Phone Number, Date Added, Reason
-                    </code>
+                <div class="template-row">
+                    <div>
+                        <strong>Need a starting file?</strong>
+                        <code class="template-code">Full Name, Position Applied, Phone Number, Date Added, Reason</code>
+                    </div>
+                    <a class="btn btn-secondary" href="import-blacklist.php?template=1"><i class="fas fa-download" aria-hidden="true"></i> Download template</a>
                 </div>
             </div>
             
@@ -388,14 +413,12 @@ function performBlacklistImport($data, $mapping) {
             <div class="import-step" id="step-mapping">
                 <div class="step-header">
                     <div class="step-number">2</div>
-                    <div class="step-title">Map Your Columns</div>
+                    <h2 class="step-title">Map and preview</h2>
                 </div>
-                
-                <p style="color: #64748b; margin-bottom: 20px;">
-                    Map your CSV columns to the blacklist fields. Required fields are marked with <span class="required">*</span>.
-                </p>
+                <p class="step-help">Map your CSV columns to blacklist fields. Required fields are marked with <span class="required">*</span>. The table shows the first 10 rows.</p>
                 
                 <form method="POST" id="mapping-form">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="preview">
                     
                     <div class="column-mapping">
@@ -459,79 +482,40 @@ function performBlacklistImport($data, $mapping) {
                     </div>
                     
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-primary" style="background: #ef4444; border-color: #ef4444;">
-                            <i class="fas fa-eye"></i>
-                            Preview Data
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            Preview data
                         </button>
                     </div>
                 </form>
-            </div>
-            <?php endif; ?>
-            
-            <!-- Step 3: Data Preview & Import -->
-            <?php if (!empty($preview_data)): ?>
-            <div class="import-step" id="step-preview">
-                <div class="step-header">
-                    <div class="step-number">3</div>
-                    <div class="step-title">Preview & Import</div>
-                </div>
-                
-                <div class="import-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">Total Records:</span>
-                        <span class="summary-value"><?php echo count($import_data); ?></span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Preview (first <?php echo min(10, count($import_data)); ?>):</span>
-                        <span class="summary-value"><?php echo count($preview_data); ?></span>
-                    </div>
-                    <?php 
-                    $valid_count = count(array_filter($preview_data, function($row) { return !$row['_has_errors']; }));
-                    $error_count = count($preview_data) - $valid_count;
-                    ?>
-                    <div class="summary-item">
-                        <span class="summary-label">Valid Records (in preview):</span>
-                        <span class="summary-value" style="color: #059669; font-weight: 600;"><?php echo $valid_count; ?></span>
-                    </div>
-                    <?php if ($error_count > 0): ?>
-                    <div class="summary-item">
-                        <span class="summary-label">Rows with Errors (in preview):</span>
-                        <span class="summary-value" style="color: #dc2626; font-weight: 600;"><?php echo $error_count; ?></span>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <div style="overflow-x: auto;">
+                <?php if (!empty($preview_data)): ?>
+                <div class="table-wrap">
                     <table class="preview-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Full Name</th>
-                                <th>Position Applied</th>
-                                <th>Phone Number</th>
-                                <th>Date</th>
-                                <th>Reason</th>
-                                <th>Status</th>
+                                <th scope="col">#</th>
+                                <th scope="col">Full Name</th>
+                                <th scope="col">Position Applied</th>
+                                <th scope="col">Phone Number</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Reason</th>
+                                <th scope="col">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($preview_data as $index => $row): ?>
-                            <tr class="<?php echo $row['_has_errors'] ? 'error-row' : ''; ?>">
-                                <td><?php echo $index + 1; ?></td>
-                                <td><?php echo htmlspecialchars($row['name'] ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($row['position_applied'] ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($row['phone_number'] ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($row['date'] ?? ''); ?></td>
-                                <td style="max-width: 200px; white-space: normal;"><?php echo htmlspecialchars(substr($row['reason'] ?? '', 0, 80)) . (strlen($row['reason'] ?? '') > 80 ? '...' : ''); ?></td>
-                                <td>
+                            <tr class="<?php echo $row['_has_errors'] ? 'is-error' : ''; ?>">
+                                <td data-label="#"><?php echo $index + 1; ?></td>
+                                <td data-label="Full Name" title="<?php echo htmlspecialchars($row['name'] ?? ''); ?>"><?php echo htmlspecialchars($row['name'] ?? ''); ?></td>
+                                <td data-label="Position Applied"><?php echo htmlspecialchars($row['position_applied'] ?? ''); ?></td>
+                                <td data-label="Phone Number"><?php echo htmlspecialchars($row['phone_number'] ?? ''); ?></td>
+                                <td data-label="Date"><?php echo htmlspecialchars($row['date'] ?? ''); ?></td>
+                                <td class="reason-cell" data-label="Reason" title="<?php echo htmlspecialchars($row['reason'] ?? ''); ?>"><?php echo htmlspecialchars(substr($row['reason'] ?? '', 0, 80)) . (strlen($row['reason'] ?? '') > 80 ? '...' : ''); ?></td>
+                                <td data-label="Status">
                                     <?php if ($row['_has_errors']): ?>
-                                        <span style="color: #dc2626; font-weight: 500;">
-                                            <i class="fas fa-times-circle"></i> Missing name
-                                        </span>
+                                        <span class="status-bad"><i class="fas fa-times-circle" aria-hidden="true"></i> Missing name</span>
                                     <?php else: ?>
-                                        <span style="color: #059669; font-weight: 500;">
-                                            <i class="fas fa-check-circle"></i> Ready
-                                        </span>
+                                        <span class="status-ok"><i class="fas fa-check-circle" aria-hidden="true"></i> Ready</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -539,99 +523,68 @@ function performBlacklistImport($data, $mapping) {
                         </tbody>
                     </table>
                 </div>
-                
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($preview_data) && empty($import_result['success'])): ?>
+            <div class="import-step" id="step-confirm">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h2 class="step-title">Confirm</h2>
+                </div>
+                <p class="step-help">This will add every valid row from the file, not only the 10-row preview.</p>
+                <?php
+                $valid_count = count(array_filter($preview_data, function ($row) { return empty($row['_has_errors']); }));
+                $error_count = count($preview_data) - $valid_count;
+                ?>
+                <div class="import-summary">
+                    <div class="summary-item"><span class="summary-label">Rows in file</span><span class="summary-value"><?php echo count($import_data); ?></span></div>
+                    <div class="summary-item"><span class="summary-label">Previewed</span><span class="summary-value"><?php echo count($preview_data); ?></span></div>
+                    <div class="summary-item"><span class="summary-label">Ready in preview</span><span class="summary-value is-ok"><?php echo $valid_count; ?></span></div>
+                    <div class="summary-item"><span class="summary-label">Errors in preview</span><span class="summary-value is-bad"><?php echo $error_count; ?></span></div>
+                </div>
                 <form method="POST" id="import-form">
+                    <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="import">
                     <?php foreach ($column_mapping as $field => $column): ?>
                     <input type="hidden" name="column_mapping[<?php echo $field; ?>]" value="<?php echo htmlspecialchars($column); ?>">
                     <?php endforeach; ?>
-                    
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-success" style="background: #059669; border-color: #059669; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;" data-confirm-title="Import blacklist entries?" data-confirm="Import <?php echo count($import_data); ?> blacklist entries?" data-confirm-ok="Import" data-confirm-icon="fas fa-upload">
-                            <i class="fas fa-upload"></i>
-                            Import <?php echo count($import_data); ?> Entries
+                        <button type="submit" class="btn btn-success" data-confirm-title="Import blacklist entries?" data-confirm="Import <?php echo count($import_data); ?> blacklist entries?" data-confirm-ok="Import" data-confirm-icon="fas fa-upload">
+                            <i class="fas fa-upload" aria-hidden="true"></i>
+                            Import <?php echo count($import_data); ?> entries
                         </button>
-                        <a href="import-blacklist.php" class="btn btn-secondary" style="padding: 10px 24px; border-radius: 8px; text-decoration: none;">
-                            <i class="fas fa-redo"></i>
-                            Start Over
-                        </a>
+                        <a href="import-blacklist.php" class="btn btn-secondary"><i class="fas fa-redo" aria-hidden="true"></i> Start over</a>
                     </div>
                 </form>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($import_result['success'])): ?>
+            <div class="import-step" id="step-result">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h2 class="step-title">Confirm</h2>
+                </div>
+                <p class="step-help"><?php echo htmlspecialchars($success); ?></p>
+                <div class="import-summary">
+                    <div class="summary-item"><span class="summary-label">Imported</span><span class="summary-value is-ok"><?php echo (int) ($import_result['imported'] ?? 0); ?></span></div>
+                    <div class="summary-item"><span class="summary-label">Skipped</span><span class="summary-value"><?php echo (int) ($import_result['skipped'] ?? 0); ?></span></div>
+                    <div class="summary-item"><span class="summary-label">Failed</span><span class="summary-value is-bad"><?php echo (int) ($import_result['failed'] ?? $import_result['duplicates'] ?? 0); ?></span></div>
+                </div>
+                <div class="btn-group">
+                    <?php if (!empty($_SESSION['blacklist_import_report'])): ?>
+                    <a class="btn btn-secondary" href="import-blacklist.php?error_report=1"><i class="fas fa-download" aria-hidden="true"></i> Download error report</a>
+                    <?php endif; ?>
+                    <a class="btn btn-primary" href="blacklist.php">View blacklist</a>
+                    <a class="btn btn-secondary" href="import-blacklist.php">Import another file</a>
+                </div>
             </div>
             <?php endif; ?>
         </div>
     </div>
 
-    <script>
-        // File upload handling
-        const fileUploadArea = document.getElementById('file-upload-area');
-        const fileInput = document.getElementById('import_file');
-        const fileInfo = document.getElementById('file-info');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
-        
-        // Drag and drop functionality
-        fileUploadArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            fileUploadArea.classList.add('dragover');
-        });
-        
-        fileUploadArea.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            fileUploadArea.classList.remove('dragover');
-        });
-        
-        fileUploadArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            fileUploadArea.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-                handleFileSelect();
-            }
-        });
-        
-        fileInput.addEventListener('change', handleFileSelect);
-        
-        function handleFileSelect() {
-            const file = fileInput.files[0];
-            if (file) {
-                // Validate file type
-                if (!file.name.toLowerCase().endsWith('.csv')) {
-                    xpmAlert('Please select a CSV file.');
-                    return;
-                }
-                
-                fileName.textContent = file.name;
-                fileSize.textContent = formatFileSize(file.size);
-                fileInfo.classList.remove('hidden');
-                
-                // Auto-submit the form
-                document.getElementById('upload-form').submit();
-            }
-        }
-        
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        // Auto-hide alerts after 8 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                if (!alert.querySelector('.btn')) { // Don't auto-hide alerts with action buttons
-                    alert.style.transition = 'opacity 0.3s';
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 300);
-                }
-            });
-        }, 8000);
-    </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script defer src="<?php echo admin_asset('js/import.js'); ?>"></script>
 </body>
 </html>

@@ -1,32 +1,48 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
+require_once __DIR__ . '/includes/ui.php';
 require_once '../includes/blacklist-lookup.php';
 
 $pdo = get_db_connection();
 $blacklisted = [];
-$stats = [
-    'total' => 0,
-    'active' => 0,
-    'inactive' => 0
-];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+$blacklist = [];
+$total_trainers = 0;
+$stats = ['total' => 0];
+$can_delete_blacklist = (($_SESSION['admin_role'] ?? 'admin') !== 'manager');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'bulk_delete' && $can_delete_blacklist) {
+    $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
+    try {
+        foreach ($ids as $trainer_id) {
+            $existing = $pdo->prepare("SELECT name, phone_number FROM blacklist WHERE id = ?");
+            $existing->execute([$trainer_id]);
+            $person = $existing->fetch(PDO::FETCH_ASSOC);
+            if ($person) {
+                blacklist_clear_marked($pdo, (string) $person['name'], (string) $person['phone_number']);
+            }
+            $stmt = $pdo->prepare("DELETE FROM blacklist WHERE id = ?");
+            $stmt->execute([$trainer_id]);
+        }
+        $success_message = count($ids) . " record" . (count($ids) === 1 ? '' : 's') . " removed.";
+    } catch (PDOException $e) {
+        $error_message = "Error performing action.";
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $trainer_id = $_POST['trainer_id'] ?? null;
     $action = $_POST['action'];
     
     if ($trainer_id) {
         try {
             switch ($action) {
-                case 'toggle_active':
-                    $stmt = $pdo->prepare("UPDATE blacklist SET is_active = NOT is_active WHERE id = ?");
-                    $stmt->execute([$trainer_id]);
-                    $success_message = "Trainer active status updated successfully!";
-                    break;
-                    
                 case 'delete':
+                    if (!$can_delete_blacklist) {
+                        $error_message = "You do not have permission to remove blacklist records.";
+                        break;
+                    }
                     $existing = $pdo->prepare("SELECT name, phone_number FROM blacklist WHERE id = ?");
                     $existing->execute([$trainer_id]);
                     $person = $existing->fetch(PDO::FETCH_ASSOC);
@@ -39,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     break;
             }
         } catch (PDOException $e) {
-            $error_message = "Error performing action: " . $e->getMessage();
+            $error_message = 'The change could not be saved.';
         }
     }
 }
@@ -48,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $filter = $_GET['filter'] ?? '';
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
-$per_page = 20;
+$per_page = ui_page_size(25);
 $offset = ($page - 1) * $per_page;
 
 // Get blacklist with filtering and pagination
@@ -85,14 +101,12 @@ if ($pdo) {
         $blacklist = $stmt->fetchAll();
         
         // Get statistics
-        $stats_sql = "SELECT 
-            COUNT(*) as total
-            FROM blacklist";
+        $stats_sql = "SELECT COUNT(*) as total FROM blacklist";
         $stats_stmt = $pdo->query($stats_sql);
         $stats = $stats_stmt->fetch();
         
     } catch (PDOException $e) {
-        $error_message = "Error fetching blacklist: " . $e->getMessage();
+        $error_message = 'The list could not be loaded.';
     }
 }
 
@@ -104,12 +118,13 @@ $total_pages = ceil($total_trainers / $per_page);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trainers Management - XpressPoint Admin</title>
+    <title>Blacklist - XpressPoint Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/list.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Blacklist', 'fas fa-user-slash'); ?>
@@ -118,204 +133,112 @@ $total_pages = ceil($total_trainers / $per_page);
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('blacklist'); ?>
 
-        <!-- Main Content -->
         <main class="admin-main">
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3><?php echo $stats['total']; ?></h3>
-                        <p>Total Blacklisted</p>
-                    </div>
+        <?php
+        $bl_filter = (string) ($filter ?? '');
+        $bl_search = (string) ($search ?? '');
+        renderPageHead(
+            'Blacklist',
+            'People who should not be hired or enrolled.',
+            '<a class="btn btn-primary" href="add-blacklist.php"><i class="fas fa-plus" aria-hidden="true"></i> New entry</a>'
+        );
+        if (isset($success_message)) {
+            echo '<div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> ' . $success_message . '</div>';
+        }
+        if (isset($error_message)) {
+            echo '<div class="alert alert-error"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> ' . ui_h($error_message) . '</div>';
+        }
+        renderStatusChips([
+            ['value' => '', 'label' => 'All', 'count' => (int) ($stats['total'] ?? 0)],
+        ], '');
+        $bl_active = [];
+        if ($bl_search !== '') {
+            $bl_active[] = ['label' => 'Search: ' . $bl_search, 'href' => ui_query(['search' => null], ['page'])];
+        }
+        renderListToolbar(
+            'search',
+            $bl_search,
+            'Search name, position, or reason',
+            '<a class="btn btn-secondary" href="import-blacklist.php">Import</a>',
+            '<button class="btn btn-secondary" type="button" onclick="exportBlacklist()">Export</button>',
+            'blacklist.php',
+            $bl_active
+        );
+        ?>
+        <?php if (empty($blacklist)): ?>
+            <?php
+            if ((int) $total_trainers === 0 && $bl_search === '' && $bl_filter === '') {
+                renderEmptyState('fas fa-user-slash', 'No blacklist entries', 'Add someone who should be blocked from hiring or enrolment.', 'add-blacklist.php', 'New entry');
+            } else {
+                renderEmptyState('fas fa-search', 'No matching entries', 'Nothing matches the current search or status.', 'blacklist.php', 'Clear filters');
+            }
+            ?>
+        <?php else: ?>
+            <form method="post" id="listBulkForm">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="action" id="bulkAction" value="">
+                <?php renderBulkBar([], $can_delete_blacklist); ?>
+                <div class="list-table-wrap">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><input type="checkbox" id="listSelectAll" aria-label="Select all rows"></th>
+                                <th scope="col">Person</th>
+                                <th scope="col">Position</th>
+                                <th scope="col">Reason</th>
+                                <th scope="col">Date</th>
+                                <th scope="col"><span class="u-clip">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($blacklist as $person): ?>
+                            <tr>
+                                <td class="list-select" data-label=""><input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $person['id']; ?>" aria-label="Select <?php echo ui_h($person['name']); ?>"></td>
+                                <td data-label="Person">
+                                    <?php echo ui_h($person['name']); ?>
+                                    <?php if (!empty($person['phone_number'])): ?><div class="meta"><?php echo ui_h($person['phone_number']); ?></div><?php endif; ?>
+                                </td>
+                                <td data-label="Position"><?php echo ui_h($person['position_applied'] ?: 'N/A'); ?></td>
+                                <td data-label="Reason"><?php echo ui_h($person['reason'] ?: 'No reason provided'); ?></td>
+                                <td data-label="Date"><?php echo ui_h(!empty($person['date']) ? $person['date'] : 'N/A'); ?></td>
+                                <td data-label="Actions">
+                                    <?php
+                                    $actions = [
+                                        ['label' => 'Edit', 'icon' => 'fas fa-edit', 'href' => 'edit-blacklist.php?id=' . (int) $person['id']],
+                                    ];
+                                    if ($can_delete_blacklist) {
+                                        $actions[] = ['label' => 'Delete', 'icon' => 'fas fa-trash', 'danger' => true, 'onclick' => 'removeBlacklist(' . (int) $person['id'] . ')'];
+                                    }
+                                    renderRowActions($actions);
+                                    ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- Search and Filters -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h3><i class="fas fa-filter"></i> Search & Filters</h3>
-                </div>
-                <div class="card-body">
-                    <form method="GET" class="d-flex gap-3" style="align-items: end; display: flex; gap: 1rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="search">Search Blacklist</label>
-                            <input type="text" name="search" id="search" class="form-control" placeholder="Search by name, position, or reason..." value="<?php echo htmlspecialchars($search); ?>">
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> Search
-                            </button>
-                        </div>
-                        <?php if (isset($_GET['search'])): ?>
-                            <div class="form-group">
-                                <a href="blacklist.php" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Clear
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Messages -->
-            <?php if (isset($success_message)): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <?php echo $success_message; ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (isset($error_message)): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <?php echo $error_message; ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Blacklist Table -->
-            <div class="card">
-                <div class="card-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h3 style="margin: 0; color: #1f2937; font-size: 20px; font-weight: 600;">
-                                <i class="fas fa-user-slash" style="color: #ef4444; margin-right: 8px;"></i>
-                                Blacklisted People
-                            </h3>
-                            <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">
-                                <?php echo count($blacklist); ?> record<?php echo count($blacklist) != 1 ? 's' : ''; ?> found
-                            </p>
-                        </div>
-                        <div style="display: flex; gap: 12px;">
-                            <a href="add-blacklist.php" class="btn btn-primary" style="background: #111111; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none;">
-                                <i class="fas fa-plus" style="margin-right: 6px;"></i>
-                                Add New
-                            </a>
-                            <a href="import-blacklist.php" class="btn btn-primary" style="background: #059669; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#047857'" onmouseout="this.style.backgroundColor='#059669'">
-                                <i class="fas fa-upload" style="margin-right: 6px;"></i>
-                                Import CSV
-                            </a>
-                            <button onclick="exportBlacklist()" class="btn btn-secondary" style="background: #6b7280; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
-                                <i class="fas fa-download" style="margin-right: 6px;"></i>
-                                Export
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-body">
-                    <?php if (empty($blacklist)): ?>
-                        <div style="text-align: center; padding: 60px 20px; color: #64748b; background: #f8fafc; border-radius: 12px; margin: 20px 0;">
-                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 32px;">
-                                <i class="fas fa-user-slash"></i>
-                            </div>
-                            <h3 style="margin-bottom: 12px; color: #374151; font-size: 24px; font-weight: 600;">No Blacklisted People</h3>
-                            <p style="color: #6b7280; font-size: 16px; margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto;">
-                                There are currently no records in the blacklist.
-                            </p>
-                            <a href="add-blacklist.php" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Add Blacklisted Person
-                            </a>
-                        </div>
-                    <?php else: ?>
-                        <div style="overflow-x: auto;">
-                            <table class="record-table">
-                                <thead>
-                                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                        <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Person</th>
-                                        <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Position Applied</th>
-                                        <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Reason</th>
-                                        <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Date</th>
-                                        <th style="padding: 16px 12px; text-align: left; font-weight: 600; color: #374151; font-size: 14px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($blacklist as $person): ?>
-                                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
-                                            <td style="padding: 16px 12px;">
-                                                <div style="display: flex; align-items: center; gap: 12px;">
-                                                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
-                                                        <i class="fas fa-user-slash"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div style="font-weight: 600; color: #1f2937; font-size: 15px; margin-bottom: 2px;">
-                                                            <?php echo htmlspecialchars($person['name']); ?>
-                                                        </div>
-                                                        <?php if ($person['phone_number']): ?>
-                                                        <div style="font-size: 13px; color: #6b7280;">
-                                                            <i class="fas fa-phone" style="font-size: 11px; margin-right: 4px;"></i>
-                                                            <?php echo htmlspecialchars($person['phone_number']); ?>
-                                                        </div>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style="padding: 16px 12px;">
-                                                <div style="font-weight: 500; color: #374151;">
-                                                    <?php echo htmlspecialchars($person['position_applied'] ?: 'N/A'); ?>
-                                                </div>
-                                            </td>
-                                            <td style="padding: 16px 12px;">
-                                                <div style="color: #4b5563; font-size: 14px; max-width: 250px; white-space: normal;">
-                                                    <?php echo htmlspecialchars($person['reason'] ?: 'No reason provided'); ?>
-                                                </div>
-                                            </td>
-                                            <td style="padding: 16px 12px;">
-                                                <div style="font-size: 14px; color: #374151; font-weight: 500;">
-                                                    <?php echo !empty($person['date']) ? htmlspecialchars($person['date']) : 'N/A'; ?>
-                                                </div>
-                                            </td>
-                                            <td style="padding: 16px 12px;">
-                                                <div style="display: flex; gap: 8px; align-items: center;">
-                                                    <a href="edit-blacklist.php?id=<?php echo $person['id']; ?>" class="btn btn-sm btn-primary" style="background: linear-gradient(135deg, #111111 0%, #111111 100%); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px; text-decoration: none;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
-                                                        <i class="fas fa-edit" style="font-size: 11px;"></i>
-                                                        Edit
-                                                    </a>
-                                                    <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
-                                                    <form method="POST" style="margin: 0; display: inline;">
-                                                        <input type="hidden" name="trainer_id" value="<?php echo $person['id']; ?>">
-                                                        <input type="hidden" name="action" value="delete">
-                                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Remove from blacklist?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">
-                                                            <i class="fas fa-trash" style="font-size: 11px;"></i>
-                                                            Delete
-                                                        </button>
-                                                    </form>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <?php if ($total_pages > 1): ?>
-                            <div class="pagination" style="margin-top: 20px;">
-                                <?php if ($page > 1): ?>
-                                    <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="btn btn-secondary">
-                                        <i class="fas fa-chevron-left"></i> Previous
-                                    </a>
-                                <?php endif; ?>
-                                
-                                <span class="pagination-info">
-                                    Page <?php echo $page; ?> of <?php echo $total_pages; ?> 
-                                    (<?php echo $total_trainers; ?> total records)
-                                </span>
-                                
-                                <?php if ($page < $total_pages): ?>
-                                    <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="btn btn-secondary">
-                                        Next <i class="fas fa-chevron-right"></i>
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
+            </form>
+            <?php renderPagination($page, $per_page, (int) $total_trainers); ?>
+        <?php endif; ?>
         </main>
+        <script>
+            function removeBlacklist(id) {
+                var run = function () {
+                    var form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'blacklist.php';
+                    form.innerHTML = '<input type="hidden" name="action" value="delete"><input type="hidden" name="trainer_id" value="' + id + '">';
+                    document.body.appendChild(form);
+                    form.submit();
+                };
+                if (window.xpmConfirm) {
+                    window.xpmConfirm({ title: 'Remove from blacklist?', message: 'This action cannot be undone.', confirmText: 'Delete', icon: 'fas fa-trash' }).then(function (ok) { if (ok) run(); });
+                } else {
+                    run();
+                }
+            }
+        </script>
+
     </div>
 
     <script>
@@ -327,42 +250,23 @@ $total_pages = ceil($total_trainers / $per_page);
         function showExportModal() {
             // Create modal overlay
             const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            overlay.className = 'modal-overlay is-open';
             
-            // Create modal content
             const modal = document.createElement('div');
-            modal.style.cssText = `
-                background: white;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 400px;
-                width: 90%;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            `;
+            modal.className = 'export-sheet';
             
             modal.innerHTML = `
-                <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
-                    <h3 style="margin: 0; color: #1e293b;">Export Blacklist</h3>
+                <div class="cluster u-mb-5">
+                    <i class="fas fa-download icon-lg" aria-hidden="true"></i>
+                    <h3 class="modal-title">Export Blacklist</h3>
                 </div>
                 
-                <p style="color: #64748b; margin-bottom: 20px;">
+                <p class="u-mb-5">
                     Choose the format for your blacklist export:
                 </p>
                 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
+                <div class="u-mb-5">
+                    <label class="field-label">Export Format</label>
                     <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
@@ -371,12 +275,12 @@ $total_pages = ceil($total_trainers / $per_page);
                     </select>
                 </div>
                 
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="closeExportModal()">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-download" style="margin-right: 4px;"></i>
+                    <button class="btn btn-ink btn-sm" onclick="performExport()">
+                        <i class="fas fa-download ico" aria-hidden="true"></i>
                         Export
                     </button>
                 </div>
@@ -394,42 +298,29 @@ $total_pages = ceil($total_trainers / $per_page);
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="z-index: 10000"]');
-            if (overlay) {
-                overlay.remove();
-            }
+            const overlay = document.querySelector('.modal-overlay.is-open');
+            if (overlay) overlay.remove();
         }
         
         function performExport() {
             const format = document.getElementById('exportFormat').value;
             const exportBtn = document.querySelector('button[onclick="exportBlacklist()"]');
-            const originalText = exportBtn.innerHTML;
-            
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 4px;"></i>Preparing...';
-            exportBtn.disabled = true;
             
             // Get current search parameter
             const searchParams = new URLSearchParams(window.location.search);
             const search = searchParams.get('search') || '';
             
             // Create export URL with format
-            const exportUrl = `export-blacklist.php?format=${format}&search=${encodeURIComponent(search)}`;
+            const selected = (window.exportSelection || []).join(',');
+            const exportUrl = `export-blacklist.php?format=${format}&search=${encodeURIComponent(search)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = exportUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Close modal
+            var exportName = `export`;
+            if (window.xpmExportDownload) {
+                window.xpmExportDownload(exportUrl, exportName, exportBtn);
+            } else {
+                window.location.href = exportUrl;
+            }
             closeExportModal();
-            
-            // Reset button
-            setTimeout(() => {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }, 1000);
         }
 
         // Auto-hide alerts after 5 seconds
@@ -441,6 +332,15 @@ $total_pages = ceil($total_trainers / $per_page);
             });
         }, 5000);
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script>
+        window.exportSelection = [];
+        var previousExport = window.exportBlacklist;
+        window.exportBlacklist = function (ids) {
+            window.exportSelection = ids || [];
+            if (typeof showExportModal === 'function') showExportModal();
+        };
+        window.exportApplications = window.exportBlacklist;
+    </script>
+    <script defer src="<?php echo admin_asset('js/list.js'); ?>"></script>
 </body>
 </html>

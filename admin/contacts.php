@@ -1,9 +1,11 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
+require_once __DIR__ . '/includes/ui.php';
 require_once '../includes/blacklist-lookup.php';
 
 // Handle AJAX search suggestions
@@ -31,7 +33,32 @@ if (isset($_GET['ajax_search']) && $_GET['ajax_search']) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['bulk_delete', 'bulk_update_status'], true)) {
+    if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
+        $error_message = 'The form expired. Please try again.';
+    } else {
+        $pdo = get_db_connection();
+        $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
+        $allowed = ['new', 'contacted', 'qualified', 'blacklisted'];
+        if ($pdo && ($_POST['action'] ?? '') === 'bulk_delete') {
+            $stmt = $pdo->prepare("DELETE FROM contacts WHERE id = ?");
+            foreach ($ids as $id) {
+                $stmt->execute([$id]);
+            }
+            header('Location: contacts.php?removed=1');
+            exit;
+        } elseif ($pdo && in_array($_POST['status'] ?? '', $allowed, true)) {
+            foreach ($ids as $id) {
+                $previous = $pdo->prepare("SELECT status FROM contacts WHERE id = ?");
+                $previous->execute([$id]);
+                $previous_status = (string) $previous->fetchColumn();
+                $pdo->prepare("UPDATE contacts SET status = ? WHERE id = ?")->execute([$_POST['status'], $id]);
+                blacklist_sync_status($pdo, 'contact', $id, $previous_status, (string) $_POST['status']);
+            }
+            $success_message = count($ids) . ' contact status' . (count($ids) === 1 ? '' : 'es') . ' updated.';
+        }
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     $contact_id = (int) ($_POST['contact_id'] ?? 0);
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
         $error_message = 'The form expired. Please try again.';
@@ -75,17 +102,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $filter = $_GET['filter'] ?? '';
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
-$per_page = 20;
+$per_page = ui_page_size(25);
 $offset = ($page - 1) * $per_page;
 
 $pdo = get_db_connection();
 $contacts = [];
+$contact_stats = ['total' => 0, 'custom' => 0, 'new' => 0, 'contacted' => 0, 'qualified' => 0, 'blacklisted' => 0];
 $blacklist_lookup = [];
 $total_contacts = 0;
 $total_pages = 0;
 
 if ($pdo) {
     try {
+        $contact_stats = ['total' => 0, 'custom' => 0, 'new' => 0, 'contacted' => 0, 'qualified' => 0, 'blacklisted' => 0];
+        $contact_stats['total'] = (int) $pdo->query("SELECT COUNT(*) FROM contacts")->fetchColumn();
+        $contact_stats['custom'] = (int) $pdo->query("SELECT COUNT(*) FROM contacts WHERE interest = 'custom'")->fetchColumn();
+        foreach ($pdo->query("SELECT status, COUNT(*) AS count FROM contacts GROUP BY status") as $row) {
+            if (isset($contact_stats[$row['status']])) {
+                $contact_stats[$row['status']] = (int) $row['count'];
+            }
+        }
+
         // Build query based on filters
         $where_conditions = [];
         $params = [];
@@ -149,12 +186,13 @@ $status_labels = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contacts - XpressPoint Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261006-3">
-    <link rel="stylesheet" href="css/contacts.css?v=20261006-3">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/contacts.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/list.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Contacts', 'fas fa-users'); ?>
@@ -163,309 +201,132 @@ $status_labels = [
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('contacts'); ?>
         
-        <!-- Page Header -->
-        <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-users"></i>
-                Contact Inquiries
-            </h2>
-            <div class="d-flex gap-2">
-                <button onclick="exportContacts()" class="btn btn-primary">
-                    <i class="fas fa-download"></i>
-                    Export
-                </button>
-                <a href="dashboard.php" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Dashboard
-                </a>
-        </div>
-        </div>
-        
-        <?php if (isset($_GET['removed'])): ?>
-            <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                Contact removed.
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($success_message)): ?>
-            <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                <?php echo htmlspecialchars($success_message); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($error_message)): ?>
-            <div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
-                <?php echo htmlspecialchars($error_message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <!-- Filters and Search -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3><i class="fas fa-filter"></i> Search & Filters</h3>
-            </div>
-            <div class="card-body">
-                <form method="GET" class="search-filter-container d-flex gap-3" style="align-items: end;">
-                    <div class="form-group search-container">
-                        <label for="search">Search Contacts</label>
-                        <input type="text" id="search" name="search" class="form-control search-input" 
-                               value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Search by name, email, or company..."
-                               autocomplete="off">
-                        <div class="search-suggestions" id="searchSuggestions">
-                            <!-- Suggestions will be populated here -->
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="filter">Filter by Type</label>
-                        <select id="filter" name="filter" class="form-control filter-select">
-                            <option value="">All Contacts</option>
-                            <option value="custom" <?php echo $filter === 'custom' ? 'selected' : ''; ?>>Custom Requests</option>
-                            <option value="new" <?php echo $filter === 'new' ? 'selected' : ''; ?>>New</option>
-                            <option value="contacted" <?php echo $filter === 'contacted' ? 'selected' : ''; ?>>Contacted</option>
-                            <option value="qualified" <?php echo $filter === 'qualified' ? 'selected' : ''; ?>>Qualified</option>
-                            <option value="blacklisted" <?php echo $filter === 'blacklisted' ? 'selected' : ''; ?>>Blacklisted</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
-                            Search
-                        </button>
-                    </div>
-                    <?php if ($search || $filter): ?>
-                        <div class="form-group">
-                            <a href="contacts.php" class="btn btn-secondary">
-                                <i class="fas fa-times"></i>
-                                Clear
-                            </a>
-            </div>
-        <?php endif; ?>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Results Summary -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-between align-center">
-                    <div>
-                        <h3 style="margin: 0; color: #1e293b; font-size: 18px;">
-                            <i class="fas fa-list"></i>
-                            Contact Results
-                        </h3>
-                        <p style="margin: 8px 0 0 0; color: #64748b;">
-                            Showing <?php echo count($contacts); ?> of <?php echo $total_contacts; ?> contacts
-                            <?php if ($search || $filter): ?>
-                                (filtered results)
-                            <?php endif; ?>
-                        </p>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: 700; color: #111111;">
-                            <?php echo number_format($total_contacts); ?>
-                        </div>
-                        <div style="font-size: 14px; color: #64748b;">
-                            Total Contacts
-                        </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            
-        <!-- Contacts List -->
-            <?php if (!empty($contacts)): ?>
-            <div class="dense-list">
-                <?php foreach ($contacts as $contact):
-                    $bl_info = blacklist_match($blacklist_lookup, $contact['name'], $contact['phone'] ?? '');
-                    $is_blacklisted = (($contact['status'] ?? '') === 'blacklisted') || $bl_info !== null;
-                ?>
-                    <div class="card contact-card<?php echo $is_blacklisted ? ' is-blacklisted' : ''; ?>">
-                        <div class="card-body">
-                            <!-- Contact Header -->
-                            <div class="contact-info" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                                <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                        <span>
-                                            <i class="fas fa-<?php echo $is_blacklisted ? 'user-slash' : 'user'; ?>" style="color: <?php echo $is_blacklisted ? '#b91c1c' : '#111111'; ?>; margin-right: 8px;"></i>
-                                            <?php echo htmlspecialchars($contact['name']); ?>
-                                        </span>
-                                        <?php if ($is_blacklisted): ?>
-                                        <span class="blacklist-flag" title="<?php echo htmlspecialchars($bl_info['reason'] ?? 'Marked as blacklisted'); ?>">
-                                            <i class="fas fa-ban"></i> Blacklisted
-                                        </span>
-                                        <?php endif; ?>
-                                    </h3>
-                                    <div class="contact-meta" style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
-                                        <div style="color: #64748b; font-size: 14px;">
-                                            <i class="fas fa-envelope" style="margin-right: 6px;"></i>
-                                            <?php echo htmlspecialchars($contact['email']); ?>
-                                        </div>
-                                        <?php if ($contact['company']): ?>
-                                            <div style="color: #64748b; font-size: 14px;">
-                                                <i class="fas fa-building" style="margin-right: 6px;"></i>
-                                                <?php echo htmlspecialchars($contact['company']); ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <span class="badge <?php echo $contact['interest'] === 'custom' ? 'custom' : 'primary'; ?>">
-                                            <i class="fas fa-tag" style="margin-right: 4px;"></i>
-                                            <?php echo htmlspecialchars($interest_labels[$contact['interest']] ?? $contact['interest']); ?>
-                                        </span>
-                                        <span class="badge status-<?php echo $contact['status'] ?? 'new'; ?>">
-                                            <i class="fas fa-circle" style="margin-right: 4px;"></i>
-                                            <?php echo htmlspecialchars($status_labels[$contact['status'] ?? 'new']); ?>
-                                        </span>
-                                        <div style="color: #64748b; font-size: 14px;">
-                                            <i class="fas fa-calendar" style="margin-right: 6px;"></i>
-                                            <?php echo date('M j, Y', strtotime($contact['created_at'])); ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Contact Details -->
-                            <div class="record-extra" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
-                                <div>
-                                    <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
-                                        Message
-                                    </h4>
-                                    <div style="color: #374151; line-height: 1.6; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <?php echo nl2br(htmlspecialchars($contact['message'])); ?>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-info-circle" style="color: #111111; margin-right: 8px;"></i>
-                                        Contact Details
-                                    </h4>
-                                    <div style="color: #374151; line-height: 1.8; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-user" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Name:</strong> <?php echo htmlspecialchars($contact['name']); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-envelope" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Email:</strong> <?php echo htmlspecialchars($contact['email']); ?>
-                                        </div>
-                                        <?php if ($contact['company']): ?>
-                                            <div style="margin-bottom: 12px;">
-                                                <i class="fas fa-building" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                                <strong>Company:</strong> <?php echo htmlspecialchars($contact['company']); ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <?php if ($contact['phone']): ?>
-                                            <div style="margin-bottom: 12px;">
-                                                <i class="fas fa-phone" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                                <strong>Phone:</strong> <?php echo htmlspecialchars($contact['phone']); ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <div>
-                                            <i class="fas fa-tag" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Interest:</strong> 
-                                            <span class="badge <?php echo $contact['interest'] === 'custom' ? 'custom' : 'primary'; ?>" style="margin-left: 8px;">
-                                                <?php echo htmlspecialchars($interest_labels[$contact['interest']] ?? $contact['interest']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                        </div>
-                            
-                            <!-- Contact Footer -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-                                <div style="color: #64748b; font-size: 14px;">
-                                    <i class="fas fa-calendar" style="margin-right: 6px;"></i>
-                                    <strong>Submitted:</strong> <?php echo date('F j, Y \a\t g:i A', strtotime($contact['created_at'])); ?>
-                                </div>
-                                <div style="display: flex; gap: 12px; align-items: center;">
-                                    <div style="color: #64748b; font-size: 14px;">
-                                        <i class="fas fa-tag" style="margin-right: 6px;"></i>
-                                        <strong>Interest:</strong> <?php echo htmlspecialchars($interest_labels[$contact['interest']] ?? $contact['interest']); ?>
-                                    </div>
-                                    <a href="contact-details.php?id=<?php echo (int) $contact['id']; ?>" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-eye"></i>
-                                        View
-                                    </a>
-                                    <button onclick="updateStatus(<?php echo $contact['id']; ?>, '<?php echo $contact['status'] ?? 'new'; ?>')" class="btn btn-secondary" style="background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
-                                        <i class="fas fa-edit"></i>
-                                        Update Status
-                                    </button>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="contact_id" value="<?php echo (int) $contact['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Remove this contact?" data-confirm="This inquiry will be deleted." data-confirm-ok="Remove" data-confirm-icon="fas fa-trash">
-                                            <i class="fas fa-trash"></i>
-                                            Remove
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+        <?php
+        $contact_filter = (string) ($filter ?? '');
+        $contact_search = (string) ($search ?? '');
+        renderPageHead('Contact Inquiries', 'Messages from the site, including custom requests.');
+        if (isset($_GET['removed'])) {
+            echo '<div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> Contact removed.</div>';
+        }
+        if (isset($success_message)) {
+            echo '<div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> ' . ui_h($success_message) . '</div>';
+        }
+        if (isset($error_message)) {
+            echo '<div class="alert alert-error"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> ' . ui_h($error_message) . '</div>';
+        }
+        renderStatusChips([
+            ['value' => '', 'label' => 'All', 'count' => $contact_stats['total']],
+            ['value' => 'custom', 'label' => 'Custom requests', 'count' => $contact_stats['custom']],
+            ['value' => 'new', 'label' => 'New', 'count' => $contact_stats['new']],
+            ['value' => 'contacted', 'label' => 'Contacted', 'count' => $contact_stats['contacted']],
+            ['value' => 'qualified', 'label' => 'Qualified', 'count' => $contact_stats['qualified']],
+            ['value' => 'blacklisted', 'label' => 'Blacklisted', 'count' => $contact_stats['blacklisted']],
+        ], $contact_filter);
+        $contact_active = [];
+        if ($contact_search !== '') {
+            $contact_active[] = ['label' => 'Search: ' . $contact_search, 'href' => ui_query(['search' => null], ['page'])];
+        }
+        if ($contact_filter !== '') {
+            $contact_active[] = ['label' => 'Filter: ' . $contact_filter, 'href' => ui_query(['filter' => null], ['page'])];
+        }
+        renderListToolbar('search', $contact_search, 'Search name, email, or company', '', '<button class="btn btn-secondary" type="button" onclick="exportContacts()">Export</button>', 'contacts.php', $contact_active);
+        echo '<div class="search-suggestions" id="searchSuggestions"></div>';
+        ?>
+        <?php if (empty($contacts)): ?>
+            <?php
+            if ((int) $total_contacts === 0 && $contact_search === '' && $contact_filter === '') {
+                renderEmptyState('fas fa-users', 'No contacts yet', 'Inquiries from the website will show up here.', 'dashboard.php', 'Back to dashboard');
+            } else {
+                renderEmptyState('fas fa-search', 'No matching contacts', 'Nothing matches the current search or filter.', 'contacts.php', 'Clear filters');
+            }
+            ?>
         <?php else: ?>
-            <div class="card">
-                <div style="padding: 60px 20px; text-align: center; color: #64748b;">
-                    <i class="fas fa-users" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="margin-bottom: 8px; color: #1e293b;">No contacts found</h3>
-                    <p style="margin: 0; font-size: 16px;">
-                        <?php if ($search || $filter): ?>
-                            No contacts match your current search criteria.
-            <?php else: ?>
-                            No contact inquiries have been submitted yet.
-                        <?php endif; ?>
-                    </p>
+            <form method="post" id="listBulkForm">
+                <input type="hidden" name="csrf_token" value="<?php echo ui_h(auth_csrf_token()); ?>">
+                <input type="hidden" name="action" id="bulkAction" value="">
+                <?php renderBulkBar([
+                    'new' => 'New',
+                    'contacted' => 'Contacted',
+                    'qualified' => 'Qualified',
+                    'blacklisted' => 'Blacklisted',
+                ], true); ?>
+                <div class="list-table-wrap">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><input type="checkbox" id="listSelectAll" aria-label="Select all rows"></th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Interest</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Submitted</th>
+                                <th scope="col"><span class="u-clip">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($contacts as $contact):
+                                $safe_status = json_encode((string) ($contact['status'] ?? 'new'));
+                            ?>
+                            <tr>
+                                <td class="list-select" data-label=""><input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $contact['id']; ?>" aria-label="Select <?php echo ui_h($contact['name']); ?>"></td>
+                                <td data-label="Name"><?php echo ui_h($contact['name']); ?></td>
+                                <td data-label="Email"><a href="mailto:<?php echo ui_h($contact['email']); ?>"><?php echo ui_h($contact['email']); ?></a></td>
+                                <td data-label="Interest"><?php echo ui_h($interest_labels[$contact['interest']] ?? $contact['interest']); ?></td>
+                                <td data-label="Status"><?php renderStatusBadge($contact['status'] ?? 'new', $status_labels[$contact['status'] ?? 'new'] ?? null); ?></td>
+                                <td data-label="Submitted"><?php echo date('M j, Y', strtotime($contact['created_at'])); ?></td>
+                                <td data-label="Actions">
+                                    <?php renderRowActions([
+                                        ['label' => 'View', 'icon' => 'fas fa-eye', 'href' => 'contact-details.php?id=' . (int) $contact['id']],
+                                        ['label' => 'Edit', 'icon' => 'fas fa-edit', 'onclick' => 'updateStatus(' . (int) $contact['id'] . ', ' . $safe_status . ')'],
+                                        ['label' => 'Delete', 'icon' => 'fas fa-trash', 'danger' => true, 'onclick' => 'removeContact(' . (int) $contact['id'] . ')'],
+                                    ]); ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-                </div>
-            <?php endif; ?>
-        
-        <!-- Pagination -->
-        <?php if ($total_pages > 1): ?>
-            <div class="pagination">
-                <?php if ($page > 1): ?>
-                    <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&filter=<?php echo urlencode($filter); ?>">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
-                <?php endif; ?>
-                
-                <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
-                    <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&filter=<?php echo urlencode($filter); ?>" 
-                       class="<?php echo $i === $page ? 'active' : ''; ?>">
-                        <?php echo $i; ?>
-                    </a>
-                <?php endfor; ?>
-                
-                <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&filter=<?php echo urlencode($filter); ?>">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
+            </form>
+            <?php renderPagination($page, $per_page, (int) $total_contacts); ?>
         <?php endif; ?>
     </div>
+    <script>
+        function removeContact(id) {
+            var run = function () {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'contacts.php';
+                var token = document.querySelector('#listBulkForm [name="csrf_token"]');
+                form.innerHTML = '<input type="hidden" name="csrf_token" value="' + (token ? token.value : '') + '"><input type="hidden" name="action" value="delete"><input type="hidden" name="contact_id" value="' + id + '">';
+                document.body.appendChild(form);
+                form.submit();
+            };
+            if (window.xpmConfirm) {
+                window.xpmConfirm({ title: 'Remove this contact?', message: 'This inquiry will be deleted.', confirmText: 'Remove', icon: 'fas fa-trash' }).then(function (ok) { if (ok) run(); });
+            } else {
+                run();
+            }
+        }
+    </script>
 
     <!-- Status Update Modal -->
-    <div id="statusModal" class="modal" style="display: none; position: fixed; z-index: 1070; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
-        <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
-            <div class="modal-header" style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; color: #1f2937; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-edit" style="color: #111111;"></i>
+    <div id="statusModal" class="modal modal-overlay is-top">
+        <div class="modal-content modal-dialog">
+            <div class="modal-header modal-head">
+                <h3 class="modal-title">
+                    <i class="fas fa-edit ink" aria-hidden="true"></i>
                     Update Contact Status
                 </h3>
-                <button class="modal-close" onclick="closeModal()" style="background: none; border: none; font-size: 18px; color: #6b7280; cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">
-                    <i class="fas fa-times"></i>
+                <button class="modal-close" aria-label="Close" onclick="closeModal()">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
-            <form method="POST" class="status-form" style="padding: 24px;">
+            <form method="POST" class="status-form modal-body">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="contact_id" id="contactId">
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label for="status" style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Contact Status</label>
+                <div class="form-group u-mb-5">
+                    <label class="field-label" for="status">Contact Status</label>
                     <select name="status" id="statusSelect" class="form-control" required>
                         <option value="new">New</option>
                         <option value="contacted">Contacted</option>
@@ -473,11 +334,11 @@ $status_labels = [
                         <option value="blacklisted">Blacklisted</option>
                     </select>
                 </div>
-                <div class="form-actions" style="display: flex; gap: 12px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                <div class="form-actions cluster">
+                    <button type="button" class="btn btn-secondary grow" onclick="closeModal()">
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #111111; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#111111'" onmouseout="this.style.backgroundColor='#111111'">
+                    <button type="submit" class="btn btn-ink grow">
                         Update Status
                     </button>
                 </div>
@@ -540,7 +401,7 @@ $status_labels = [
             }
             
             // Show loading state
-            suggestionsContainer.innerHTML = '<div class="search-loading"><i class="fas fa-spinner"></i> Searching...</div>';
+            suggestionsContainer.innerHTML = '<div class="search-loading"><i class="fas fa-spinner" aria-hidden="true"></i> Searching...</div>';
             suggestionsContainer.style.display = 'block';
             
             // Debounce the search
@@ -631,7 +492,7 @@ $status_labels = [
                 
                 return `
                     <div class="suggestion-item" data-search="${suggestion.name}">
-                        <i class="fas fa-user suggestion-icon"></i>
+                        <i class="fas fa-user suggestion-icon" aria-hidden="true"></i>
                         <div class="suggestion-text">
                             <div class="suggestion-name">${highlightedName}</div>
                             <div class="suggestion-details">
@@ -663,50 +524,33 @@ $status_labels = [
             return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
         }
         
-        function exportContacts() {
-            // Show format selection modal
+        var exportSelection = [];
+        function exportContacts(ids) {
+            exportSelection = ids || [];
             showExportModal();
         }
+        window.exportApplications = exportContacts;
         
         function showExportModal() {
             // Create modal overlay
             const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            overlay.className = 'modal-overlay is-open';
             
-            // Create modal content
             const modal = document.createElement('div');
-            modal.style.cssText = `
-                background: white;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 400px;
-                width: 90%;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            `;
+            modal.className = 'export-sheet';
             
             modal.innerHTML = `
-                <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
-                    <h3 style="margin: 0; color: #1e293b;">Export Contacts</h3>
+                <div class="cluster u-mb-5">
+                    <i class="fas fa-download icon-lg" aria-hidden="true"></i>
+                    <h3 class="modal-title">Export Contacts</h3>
                 </div>
                 
-                <p style="color: #64748b; margin-bottom: 20px;">
+                <p class="u-mb-5">
                     Choose the format for your contacts export:
                 </p>
                 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
+                <div class="u-mb-5">
+                    <label class="field-label">Export Format</label>
                     <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
@@ -714,12 +558,12 @@ $status_labels = [
                     </select>
                 </div>
                 
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="closeExportModal()">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-download" style="margin-right: 4px;"></i>
+                    <button class="btn btn-ink btn-sm" onclick="performExport()">
+                        <i class="fas fa-download ico" aria-hidden="true"></i>
                         Export
                     </button>
                 </div>
@@ -737,19 +581,13 @@ $status_labels = [
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="z-index: 10000"]');
-            if (overlay) {
-                overlay.remove();
-            }
+            const overlay = document.querySelector('.modal-overlay.is-open');
+            if (overlay) overlay.remove();
         }
         
         function performExport() {
             const format = document.getElementById('exportFormat').value;
             const exportBtn = document.querySelector('button[onclick="exportContacts()"]');
-            const originalText = exportBtn.innerHTML;
-            
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 4px;"></i>Preparing...';
-            exportBtn.disabled = true;
             
             // Get current search and filter parameters
             const searchParams = new URLSearchParams(window.location.search);
@@ -757,26 +595,18 @@ $status_labels = [
             const filter = searchParams.get('filter') || '';
             
             // Create export URL with format
-            const exportUrl = `export-contacts.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}`;
+            const selected = (exportSelection || []).join(',');
+            const exportUrl = `export-contacts.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = exportUrl;
-            link.download = `contacts.${format}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Close modal
+            var exportName = `contacts.${format}`;
+            if (window.xpmExportDownload) {
+                window.xpmExportDownload(exportUrl, exportName, exportBtn);
+            } else {
+                window.location.href = exportUrl;
+            }
             closeExportModal();
-            
-            // Reset button
-            setTimeout(() => {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }, 1000);
         }
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script defer src="<?php echo admin_asset('js/list.js'); ?>"></script>
 </body>
 </html> 

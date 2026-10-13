@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager', 'trainer']);
+csrf_guard();
 if (auth_is_trainer()) {
     header('Location: facilities.php');
     exit;
@@ -8,6 +9,7 @@ if (auth_is_trainer()) {
 
 // Include database connection
 require_once '../includes/database.php';
+require_once __DIR__ . '/includes/ui.php';
 require_once '../includes/programme-pricing.php';
 
 // Helper function to safely display prices
@@ -73,8 +75,44 @@ if (isset($_GET['message'])) {
     $message = $_GET['message'];
 }
 
+$programme_stats = ['total' => 0, 'active' => 0, 'inactive' => 0, 'webinar' => 0, 'training' => 0];
+$list_page = max(1, (int) ($_GET['page'] ?? 1));
+$list_per_page = ui_page_size(25);
+$list_total = 0;
+$can_delete_programmes = (($_SESSION['admin_role'] ?? 'admin') !== 'manager');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && in_array($_POST['action'] ?? '', ['bulk_delete', 'bulk_update_status'], true)) {
+    $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
+    if (($_POST['action'] ?? '') === 'bulk_delete' && $can_delete_programmes) {
+        $stmt = $pdo->prepare("DELETE FROM programmes WHERE id = ?");
+        foreach ($ids as $id) {
+            $stmt->execute([$id]);
+        }
+        $message = count($ids) . ' programme' . (count($ids) === 1 ? '' : 's') . ' deleted.';
+    } elseif (in_array($_POST['status'] ?? '', ['active', 'inactive'], true)) {
+        $stmt = $pdo->prepare("UPDATE programmes SET is_active = ? WHERE id = ?");
+        $active = $_POST['status'] === 'active' ? 1 : 0;
+        foreach ($ids as $id) {
+            $stmt->execute([$active, $id]);
+        }
+        $message = count($ids) . ' programme' . (count($ids) === 1 ? '' : 's') . ' updated.';
+    }
+}
+
 if ($pdo) {
     try {
+        foreach ($pdo->query("SELECT is_active, COUNT(*) AS count FROM programmes GROUP BY is_active") as $row) {
+            $key = ((int) $row['is_active'] === 1) ? 'active' : 'inactive';
+            $programme_stats[$key] = (int) $row['count'];
+            $programme_stats['total'] += (int) $row['count'];
+        }
+        foreach ($pdo->query("SELECT programme_type, COUNT(*) AS count FROM programmes GROUP BY programme_type") as $row) {
+            $type = (string) $row['programme_type'];
+            if (isset($programme_stats[$type])) {
+                $programme_stats[$type] = (int) $row['count'];
+            }
+        }
+
         // Build the query with filters
         $where_conditions = [];
         $params = [];
@@ -114,13 +152,25 @@ if ($pdo) {
             $sql .= " WHERE " . implode(" AND ", $where_conditions);
         }
         $sql .= " ORDER BY programmes.created_at DESC";
+        $count_sql = "SELECT COUNT(*) FROM programmes LEFT JOIN users ON users.id = programmes.owner_user_id";
+        if (!empty($where_conditions)) {
+            $count_sql .= " WHERE " . implode(" AND ", $where_conditions);
+        }
+        $count_stmt = $pdo->prepare($count_sql);
+        $count_stmt->execute($params);
+        $list_total = (int) $count_stmt->fetchColumn();
+        $list_pages = max(1, (int) ceil($list_total / $list_per_page));
+        if ($list_page > $list_pages) {
+            $list_page = $list_pages;
+        }
+        $sql .= " LIMIT " . (int) $list_per_page . " OFFSET " . (int) (($list_page - 1) * $list_per_page);
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $programmes = $stmt->fetchAll();
         
     } catch (PDOException $e) {
-        $error = "Database error: " . $e->getMessage();
+        $error = 'The request could not be completed.';
     }
 } else {
     $error = "Unable to connect to database";
@@ -132,12 +182,13 @@ if ($pdo) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Programmes - XpressPoint Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/programmes.css?v=20260930-4">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/programmes.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/list.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Training Programmes', 'fas fa-graduation-cap'); ?>
@@ -146,369 +197,126 @@ if ($pdo) {
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('programmes'); ?>
 
-        <!-- Page Header -->
-        <div class="page-header">
-            <h2 class="page-title">
-                <i class="fas fa-graduation-cap"></i>
-                Training Courses
-            </h2>
-            <div class="d-flex gap-2">
-                <a href="add-programme.php" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Add New Programme
-                </a>
-                <a href="dashboard.php" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Dashboard
-                </a>
-            </div>
-        </div>
-
-        <!-- Alerts -->
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-triangle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <!-- Search and Filters -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3><i class="fas fa-filter"></i> Search & Filters</h3>
-            </div>
-            <div class="card-body">
-                <form method="GET" class="d-flex gap-3" style="align-items: end;">
-                    <div class="form-group search-container">
-                        <label for="search">Search Programmes</label>
-                        <input type="text" id="search" name="search" class="form-control" 
-                               value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" 
-                               placeholder="Search by programme title, category, or duration..."
-                               autocomplete="off">
-                        <div class="search-suggestions" id="searchSuggestions">
-                            <!-- Suggestions will be populated here -->
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="filter">Filter by Status</label>
-                        <select id="filter" name="filter" class="form-control">
-                            <option value="">All Programmes</option>
-                            <option value="active" <?php echo ($_GET['filter'] ?? '') === 'active' ? 'selected' : ''; ?>>Active Only</option>
-                            <option value="inactive" <?php echo ($_GET['filter'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inactive Only</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i>
-                            Search
-                        </button>
-                    </div>
-                    <?php if (isset($_GET['search']) || isset($_GET['filter'])): ?>
-                        <div class="form-group">
-                            <a href="programmes.php" class="btn btn-secondary">
-                                <i class="fas fa-times"></i>
-                                Clear
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </form>
-            </div>
-        </div>
-
-        <!-- Programmes Overview -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-between align-center">
-                    <div>
-                        <h3 style="margin: 0; color: #1e293b; font-size: 18px;">
-                            <i class="fas fa-list"></i>
-                            Training Programmes Overview
-                        </h3>
-                        <p style="margin: 8px 0 0 0; color: #64748b;">
-                            Manage your HR training courses and programmes
-                        </p>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: 700; color: #111111;">
-                            <?php echo count($programmes); ?>
-                        </div>
-                        <div style="font-size: 14px; color: #64748b;">
-                            Total Programmes
-                        </div>
-                        <?php if (!$isTrainerList): ?>
-                        <div style="margin-top: 12px;">
-                            <button onclick="exportProgrammes()" class="btn btn-secondary" style="background: #6b7280; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">
-                                <i class="fas fa-download" style="margin-right: 4px;"></i>
-                                Export
-                            </button>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Programmes List -->
-        <?php if (!empty($programmes)): ?>
-            <div class="dense-list">
-                <?php foreach ($programmes as $programme): ?>
-                    <div class="card" id="programme-<?php echo $programme['id']; ?>">
-                        <div class="card-body">
-                            <!-- Programme Header -->
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
-                                <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 20px; font-weight: 600;">
-                                        <i class="fas fa-graduation-cap" style="color: #111111; margin-right: 8px;"></i>
-                                        <?php echo htmlspecialchars($programme['title']); ?>
-                                    </h3>
-                                    <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
-                                        <span class="badge primary">
-                                            <i class="fas fa-tag" style="margin-right: 4px;"></i>
-                                            <?php echo htmlspecialchars(auth_programme_type_label($programme['programme_type'] ?? 'training')); ?>
-                                        </span>
-                                        <?php if (!$isTrainerList && !empty($programme['owner_name'])): ?>
-                                        <span class="badge">
-                                            <i class="fas fa-user" style="margin-right: 4px;"></i>
-                                            <?php echo htmlspecialchars($programme['owner_name']); ?>
-                                        </span>
-                                        <?php endif; ?>
-                                        <div style="color: #64748b; font-size: 14px;">
-                                            <i class="fas fa-clock" style="margin-right: 6px;"></i>
-                                            <?php echo htmlspecialchars($programme['duration']); ?>
-                                        </div>
-                                        <span class="badge <?php echo $programme['is_active'] ? 'success' : 'warning'; ?>">
-                                            <i class="fas fa-dollar-sign" style="margin-right: 4px;"></i>
-                                            <?php echo formatPrice(getDisplayPrice($programme, 'price')); ?>
-                                            <?php $sst_note = programme_sst_note($programme); ?>
-                                            <?php if ($sst_note !== ''): ?>
-                                                <small style="margin-left: 4px; font-weight: normal; opacity: 0.9;">
-                                                    (<?php echo htmlspecialchars($sst_note); ?>)
-                                                </small>
-                                            <?php endif; ?>
-                                            <?php if (!empty($programme['original_price']) && $programme['original_price'] > $programme['price']): ?>
-                                                <span style="margin-left: 8px; font-size: 12px; opacity: 0.7; text-decoration: line-through;">
-                                                    <i class="fas fa-tag" style="margin-right: 4px;"></i>
-                                                    <?php echo formatPrice(getDisplayPrice($programme, 'original_price')); ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </span>
-                                        <span class="badge <?php echo $programme['is_active'] ? 'success' : 'warning'; ?>">
-                                            <i class="fas fa-toggle-<?php echo $programme['is_active'] ? 'on' : 'off'; ?>" style="margin-right: 4px;"></i>
-                                            <?php echo $programme['is_active'] ? 'Active' : 'Inactive'; ?>
-                                        </span>
-                                        <?php if (isset($programme['is_featured']) && $programme['is_featured'] == 1): ?>
-                                            <span class="badge" style="background-color: #f59e0b; color: white;">
-                                                <i class="fas fa-star" style="margin-right: 4px;"></i>
-                                                Featured
-                                            </span>
-                                        <?php endif; ?>
-                                        <?php if (isset($programme['registration_status'])): ?>
-                                            <span class="badge <?php 
-                                                echo $programme['registration_status'] === 'open' ? 'success' : 
-                                                    ($programme['registration_status'] === 'closed' ? 'warning' : 'danger'); 
-                                            ?>">
-                                                <i class="fas fa-<?php 
-                                                    echo $programme['registration_status'] === 'open' ? 'unlock' : 
-                                                        ($programme['registration_status'] === 'closed' ? 'lock' : 'users'); 
-                                                ?>" style="margin-right: 4px;"></i>
-                                                <?php echo ucfirst($programme['registration_status']); ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                
-                                <!-- Action Buttons -->
-                                <div class="d-flex gap-3 flex-wrap align-center">
-                                    <a href="edit-programme.php?id=<?php echo $programme['id']; ?>" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                        Edit
-                                    </a>
-                                    <form method="POST" action="programme-actions.php" style="display: contents;">
-                                        <input type="hidden" name="action" value="duplicate">
-                                        <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-info" data-confirm-title="Duplicate this programme?" data-confirm="A copy will be created as inactive." data-confirm-ok="Duplicate" data-confirm-icon="fas fa-copy">
-                                            <i class="fas fa-copy"></i>
-                                            Duplicate
-                                        </button>
-                                    </form>
-                                    <?php if ($programme['is_active']): ?>
-                                        <form method="POST" action="programme-actions.php" style="display: contents;">
-                                            <input type="hidden" name="action" value="deactivate">
-                                            <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-warning" data-confirm-title="Deactivate this programme?" data-confirm="This training programme will be marked inactive." data-confirm-ok="Deactivate" data-confirm-icon="fas fa-pause">
-                                                <i class="fas fa-pause"></i>
-                                                Deactivate
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <form method="POST" action="programme-actions.php" style="display: contents;">
-                                            <input type="hidden" name="action" value="activate">
-                                            <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fas fa-play"></i>
-                                                Activate
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                    <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
-                                    <form method="POST" action="programme-actions.php" style="margin: 0;">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="programme_id" value="<?php echo $programme['id']; ?>">
-                                        <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Delete this programme?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
-                                            <i class="fas fa-trash"></i>
-                                            Delete
-                                        </button>
-                                    </form>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            
-                            <!-- Programme Details -->
-                            <div class="record-extra" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 16px;">
-                                <div>
-                                    <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-file-alt" style="color: #111111; margin-right: 8px;"></i>
-                                        Programme Description
-                                    </h4>
-                                    <div style="color: #374151; line-height: 1.6; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <?php echo nl2br(htmlspecialchars($programme['description'])); ?>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 style="color: #1e293b; margin-bottom: 12px; font-size: 16px; font-weight: 600;">
-                                        <i class="fas fa-info-circle" style="color: #111111; margin-right: 8px;"></i>
-                                        Programme Details
-                                    </h4>
-                                    <div style="color: #374151; line-height: 1.8; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-tag" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Category:</strong> <?php echo htmlspecialchars($programme['category']); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-clock" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Duration:</strong> <?php echo htmlspecialchars($programme['duration']); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-dollar-sign" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Current Price:</strong> <?php echo formatPrice(getDisplayPrice($programme, 'price')); ?>
-                                            <?php $sst_note = programme_sst_note($programme); ?>
-                                            <?php if ($sst_note !== ''): ?>
-                                                <span style="font-size: 13px; color: #64748b; margin-left: 6px;">
-                                                    (<?php echo htmlspecialchars($sst_note); ?>)
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if (!empty($programme['original_price'])): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-tag" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Original Price:</strong> <?php echo formatPrice(getDisplayPrice($programme, 'original_price')); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-users" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Max Participants:</strong> <?php echo htmlspecialchars($programme['max_participants'] ?? 25); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-certificate" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Certification:</strong> <?php echo htmlspecialchars($programme['certification'] ?? 'HRD Corp Certified'); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-map-marker-alt" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Location/Format:</strong> <?php echo htmlspecialchars($programme['location'] ?? 'Online'); ?>
-                                        </div>
-                                        <?php if (!empty($programme['start_date']) && $programme['start_date'] !== '0000-00-00'): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-calendar-alt" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Start Date:</strong> <?php echo htmlspecialchars($programme['start_date']); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($programme['end_date']) && $programme['end_date'] !== '0000-00-00'): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-calendar-alt" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>End Date:</strong> <?php echo htmlspecialchars($programme['end_date']); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($programme['start_time'])): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-clock" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Start Time:</strong> <?php echo htmlspecialchars($programme['start_time']); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($programme['end_time'])): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-clock" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>End Time:</strong> <?php echo htmlspecialchars($programme['end_time']); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="<?php echo htmlspecialchars($programme['programme_icon'] ?? 'fas fa-graduation-cap'); ?>" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Icon:</strong> <?php echo htmlspecialchars($programme['programme_icon'] ?? 'fas fa-graduation-cap'); ?>
-                                        </div>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-tag" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Badge:</strong> <?php echo htmlspecialchars($programme['programme_badge'] ?? 'Popular'); ?>
-                                        </div>
-                                        <?php if (!empty($programme['schedule_type'])): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-calendar" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Schedule Type:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $programme['schedule_type']))); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <?php if (!empty($programme['modules'])): ?>
-                                        <div style="margin-bottom: 12px;">
-                                            <i class="fas fa-list" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Modules:</strong> <?php echo htmlspecialchars($programme['modules']); ?>
-                                        </div>
-                                        <?php endif; ?>
-                                        <div>
-                                            <i class="fas fa-toggle-<?php echo $programme['is_active'] ? 'on' : 'off'; ?>" style="color: #64748b; margin-right: 8px; width: 16px;"></i>
-                                            <strong>Status:</strong> 
-                                            <span class="badge <?php echo $programme['is_active'] ? 'success' : 'warning'; ?>" style="margin-left: 8px;">
-                                                <?php echo $programme['is_active'] ? 'Active' : 'Inactive'; ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Programme Footer -->
-                            <div class="record-extra" style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-                                <div style="color: #64748b; font-size: 14px;">
-                                    <i class="fas fa-calendar" style="margin-right: 6px;"></i>
-                                    <strong>Created:</strong> <?php echo date('F j, Y \a\t g:i A', strtotime($programme['created_at'])); ?>
-                                </div>
-                                <div style="color: #64748b; font-size: 14px;">
-                                    <i class="fas fa-clock" style="margin-right: 6px;"></i>
-                                    <strong>Last Updated:</strong> <?php echo date('F j, Y', strtotime($programme['updated_at'])); ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+        <?php
+        $programme_filter = (string) ($_GET['filter'] ?? '');
+        $programme_search = (string) ($_GET['search'] ?? '');
+        renderPageHead(
+            'Training Programmes',
+            'Open, close, and review the programmes people can join.',
+            '<a class="btn btn-primary" href="add-programme.php"><i class="fas fa-plus" aria-hidden="true"></i> New programme</a>'
+        );
+        if ($error) {
+            echo '<div class="alert alert-error"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> ' . ui_h($error) . '</div>';
+        }
+        if ($message) {
+            echo '<div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> ' . ui_h($message) . '</div>';
+        }
+        renderStatusChips([
+            ['value' => '', 'label' => 'All', 'count' => $programme_stats['total']],
+            ['value' => 'active', 'label' => 'Active', 'count' => $programme_stats['active']],
+            ['value' => 'inactive', 'label' => 'Inactive', 'count' => $programme_stats['inactive']],
+            ['value' => 'training', 'label' => 'Training', 'count' => $programme_stats['training']],
+            ['value' => 'webinar', 'label' => 'Webinar', 'count' => $programme_stats['webinar']],
+        ], $programme_filter);
+        $programme_active = [];
+        if ($programme_search !== '') {
+            $programme_active[] = ['label' => 'Search: ' . $programme_search, 'href' => ui_query(['search' => null], ['page'])];
+        }
+        if ($programme_filter !== '') {
+            $programme_active[] = ['label' => 'Filter: ' . $programme_filter, 'href' => ui_query(['filter' => null], ['page'])];
+        }
+        renderListToolbar(
+            'search',
+            $programme_search,
+            'Search title, category, or duration',
+            '',
+            '<button class="btn btn-secondary" type="button" onclick="exportProgrammes()">Export</button>',
+            'programmes.php',
+            $programme_active
+        );
+        echo '<div class="search-suggestions" id="searchSuggestions"></div>';
+        ?>
+        <?php if (empty($programmes)): ?>
+            <?php
+            if ($list_total === 0 && $programme_search === '' && $programme_filter === '') {
+                renderEmptyState('fas fa-book-open', 'No programmes yet', 'Create a programme so people can register.', 'add-programme.php', 'New programme');
+            } else {
+                renderEmptyState('fas fa-search', 'No matching programmes', 'Nothing matches the current search or filter.', 'programmes.php', 'Clear filters');
+            }
+            ?>
         <?php else: ?>
-            <div class="card">
-                <div style="padding: 60px 20px; text-align: center; color: #64748b;">
-                    <i class="fas fa-graduation-cap" style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;"></i>
-                    <h3 style="margin-bottom: 8px; color: #1e293b;">No training programmes yet</h3>
-                    <p style="margin: 0; font-size: 16px;">
-                        Start building your training portfolio by adding your first programme.
-                    </p>
-                    <a href="add-programme.php" class="btn btn-primary" style="margin-top: 20px;">
-                        <i class="fas fa-plus"></i>
-                        Add Your First Programme
-                    </a>
+            <form method="post" id="listBulkForm">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="action" id="bulkAction" value="">
+                <?php renderBulkBar(['active' => 'Active', 'inactive' => 'Inactive'], $can_delete_programmes); ?>
+                <div class="list-table-wrap">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><input type="checkbox" id="listSelectAll" aria-label="Select all rows"></th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Status</th>
+                                <th scope="col"><span class="u-clip">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($programmes as $programme): ?>
+                            <tr>
+                                <td class="list-select" data-label=""><input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $programme['id']; ?>" aria-label="Select <?php echo ui_h($programme['title']); ?>"></td>
+                                <td data-label="Title"><?php echo ui_h($programme['title']); ?></td>
+                                <td data-label="Type"><?php renderStatusBadge($programme['programme_type'] ?? 'training'); ?></td>
+                                <td data-label="Price"><?php echo formatPrice(getDisplayPrice($programme) ?? 0); ?></td>
+                                <td data-label="Status"><?php renderStatusBadge(!empty($programme['is_active']) ? 'active' : 'inactive'); ?></td>
+                                <td data-label="Actions">
+                                    <?php
+                                    $actions = [
+                                        ['label' => 'Edit', 'icon' => 'fas fa-edit', 'href' => 'edit-programme.php?id=' . (int) $programme['id']],
+                                        ['label' => 'Duplicate', 'icon' => 'fas fa-copy', 'onclick' => 'postProgramme(' . (int) $programme['id'] . ', "duplicate")'],
+                                    ];
+                                    if (!empty($programme['is_active'])) {
+                                        $actions[] = ['label' => 'Deactivate', 'icon' => 'fas fa-pause', 'onclick' => 'postProgramme(' . (int) $programme['id'] . ', "deactivate")'];
+                                    } else {
+                                        $actions[] = ['label' => 'Activate', 'icon' => 'fas fa-play', 'onclick' => 'postProgramme(' . (int) $programme['id'] . ', "activate")'];
+                                    }
+                                    if ($can_delete_programmes) {
+                                        $actions[] = ['label' => 'Delete', 'icon' => 'fas fa-trash', 'danger' => true, 'onclick' => 'postProgramme(' . (int) $programme['id'] . ', "delete")'];
+                                    }
+                                    renderRowActions($actions);
+                                    ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </form>
+            <?php renderPagination($list_page, $list_per_page, $list_total); ?>
         <?php endif; ?>
     </div>
+    <script>
+        function postProgramme(id, action) {
+            var labels = {
+                duplicate: ['Duplicate this programme?', 'A copy will be created as inactive.', 'Duplicate', 'fas fa-copy'],
+                deactivate: ['Deactivate this programme?', 'This training programme will be marked inactive.', 'Deactivate', 'fas fa-pause'],
+                delete: ['Delete this programme?', 'This action cannot be undone.', 'Delete', 'fas fa-trash']
+            };
+            var run = function () {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'programme-actions.php';
+                form.innerHTML = '<input type="hidden" name="action" value="' + action + '"><input type="hidden" name="programme_id" value="' + id + '">';
+                document.body.appendChild(form);
+                form.submit();
+            };
+            if (labels[action] && window.xpmConfirm) {
+                window.xpmConfirm({ title: labels[action][0], message: labels[action][1], confirmText: labels[action][2], icon: labels[action][3] }).then(function (ok) { if (ok) run(); });
+            } else {
+                run();
+            }
+        }
+    </script>
 
     <script>
         // Autocomplete functionality
@@ -529,7 +337,7 @@ if ($pdo) {
             }
             
             // Show loading state
-            suggestionsContainer.innerHTML = '<div class="search-loading"><i class="fas fa-spinner"></i> Searching...</div>';
+            suggestionsContainer.innerHTML = '<div class="search-loading"><i class="fas fa-spinner" aria-hidden="true"></i> Searching...</div>';
             suggestionsContainer.style.display = 'block';
             
             // Debounce the search
@@ -620,7 +428,7 @@ if ($pdo) {
                 
                 return `
                     <div class="suggestion-item" data-search="${suggestion.title}">
-                        <i class="fas fa-graduation-cap suggestion-icon"></i>
+                        <i class="fas fa-graduation-cap suggestion-icon" aria-hidden="true"></i>
                         <div class="suggestion-text">
                             <div class="suggestion-name">${highlightedTitle}</div>
                             <div class="suggestion-details">
@@ -651,50 +459,33 @@ if ($pdo) {
             return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
         }
 
-        function exportProgrammes() {
-            // Show format selection modal
+        var exportSelection = [];
+        function exportProgrammes(ids) {
+            exportSelection = ids || [];
             showExportModal();
         }
+        window.exportApplications = exportProgrammes;
         
         function showExportModal() {
             // Create modal overlay
             const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            overlay.className = 'modal-overlay is-open';
             
-            // Create modal content
             const modal = document.createElement('div');
-            modal.style.cssText = `
-                background: white;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 400px;
-                width: 90%;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            `;
+            modal.className = 'export-sheet';
             
             modal.innerHTML = `
-                <div style="display: flex; align-items: center; margin-bottom: 20px;">
-                    <i class="fas fa-download" style="color: #111111; margin-right: 12px; font-size: 20px;"></i>
-                    <h3 style="margin: 0; color: #1e293b;">Export Programmes</h3>
+                <div class="cluster u-mb-5">
+                    <i class="fas fa-download icon-lg" aria-hidden="true"></i>
+                    <h3 class="modal-title">Export Programmes</h3>
                 </div>
                 
-                <p style="color: #64748b; margin-bottom: 20px;">
+                <p class="u-mb-5">
                     Choose the format for your programmes export:
                 </p>
                 
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Export Format</label>
+                <div class="u-mb-5">
+                    <label class="field-label">Export Format</label>
                     <select id="exportFormat" class="form-control">
                         <option value="csv">CSV (Comma Separated Values)</option>
                         <option value="json">JSON (JavaScript Object Notation)</option>
@@ -702,12 +493,12 @@ if ($pdo) {
                     </select>
                 </div>
                 
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button onclick="closeExportModal()" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; color: #374151;">
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="closeExportModal()">
                         Cancel
                     </button>
-                    <button onclick="performExport()" style="padding: 8px 16px; background: #111111; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-download" style="margin-right: 4px;"></i>
+                    <button class="btn btn-ink btn-sm" onclick="performExport()">
+                        <i class="fas fa-download ico" aria-hidden="true"></i>
                         Export
                     </button>
                 </div>
@@ -725,19 +516,13 @@ if ($pdo) {
         }
         
         function closeExportModal() {
-            const overlay = document.querySelector('[style*="z-index: 10000"]');
-            if (overlay) {
-                overlay.remove();
-            }
+            const overlay = document.querySelector('.modal-overlay.is-open');
+            if (overlay) overlay.remove();
         }
         
         function performExport() {
             const format = document.getElementById('exportFormat').value;
             const exportBtn = document.querySelector('button[onclick="exportProgrammes()"]');
-            const originalText = exportBtn.innerHTML;
-            
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 4px;"></i>Preparing...';
-            exportBtn.disabled = true;
             
             // Get current search and filter parameters
             const searchParams = new URLSearchParams(window.location.search);
@@ -745,26 +530,18 @@ if ($pdo) {
             const filter = searchParams.get('filter') || '';
             
             // Create export URL with format
-            const exportUrl = `export-programmes.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}`;
+            const selected = (exportSelection || []).join(',');
+            const exportUrl = `export-programmes.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = exportUrl;
-            link.download = `training_programmes.${format}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Close modal
+            var exportName = `training_programmes.${format}`;
+            if (window.xpmExportDownload) {
+                window.xpmExportDownload(exportUrl, exportName, exportBtn);
+            } else {
+                window.location.href = exportUrl;
+            }
             closeExportModal();
-            
-            // Reset button
-            setTimeout(() => {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }, 1000);
         }
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script defer src="<?php echo admin_asset('js/list.js'); ?>"></script>
 </body>
 </html> 

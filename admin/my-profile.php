@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['trainer']);
+csrf_guard();
 
 $pdo = get_db_connection();
 $user = auth_user();
@@ -43,26 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $image_path = $trainer['image_path'];
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = '../assets/images/trainers/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            if (!in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-                throw new Exception('Use a JPG, PNG, GIF, or WebP image.');
-            }
-            $filename = 'trainer_' . time() . '_' . uniqid() . '.' . $file_extension;
-            if (!move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
-                throw new Exception('Could not upload the image.');
+        if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $saved = auth_save_image($_FILES['image'], 'assets/images/trainers', 'trainer');
+            if (!$saved['ok']) {
+                throw new Exception($saved['error'] ?: 'Could not upload the image.');
             }
             if ($trainer['image_path'] && !preg_match('/icol-chua\.png|HRDTrainer\.png|AccreditedTrainer\.png|PowerUpMentor\.png/', $trainer['image_path'])) {
-                $old = '../' . $trainer['image_path'];
-                if (is_file($old)) {
-                    unlink($old);
-                }
+                auth_remove_managed_image($trainer['image_path']);
             }
-            $image_path = 'assets/images/trainers/' . $filename;
+            $image_path = $saved['path'];
         }
 
         $pdo->prepare("UPDATE trainers SET name = ?, title = ?, experience_years = ?, image_path = ?, description = ?, specialties = ?, credentials = ? WHERE id = ? AND user_id = ?")
@@ -82,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([(int) $user['id']]);
         $trainer = $stmt->fetch();
     } catch (Exception $e) {
-        $error = $e->getMessage();
+        $error = $e instanceof PDOException ? 'The profile could not be saved.' : $e->getMessage();
     }
 }
 
@@ -101,28 +91,28 @@ if (!empty($trainer['credentials'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My trainer profile - XpressPoint</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('My profile', 'fas fa-id-badge'); ?>
     <div class="admin-container">
         <?php include 'includes/navigation.php'; renderAdminNavigation('my_profile'); ?>
         <div class="page-header">
-            <h2 class="page-title"><i class="fas fa-id-badge"></i> Trainer card</h2>
+            <h2 class="page-title"><i class="fas fa-id-badge" aria-hidden="true"></i> Trainer card</h2>
             <p>This is the profile shown in the trainer section on the programmes page.</p>
         </div>
         <?php if ($error): ?>
-            <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-error"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> <?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
         <?php if ($success): ?>
-            <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success); ?></div>
+            <div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> <?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
         <?php if (empty($trainer['is_active'])): ?>
-            <div class="alert alert-warning"><i class="fas fa-eye-slash"></i> Your card is hidden until an admin marks it active.</div>
+            <div class="alert alert-warning"><i class="fas fa-eye-slash" aria-hidden="true"></i> Your card is hidden until an admin marks it active.</div>
         <?php endif; ?>
         <div class="card">
             <div class="card-body">
@@ -166,6 +156,5 @@ if (!empty($trainer['credentials'])) {
             </div>
         </div>
     </div>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

@@ -225,4 +225,10 @@ body.is-leaving .footer {
         transform: none !important;
         filter: none !important;
     }
+
+    .stagger-rows > *,
+    .admin-header,
+    .admin-container {
+        animation: none !important;
+    }
 }

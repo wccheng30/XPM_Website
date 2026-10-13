@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager', 'trainer']);
+csrf_guard();
 
 // Handle logout
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
@@ -19,17 +20,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirm Logout - XpressPoint Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/auth.css?v=20261005-1">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-tokens.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-motion.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/auth.css'); ?>">
 </head>
 <body class="auth-center" data-motion="admin">
     <div class="logout-container" role="dialog" aria-labelledby="logout-title">
         <div class="logout-icon">
-            <i class="fas fa-sign-out-alt"></i>
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
         </div>
 
         <h1 class="logout-title" id="logout-title">Sign out?</h1>
@@ -41,18 +44,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_logout'])) {
 
         <div class="logout-buttons">
             <a href="dashboard.php" class="btn btn-secondary btn-cancel">
-                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 Cancel
             </a>
 
             <form method="POST">
+                <?php echo csrf_field(); ?>
                 <button type="submit" name="confirm_logout" class="btn btn-primary btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     Yes, Logout
                 </button>
             </form>
         </div>
     </div>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script defer src="<?php echo admin_asset('../assets/js/motion.js'); ?>"></script>
 </body>
 </html>

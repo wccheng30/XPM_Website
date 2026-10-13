@@ -1,8 +1,8 @@
 /* Admin page styles: applications.php */
          .status-badge {
-             padding: 6px 12px;
+             padding: 6px var(--space-3);
              border-radius: 20px;
-             font-size: 12px;
+             font-size: var(--text-xs);
              font-weight: 600;
              text-transform: uppercase;
              letter-spacing: 0.5px;
@@ -13,44 +13,44 @@
          
          /* Pending - Orange */
          .status-pending {
-             background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-             color: #c2410c;
-             border: 1px solid #f97316;
+             background: linear-gradient(135deg, var(--warning-bg) 0%, var(--warning-border) 100%);
+             color: var(--warning-text);
+             border: 1px solid var(--warning-border);
          }
          
          /* KIV - Yellow */
          .status-reviewed {
-             background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
-             color: #a16207;
-             border: 1px solid #eab308;
+             background: linear-gradient(135deg, var(--warning-bg) 0%, var(--warning-border) 100%);
+             color: var(--warning-text);
+             border: 1px solid var(--warning-border);
          }
          
-         /* Shortlisted - Purple */
+         /* Shortlisted */
          .status-shortlisted {
-             background: linear-gradient(135deg, #f4f4f5 0%, #e9d5ff 100%);
+             background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--info-border) 100%);
              color: var(--text-primary);
              border: 1px solid var(--text-primary);
          }
          
          /* Rejected - Red */
          .status-rejected {
-             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-             color: #dc2626;
-             border: 1px solid #ef4444;
+             background: linear-gradient(135deg, var(--danger-bg-hover) 0%, var(--danger-border) 100%);
+             color: var(--danger-text);
+             border: 1px solid var(--accent-danger);
          }
          
          /* Blacklisted */
          .status-blacklisted {
-             background: #b91c1c;
-             color: #ffffff;
-             border: 1px solid #991b1b;
+             background: var(--danger-solid);
+             color: var(--text-on-danger);
+             border: 1px solid var(--accent-danger);
          }
 
         /* Hired - Green */
         .status-hired {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #15803d;
-            border: 1px solid #22c55e;
+            background: linear-gradient(135deg, var(--success-bg) 0%, var(--success-border) 100%);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
 
         /* Interview - Blue */
@@ -58,7 +58,7 @@
         .status-interviewed,
         .status-waiting-for-interview,
         .status-waiting_for_interview {
-            background: linear-gradient(135deg, #f4f4f5 0%, #d9d9db 100%);
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border-secondary) 100%);
             color: var(--text-primary);
             border: 1px solid var(--text-primary);
         }
@@ -74,18 +74,18 @@
              top: 0;
              width: 100%;
              height: 100%;
-             background-color: rgba(0,0,0,0.5);
+             background-color: var(--overlay);
              backdrop-filter: blur(4px);
          }
          
          .modal-content {
-             background-color: white;
+             background-color: var(--bg-primary);
              margin: 5% auto;
              padding: 0;
              border-radius: 12px;
              width: 90%;
              max-width: 500px;
-             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+             box-shadow: var(--shadow-xl);
              animation: modalSlideIn 0.3s ease-out;
          }
          
@@ -101,8 +101,8 @@
          }
          
          .modal-header {
-             padding: 20px 24px;
-             border-bottom: 1px solid #e5e7eb;
+             padding: 20px var(--space-5);
+             border-bottom: 1px solid var(--border-primary);
              display: flex;
              justify-content: space-between;
              align-items: center;
@@ -110,25 +110,27 @@
          
          .modal-header h3 {
              margin: 0;
-             color: #1f2937;
-             font-size: 18px;
+             color: var(--text-primary);
+             font-size: var(--text-lg);
              font-weight: 600;
          }
          
          .modal-close {
              background: none;
              border: none;
+             min-width: 44px;
+             min-height: 44px;
              font-size: 20px;
-             color: #6b7280;
+             color: var(--text-muted);
              cursor: pointer;
-             padding: 4px;
+             padding: var(--space-1);
              border-radius: 4px;
              transition: background-color 0.2s;
          }
          
          .modal-close:hover {
-             background-color: #f3f4f6;
-             color: #374151;
+             background-color: var(--bg-tertiary);
+             color: var(--text-secondary);
          }
          
          .form-group {
@@ -137,34 +139,34 @@
          
          .form-group label {
              display: block;
-             margin-bottom: 8px;
-             color: #374151;
+             margin-bottom: var(--space-2);
+             color: var(--text-secondary);
              font-weight: 500;
-             font-size: 14px;
+             font-size: var(--text-sm);
          }
          
          .form-group select {
              width: 100%;
-             padding: 12px 16px;
-             border: 1px solid #d1d5db;
+             padding: var(--space-3) var(--space-4);
+             border: 1px solid var(--border-secondary);
              border-radius: 8px;
-             font-size: 14px;
-             color: #374151;
-             background-color: white;
+             font-size: var(--text-sm);
+             color: var(--text-secondary);
+             background-color: var(--bg-primary);
              transition: border-color 0.2s;
          }
          
          .form-group select:focus {
              outline: none;
              border-color: var(--c-teal-deep);
-             box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+             box-shadow: 0 0 0 4px var(--ring);
          }
          
          .form-actions {
-             padding: 20px 24px;
-             border-top: 1px solid #e5e7eb;
+             padding: 20px var(--space-5);
+             border-top: 1px solid var(--border-primary);
              display: flex;
-             gap: 12px;
+             gap: var(--space-3);
              justify-content: flex-end;
          }
          
@@ -172,7 +174,7 @@
              padding: 10px 20px;
              border-radius: 8px;
              font-weight: 500;
-             font-size: 14px;
+             font-size: var(--text-sm);
              cursor: pointer;
              transition: all 0.2s;
              border: none;
@@ -184,40 +186,37 @@
          
          .btn-primary {
              background: var(--accent-primary);
-             color: white;
+             color: var(--text-on-solid);
          }
          
          .btn-primary:hover {
              background: var(--accent-secondary);
              transform: translateY(-1px);
-             box-shadow: 0 4px 12px rgba(17, 17, 17, 0.3);
+             box-shadow: var(--shadow-md);
          }
          
          .btn-secondary {
-             background: #6b7280;
-             color: white;
+             background: var(--neutral-solid);
+             color: var(--text-on-solid);
          }
          
          .btn-secondary:hover {
-             background: #4b5563;
+             background: var(--neutral-solid-hover);
              transform: translateY(-1px);
-             box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+             box-shadow: var(--shadow-md);
          }
          
          /* Responsive improvements */
          @media (max-width: 768px) {
              .stats-grid {
                  grid-template-columns: 1fr;
-                 gap: 16px;
+                 gap: var(--space-4);
              }
              
              table {
-                 font-size: 14px;
+                 font-size: var(--text-sm);
              }
              
-             .action-buttons {
-                 flex-direction: column;
-                 gap: 4px;
-             }
+             
          }
      

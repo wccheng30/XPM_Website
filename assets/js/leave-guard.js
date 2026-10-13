@@ -11,7 +11,7 @@
         dialog.innerHTML =
             '<div class="leave-dialog-backdrop" data-leave="stay"></div>' +
             '<div class="leave-dialog-card" role="dialog" aria-modal="true" aria-labelledby="leave-dialog-title">' +
-                '<div class="leave-dialog-icon" aria-hidden="true"><i class="fas fa-right-from-bracket"></i></div>' +
+                '<div class="leave-dialog-icon" aria-hidden="true"></div>' +
                 '<h2 id="leave-dialog-title">Leave this page?</h2>' +
                 '<p id="leave-dialog-text">You have unsaved changes. If you leave now, this form will not be submitted.</p>' +
                 '<div class="leave-dialog-actions">' +
@@ -20,6 +20,13 @@
                 '</div>' +
             '</div>';
         document.body.appendChild(dialog);
+        var iconHolder = dialog.querySelector('.leave-dialog-icon');
+        if (iconHolder) {
+            var sprite = window.XPM_ICON_SPRITE;
+            iconHolder.innerHTML = sprite
+                ? '<svg class="icon" aria-hidden="true" focusable="false"><use href="' + sprite + '#right-from-bracket"></use></svg>'
+                : '<i class="fas fa-right-from-bracket" aria-hidden="true"></i>';
+        }
 
         dialog.addEventListener('click', function (event) {
             var action = event.target.closest('[data-leave]');

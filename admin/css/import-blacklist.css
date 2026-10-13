@@ -5,25 +5,25 @@
         }
         
         .import-step {
-            background: white;
+            background: var(--bg-primary);
             border-radius: 12px;
-            padding: 24px;
+            padding: var(--space-5);
             margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-primary);
         }
         
         .step-header {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: var(--space-4);
+            border-bottom: 2px solid var(--border-primary);
         }
         
         .step-number {
-            background: #ef4444;
-            color: white;
+            background: var(--danger-solid);
+            color: var(--text-on-solid);
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -31,40 +31,40 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            margin-right: 12px;
+            margin-right: var(--space-3);
             flex-shrink: 0;
         }
         
         .step-title {
-            font-size: 18px;
+            font-size: var(--text-lg);
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary);
         }
         
         .file-upload-area {
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed var(--border-secondary);
             border-radius: 8px;
             padding: 40px;
             text-align: center;
-            background: #f8fafc;
+            background: var(--bg-secondary);
             transition: all 0.3s ease;
             cursor: pointer;
         }
         
         .file-upload-area:hover {
-            border-color: #ef4444;
-            background: #fef2f2;
+            border-color: var(--accent-danger);
+            background: var(--danger-bg);
         }
         
         .file-upload-area.dragover {
-            border-color: #ef4444;
-            background: #fef2f2;
+            border-color: var(--accent-danger);
+            background: var(--danger-bg);
         }
         
         .column-mapping {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: var(--space-4);
             margin-bottom: 20px;
         }
         
@@ -77,73 +77,69 @@
         .mapping-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: #f8fafc;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: var(--bg-secondary);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-primary);
         }
         
         .mapping-label {
             font-weight: 600;
-            color: #374151;
+            color: var(--text-secondary);
             min-width: 140px;
-            font-size: 14px;
+            font-size: var(--text-sm);
         }
         
         .mapping-select {
             flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border-secondary);
             border-radius: 6px;
-            background: white;
-            font-size: 14px;
+            background: var(--bg-primary);
+            font-size: var(--text-sm);
         }
         
         .required {
-            color: #dc2626;
+            color: var(--danger-text);
         }
         
         .preview-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: var(--space-4);
         }
         
         .preview-table th,
         .preview-table td {
-            padding: 12px;
+            padding: var(--space-3);
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 14px;
+            border-bottom: 1px solid var(--border-primary);
+            font-size: var(--text-sm);
         }
         
         .preview-table th {
-            background: #f9fafb;
+            background: var(--bg-secondary);
             font-weight: 600;
-            color: #374151;
+            color: var(--text-secondary);
         }
         
-        .preview-table tr.error-row {
-            background: #fef2f2;
-        }
         
-        .preview-table tr.error-row td {
-            color: #dc2626;
-        }
+        
+        
         
         .import-summary {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
             border-radius: 8px;
-            padding: 16px;
+            padding: var(--space-4);
             margin-bottom: 20px;
         }
         
         .summary-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: var(--space-2);
         }
         
         .summary-item:last-child {
@@ -152,41 +148,27 @@
         
         .summary-label {
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary);
         }
         
         .summary-value {
-            color: #64748b;
+            color: var(--text-muted);
         }
         
         .btn-group {
             display: flex;
-            gap: 12px;
+            gap: var(--space-3);
             justify-content: center;
-            margin-top: 24px;
+            margin-top: var(--space-5);
         }
         
         .hidden {
             display: none;
         }
 
-        .template-section {
-            background: #f4f4f5;
-            border: 1px solid #d9d9db;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
-        }
+        
 
-        .template-section h4 {
-            margin: 0 0 8px 0;
-            color: #0369a1;
-            font-size: 14px;
-        }
+        
 
-        .template-section p {
-            margin: 0 0 12px 0;
-            color: #64748b;
-            font-size: 13px;
-        }
+        
     

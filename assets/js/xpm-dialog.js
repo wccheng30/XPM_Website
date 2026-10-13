@@ -4,11 +4,24 @@
     var titleEl;
     var messageEl;
     var fieldEl;
+    var fieldLabelEl;
     var confirmBtn;
     var cancelBtn;
     var iconEl;
     var lastFocus = null;
     var pending = null;
+
+    function paintDialogIcon(holder, className) {
+        if (!holder) return;
+        var sprite = window.XPM_ICON_SPRITE;
+        if (!sprite) {
+            holder.innerHTML = '<i class="' + className + '" aria-hidden="true"></i>';
+            return;
+        }
+        var match = /fa-([a-z0-9-]+)/.exec(className || '');
+        var name = match ? match[1] : 'circle-question';
+        holder.innerHTML = '<svg class="icon" aria-hidden="true" focusable="false"><use href="' + sprite + '#' + name + '"></use></svg>';
+    }
 
     function build() {
         if (dialog) return;
@@ -25,7 +38,9 @@
             '.xpm-dialog-card h2{margin:0 0 .45rem;font-family:Poppins,Inter,sans-serif;font-size:1.35rem;font-weight:600;line-height:1.25;color:#1E2328}',
             '.xpm-dialog-card p{margin:0 0 1.35rem;font-size:.95rem;line-height:1.55;color:#4E575E;white-space:pre-line}',
             '.xpm-dialog-card p[hidden],.xpm-dialog-field[hidden],.xpm-dialog-cancel[hidden]{display:none}',
-            '.xpm-dialog-field{display:block;width:100%;margin:-.35rem 0 1.2rem;min-height:44px;padding:.65rem .8rem;font:inherit;font-size:.95rem;color:#1E2328;background:#fff;border:1px solid #d9d9db;border-radius:10px}',
+            '.xpm-dialog-field-label{display:block;margin:0 0 .35rem;font-size:.85rem;font-weight:600;color:#1E2328;text-align:left}',
+            '.xpm-dialog-field-label[hidden]{display:none}',
+            '.xpm-dialog-field{display:block;width:100%;margin:0 0 1.2rem;min-height:44px;padding:.65rem .8rem;font:inherit;font-size:.95rem;color:#1E2328;background:#fff;border:1px solid #d9d9db;border-radius:10px}',
             '.xpm-dialog-field:focus{outline:none;border-color:#B31B01;box-shadow:0 0 0 4px rgba(179,27,1,.16)}',
             '.xpm-dialog-actions{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}',
             '.xpm-dialog-confirm,.xpm-dialog-cancel{min-height:44px;padding:.65rem 1.1rem;font:inherit;font-size:.95rem;font-weight:600;border-radius:10px;cursor:pointer}',
@@ -33,7 +48,7 @@
             '.xpm-dialog-confirm:hover{background:#8E1400;border-color:#8E1400}',
             '.xpm-dialog-cancel{color:#1E2328;background:transparent;border:1px solid #d9d9db}',
             '.xpm-dialog-cancel:hover{border-color:#1E2328}',
-            '.xpm-dialog-confirm:focus-visible,.xpm-dialog-cancel:focus-visible,.xpm-dialog-field:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(31,106,110,.22)}'
+            '.xpm-dialog-confirm:focus-visible,.xpm-dialog-cancel:focus-visible,.xpm-dialog-field:focus-visible{outline:2px solid #1F6A6E;outline-offset:2px;box-shadow:none}'
         ].join('');
         document.head.appendChild(style);
 
@@ -43,10 +58,11 @@
         dialog.innerHTML = ''
             + '<div class="xpm-dialog-backdrop" data-xpm-dialog="cancel"></div>'
             + '<div class="xpm-dialog-card" role="dialog" aria-modal="true" aria-labelledby="xpm-dialog-title">'
-            + '<div class="xpm-dialog-icon" aria-hidden="true"><i class="fas fa-circle-question"></i></div>'
+            + '<div class="xpm-dialog-icon" aria-hidden="true"></div>'
             + '<h2 id="xpm-dialog-title"></h2>'
             + '<p id="xpm-dialog-message"></p>'
-            + '<input class="xpm-dialog-field" id="xpm-dialog-field" type="text" hidden>'
+            + '<label class="xpm-dialog-field-label" id="xpm-dialog-field-label" for="xpm-dialog-field" hidden>Your response</label>'
+            + '<input class="xpm-dialog-field" id="xpm-dialog-field" type="text" hidden aria-label="Your response">'
             + '<div class="xpm-dialog-actions">'
             + '<button type="button" class="xpm-dialog-confirm" data-xpm-dialog="confirm"></button>'
             + '<button type="button" class="xpm-dialog-cancel" data-xpm-dialog="cancel"></button>'
@@ -56,9 +72,10 @@
         titleEl = dialog.querySelector('#xpm-dialog-title');
         messageEl = dialog.querySelector('#xpm-dialog-message');
         fieldEl = dialog.querySelector('#xpm-dialog-field');
+        fieldLabelEl = dialog.querySelector('#xpm-dialog-field-label');
         confirmBtn = dialog.querySelector('.xpm-dialog-confirm');
         cancelBtn = dialog.querySelector('.xpm-dialog-cancel');
-        iconEl = dialog.querySelector('.xpm-dialog-icon i');
+        iconEl = dialog.querySelector('.xpm-dialog-icon');
 
         dialog.addEventListener('click', function (event) {
             var action = event.target.getAttribute && event.target.getAttribute('data-xpm-dialog');
@@ -69,6 +86,23 @@
             if (event.key === 'Enter') {
                 event.preventDefault();
                 finish(true);
+            }
+        });
+        dialog.addEventListener('keydown', function (event) {
+            if (event.key !== 'Tab' || dialog.hidden) return;
+            var nodes = dialog.querySelectorAll('button:not([hidden]), input:not([hidden])');
+            var list = Array.prototype.filter.call(nodes, function (node) {
+                return !node.hidden && node.getAttribute('aria-hidden') !== 'true';
+            });
+            if (!list.length) return;
+            var first = list[0];
+            var last = list[list.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
             }
         });
     }
@@ -99,11 +133,12 @@
             titleEl.textContent = options.title || '';
             messageEl.textContent = options.message || '';
             messageEl.hidden = !options.message;
-            iconEl.className = options.icon || 'fas fa-circle-question';
+            paintDialogIcon(iconEl, options.icon || 'fas fa-circle-question');
             confirmBtn.textContent = options.confirmText || 'Continue';
             cancelBtn.textContent = options.cancelText || 'Cancel';
             cancelBtn.hidden = options.mode === 'alert';
             fieldEl.hidden = options.mode !== 'prompt';
+            if (fieldLabelEl) fieldLabelEl.hidden = options.mode !== 'prompt';
             fieldEl.value = '';
             fieldEl.placeholder = options.placeholder || '';
             dialog.hidden = false;

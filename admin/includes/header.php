@@ -1,7 +1,7 @@
 <?php
 /**
- * Admin Header Component
- * Markup only: brand, page title, and account links.
+ * Admin header.
+ * Hamburger (mobile), page title with optional back link, and one account menu.
  *
  * @param string     $title Page title shown in the header
  * @param string     $icon  Font Awesome classes for the title icon
@@ -9,43 +9,57 @@
  */
 function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null) {
     $username = $_SESSION['user_name'] ?? ($_SESSION['admin_username'] ?? 'Admin');
-    $brandKicker = (($_SESSION['admin_role'] ?? '') === 'trainer') ? 'Trainer workspace' : 'XpressPoint Admin';
     $initial = function_exists('mb_substr') ? mb_substr($username, 0, 1) : substr($username, 0, 1);
     ?>
-    <link rel="stylesheet" href="css/dense-list.css?v=20261008-3">
+    <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-tokens.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-motion.css'); ?>">
+    <a class="skip-link" href="#admin-main">Skip to main content</a>
     <header class="admin-header">
-        <a href="dashboard.php" class="admin-brand" aria-label="Admin dashboard">
-            <span class="admin-brand-mark">XP</span>
-            <span class="admin-brand-text">
-                <span class="admin-brand-kicker"><?php echo htmlspecialchars($brandKicker); ?></span>
-                <h1><i class="<?php echo htmlspecialchars($icon); ?>"></i><?php echo htmlspecialchars($title); ?></h1>
-            </span>
-        </a>
-        <div class="user-info">
-            <?php if (!empty($back['url'])): ?>
-                <a href="<?php echo htmlspecialchars($back['url']); ?>" class="header-icon-btn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span><?php echo htmlspecialchars($back['label'] ?? 'Back'); ?></span>
-                </a>
-            <?php endif; ?>
-            <span class="user-chip">
-                <span class="user-avatar"><?php echo htmlspecialchars($initial); ?></span>
-                <?php echo htmlspecialchars($username); ?>
-            </span>
-            <a href="../index.html" class="logout-btn" title="Public site">
-                <i class="fas fa-home"></i>
-                <span>Main site</span>
-            </a>
-            <a href="change-password.php" class="logout-btn" title="Change password">
-                <i class="fas fa-key"></i>
-                <span>Password</span>
-            </a>
-            <a href="logout-confirm.php" class="logout-btn is-primary">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
+        <div class="header-lead">
+            <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-expanded="false" aria-controls="adminSidebar" aria-label="Open menu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </button>
+            <div class="header-heading">
+                <?php if (!empty($back['url'])): ?>
+                    <a class="header-back" href="<?php echo htmlspecialchars($back['url'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        <span><?php echo htmlspecialchars($back['label'] ?? 'Back', ENT_QUOTES, 'UTF-8'); ?></span>
+                    </a>
+                    <span class="header-sep" aria-hidden="true">/</span>
+                <?php endif; ?>
+                <h1>
+                    <i class="<?php echo htmlspecialchars($icon, ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"></i>
+                    <span><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></span>
+                </h1>
+            </div>
+        </div>
+        <div class="user-menu">
+            <button type="button" class="user-menu-btn" id="userMenuBtn" aria-expanded="false" aria-haspopup="true" aria-controls="userMenu" aria-label="Account menu">
+                <span class="user-avatar"><?php echo htmlspecialchars($initial, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span class="user-menu-name"><?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="user-menu-panel" id="userMenu" hidden>
+                <a href="../index.html"><i class="fas fa-home" aria-hidden="true"></i> Main site</a>
+                <a href="change-password.php"><i class="fas fa-key" aria-hidden="true"></i> Change password</a>
+                <div class="theme-switch" role="radiogroup" aria-label="Theme">
+                    <span class="theme-switch-label">Theme</span>
+                    <div class="theme-switch-options">
+                        <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+                        <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+                        <button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
+                    </div>
+                </div>
+                <a class="user-menu-logout" href="logout-confirm.php"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout</a>
+            </div>
         </div>
     </header>
-    <script src="../assets/js/xpm-dialog.js?v=20261006-5"></script>
+    <script>window.XPM_ICON_SPRITE=<?php echo json_encode(admin_asset('assets/icons.svg', false)); ?>;</script>
+    <script defer src="<?php echo admin_asset('../assets/js/xpm-dialog.js'); ?>"></script>
+    <script defer src="<?php echo admin_asset('js/shell.js'); ?>"></script>
+    <script defer src="<?php echo admin_asset('js/toast.js'); ?>"></script>
+    <script defer src="<?php echo admin_asset('../assets/js/motion.js'); ?>"></script>
     <?php
 }

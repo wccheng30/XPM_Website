@@ -47,6 +47,19 @@ if ($pdo) {
                 $where_conditions[] = "is_active = 1";
             } elseif ($_GET['filter'] === 'inactive') {
                 $where_conditions[] = "is_active = 0";
+            } elseif ($_GET['filter'] === 'webinar') {
+                $where_conditions[] = "programme_type = 'webinar'";
+            } elseif ($_GET['filter'] === 'training') {
+                $where_conditions[] = "programme_type = 'training'";
+            }
+        }
+        if (!empty($_GET['ids'])) {
+            $ids = array_values(array_filter(array_map('intval', explode(',', (string) $_GET['ids']))));
+            if ($ids) {
+                $where_conditions[] = 'id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+                foreach ($ids as $id) {
+                    $params[] = $id;
+                }
             }
         }
         
@@ -108,7 +121,7 @@ if ($pdo) {
         
     } catch (PDOException $e) {
         http_response_code(500);
-        exit('Database error: ' . $e->getMessage());
+        exit('The request could not be completed.');
     }
 } else {
     http_response_code(500);

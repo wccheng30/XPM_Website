@@ -4,6 +4,7 @@ auth_require(['admin', 'manager', 'trainer']);
 
 // Include database connection
 require_once '../includes/database.php';
+require_once __DIR__ . '/includes/ui.php';
 
 $pdo = get_db_connection();
 $booking = null;
@@ -56,7 +57,6 @@ $status_options = [
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -65,8 +65,10 @@ $status_options = [
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/booking-details.css?v=20260930-4">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/detail.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/booking-details.css'); ?>">
     
 </head>
 <body data-motion="admin">
@@ -76,178 +78,110 @@ $status_options = [
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('bookings'); ?>
     
-        <a href="facilities.php" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Back to Bookings
-        </a>
-        
         <?php if ($error_message): ?>
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 <?php echo htmlspecialchars($error_message); ?>
             </div>
-        <?php elseif ($booking): ?>
-            <div class="booking-details-container">
-                <!-- Booking Header -->
-                <div class="booking-header">
-                    <div class="booking-title">
-                        <span class="booking-id">Booking #<?php echo $booking['id']; ?></span>
-                        <span class="booking-status status-<?php echo $booking['status']; ?>">
-                            <?php echo ucfirst($booking['status']); ?>
-                        </span>
-                    </div>
-                    
-                    <div class="booking-info">
-                        <div class="info-item">
-                            <span class="info-label">Facility</span>
-                            <span class="info-value"><?php echo htmlspecialchars($facility_types[$booking['facility_type']] ?? $booking['facility_type']); ?></span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Date</span>
-                            <span class="info-value"><?php echo date('l, F j, Y', strtotime($booking['booking_date'])); ?></span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Time</span>
-                            <span class="info-value">
-                                <?php echo date('g:i A', strtotime($booking['start_time'])); ?> - 
-                                <?php echo date('g:i A', strtotime($booking['end_time'])); ?>
-                            </span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Duration</span>
-                            <span class="info-value">
-                                <?php 
-                                $start = strtotime($booking['start_time']);
-                                $end = strtotime($booking['end_time']);
-                                $duration = round(($end - $start) / 3600, 1);
-                                echo $duration . ' hour' . ($duration != 1 ? 's' : '');
-                                ?>
-                            </span>
+        <?php elseif ($booking):
+            $canChangeBooking = auth_can_change_booking(auth_user(), $booking['owner_user_id'] ?? null, $booking['programme_id'] ?? null);
+            $start = strtotime($booking['start_time']);
+            $end = strtotime($booking['end_time']);
+            $duration = round(($end - $start) / 3600, 1);
+            $primary = '';
+            if ($canChangeBooking && $booking['status'] === 'pending') {
+                $primary = '<button type="button" class="btn btn-primary" onclick="confirmBooking(' . (int) $booking['id'] . ')"><i class="fas fa-check" aria-hidden="true"></i> Confirm booking</button>';
+            } elseif ($canChangeBooking && $booking['status'] === 'confirmed') {
+                $primary = '<button type="button" class="btn btn-primary" onclick="completeBooking(' . (int) $booking['id'] . ')"><i class="fas fa-check-double" aria-hidden="true"></i> Mark completed</button>';
+            }
+        ?>
+            <div class="detail-page">
+                <header class="detail-head">
+                    <div class="detail-head-copy">
+                        <a class="detail-back" href="facilities.php"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back to bookings</a>
+                        <h2 class="detail-title"><?php echo htmlspecialchars($booking['customer_name']); ?></h2>
+                        <div class="detail-head-meta">
+                            <?php renderStatusBadge($booking['status']); ?>
+                            <span class="meta">Booking #<?php echo (int) $booking['id']; ?></span>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Customer Information -->
-                <div class="info-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-user"></i>
-                        Customer Information
-                    </h3>
-                    
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Full Name</span>
-                            <span class="info-value"><?php echo htmlspecialchars($booking['customer_name']); ?></span>
-                        </div>
-                        
-                        <div class="info-item email-item">
-                            <span class="info-label">Email Address</span>
-                            <span class="info-value email-value"><?php echo htmlspecialchars($booking['customer_email']); ?></span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Phone Number</span>
-                            <span class="info-value <?php echo empty($booking['customer_phone']) ? 'empty' : ''; ?>">
-                                <?php echo htmlspecialchars($booking['customer_phone'] ?: 'Not provided'); ?>
-                            </span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Company</span>
-                            <span class="info-value <?php echo empty($booking['company']) ? 'empty' : ''; ?>">
-                                <?php echo htmlspecialchars($booking['company'] ?: 'Not specified'); ?>
-                            </span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Number of Attendees</span>
-                            <span class="info-value"><?php echo $booking['attendees_count']; ?> people</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Booking Details -->
-                <div class="info-section">
-                    <h3 class="section-title">
-                        <i class="fas fa-calendar-alt"></i>
-                        Booking Details
-                    </h3>
-                    
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Purpose</span>
-                            <span class="info-value <?php echo empty($booking['purpose']) ? 'empty' : ''; ?>">
-                                <?php echo htmlspecialchars($booking['purpose'] ?: 'Not specified'); ?>
-                            </span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Special Requirements</span>
-                            <span class="info-value <?php echo empty($booking['special_requirements']) ? 'empty' : ''; ?>">
-                                <?php echo htmlspecialchars($booking['special_requirements'] ?: 'None'); ?>
-                            </span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <span class="info-label">Booking Created</span>
-                            <span class="info-value"><?php echo date('M j, Y \a\t g:i A', strtotime($booking['created_at'])); ?></span>
-                        </div>
-                        
-                        <?php if ($booking['confirmed_by_name']): ?>
-                            <div class="info-item">
-                                <span class="info-label">Confirmed By</span>
-                                <span class="info-value"><?php echo htmlspecialchars($booking['confirmed_by_name']); ?></span>
+                    <?php echo $primary; ?>
+                </header>
+                <div class="detail-layout">
+                    <div class="detail-main">
+                        <section class="detail-card">
+                            <h3>Personal details</h3>
+                            <div class="kv-list">
+                                <div class="kv-row"><span class="kv-label">Name</span><span class="kv-value"><?php echo htmlspecialchars($booking['customer_name']); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Email</span><span class="kv-value"><a href="mailto:<?php echo htmlspecialchars($booking['customer_email']); ?>"><?php echo htmlspecialchars($booking['customer_email']); ?></a></span></div>
+                                <div class="kv-row"><span class="kv-label">Phone</span><span class="kv-value"><?php echo htmlspecialchars($booking['customer_phone'] ?: 'Not provided'); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Company</span><span class="kv-value"><?php echo htmlspecialchars($booking['company'] ?: 'Not specified'); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Attendees</span><span class="kv-value"><?php echo (int) $booking['attendees_count']; ?> people</span></div>
                             </div>
-                            
-                            <div class="info-item">
-                                <span class="info-label">Confirmed On</span>
-                                <span class="info-value"><?php echo date('M j, Y \a\t g:i A', strtotime($booking['confirmed_at'])); ?></span>
+                        </section>
+                        <section class="detail-card">
+                            <h3>Booking info</h3>
+                            <div class="kv-list">
+                                <div class="kv-row"><span class="kv-label">Facility</span><span class="kv-value"><?php echo htmlspecialchars($facility_types[$booking['facility_type']] ?? $booking['facility_type']); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Date</span><span class="kv-value"><?php echo date('l, F j, Y', strtotime($booking['booking_date'])); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Time</span><span class="kv-value"><?php echo date('g:i A', $start); ?> – <?php echo date('g:i A', $end); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Duration</span><span class="kv-value"><?php echo $duration . ' hour' . ($duration != 1 ? 's' : ''); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Purpose</span><span class="kv-value"><?php echo htmlspecialchars($booking['purpose'] ?: 'Not specified'); ?></span></div>
+                                <div class="kv-row"><span class="kv-label">Requirements</span><span class="kv-value"><?php echo htmlspecialchars($booking['special_requirements'] ?: 'None'); ?></span></div>
+                                <?php if ($booking['cancellation_reason']): ?>
+                                <div class="kv-row"><span class="kv-label">Cancellation</span><span class="kv-value"><?php echo htmlspecialchars($booking['cancellation_reason']); ?></span></div>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($booking['cancellation_reason']): ?>
-                            <div class="info-item">
-                                <span class="info-label">Cancellation Reason</span>
-                                <span class="info-value"><?php echo htmlspecialchars($booking['cancellation_reason']); ?></span>
+                        </section>
+                    </div>
+                    <aside class="detail-side">
+                        <section class="detail-card">
+                            <h3>Current status</h3>
+                            <?php renderStatusBadge($booking['status']); ?>
+                            <div class="detail-stack">
+                                <?php if ($canChangeBooking && $booking['status'] === 'pending'): ?>
+                                    <button type="button" class="btn btn-primary" onclick="confirmBooking(<?php echo (int) $booking['id']; ?>)"><i class="fas fa-check" aria-hidden="true"></i> Confirm booking</button>
+                                    <button type="button" class="btn btn-secondary" onclick="cancelBooking(<?php echo (int) $booking['id']; ?>)"><i class="fas fa-times" aria-hidden="true"></i> Cancel booking</button>
+                                <?php elseif ($canChangeBooking && $booking['status'] === 'confirmed'): ?>
+                                    <button type="button" class="btn btn-primary" onclick="completeBooking(<?php echo (int) $booking['id']; ?>)"><i class="fas fa-check-double" aria-hidden="true"></i> Mark completed</button>
+                                <?php else: ?>
+                                    <p class="detail-prose">This booking is <?php echo htmlspecialchars($booking['status']); ?>.</p>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                
-                <!-- Booking Actions -->
-                <div class="booking-actions">
-                    <h3 class="actions-title">Actions</h3>
-                    
-                    <div class="action-buttons">
-                        <a href="facilities.php" class="btn-action btn-back">
-                            <i class="fas fa-arrow-left"></i>
-                            Back to Facilities
-                        </a>
-                        <?php $canChangeBooking = auth_can_change_booking(auth_user(), $booking['owner_user_id'] ?? null, $booking['programme_id'] ?? null); ?>
-                        <?php if ($canChangeBooking && $booking['status'] === 'pending'): ?>
-                            <button onclick="confirmBooking(<?php echo $booking['id']; ?>)" class="btn-action btn-confirm">
-                                <i class="fas fa-check"></i>
-                                Confirm Booking
-                            </button>
-                            <button onclick="cancelBooking(<?php echo $booking['id']; ?>)" class="btn-action btn-cancel">
-                                <i class="fas fa-times"></i>
-                                Cancel Booking
-                            </button>
-                        <?php elseif ($canChangeBooking && $booking['status'] === 'confirmed'): ?>
-                            <button onclick="completeBooking(<?php echo $booking['id']; ?>)" class="btn-action btn-complete">
-                                <i class="fas fa-check-double"></i>
-                                Mark as Completed
-                            </button>
-                        <?php endif; ?>
-                    </div>
+                        </section>
+                        <section class="detail-card">
+                            <h3>Quick actions</h3>
+                            <div class="detail-actions">
+                                <a class="btn btn-secondary" href="mailto:<?php echo htmlspecialchars($booking['customer_email']); ?>"><i class="fas fa-envelope" aria-hidden="true"></i> Email</a>
+                                <a class="btn btn-secondary" href="facilities.php"><i class="fas fa-calendar-alt" aria-hidden="true"></i> Open calendar</a>
+                            </div>
+                        </section>
+                        <section class="detail-card">
+                            <h3>Activity</h3>
+                            <ol class="detail-timeline">
+                                <li>
+                                    <div>
+                                        <strong>Booked</strong>
+                                        <time datetime="<?php echo htmlspecialchars($booking['created_at']); ?>"><?php echo date('M j, Y', strtotime($booking['created_at'])); ?></time>
+                                    </div>
+                                </li>
+                                <?php if ($booking['confirmed_by_name']): ?>
+                                <li>
+                                    <div>
+                                        <strong>Confirmed by <?php echo htmlspecialchars($booking['confirmed_by_name']); ?></strong>
+                                        <time datetime="<?php echo htmlspecialchars($booking['confirmed_at']); ?>"><?php echo date('M j, Y', strtotime($booking['confirmed_at'])); ?></time>
+                                    </div>
+                                </li>
+                                <?php endif; ?>
+                            </ol>
+                        </section>
+                    </aside>
                 </div>
             </div>
         <?php endif; ?>
     </div>
-    
+
+
     <script>
         function postBookingAction(bookingId, action, extra) {
             const form = document.createElement('form');
@@ -311,6 +245,5 @@ $status_options = [
             });
         }
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>

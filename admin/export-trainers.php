@@ -16,8 +16,18 @@ $format = $_GET['format'] ?? 'csv';
 
 try {
     // Get trainers data
-    $sql = "SELECT * FROM trainers ORDER BY display_order ASC, name ASC";
-    $stmt = $pdo->query($sql);
+    $params = [];
+    $sql = "SELECT * FROM trainers";
+    if (!empty($_GET['ids'])) {
+        $ids = array_values(array_filter(array_map('intval', explode(',', (string) $_GET['ids']))));
+        if ($ids) {
+            $sql .= ' WHERE id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+            $params = $ids;
+        }
+    }
+    $sql .= " ORDER BY display_order ASC, name ASC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $trainers = $stmt->fetchAll();
     
     if ($format === 'csv') {
@@ -81,19 +91,19 @@ try {
         echo '<html><head><meta charset="utf-8"></head><body>';
         echo '<table border="1">';
         echo '<tr>';
-        echo '<th>ID</th>';
-        echo '<th>Name</th>';
-        echo '<th>Title</th>';
-        echo '<th>Experience Years</th>';
-        echo '<th>Image Path</th>';
-        echo '<th>Description</th>';
-        echo '<th>Specialties</th>';
-        echo '<th>Credentials</th>';
-        echo '<th>Is Featured</th>';
-        echo '<th>Is Active</th>';
-        echo '<th>Display Order</th>';
-        echo '<th>Created At</th>';
-        echo '<th>Updated At</th>';
+        echo '<th scope="col">ID</th>';
+        echo '<th scope="col">Name</th>';
+        echo '<th scope="col">Title</th>';
+        echo '<th scope="col">Experience Years</th>';
+        echo '<th scope="col">Image Path</th>';
+        echo '<th scope="col">Description</th>';
+        echo '<th scope="col">Specialties</th>';
+        echo '<th scope="col">Credentials</th>';
+        echo '<th scope="col">Is Featured</th>';
+        echo '<th scope="col">Is Active</th>';
+        echo '<th scope="col">Display Order</th>';
+        echo '<th scope="col">Created At</th>';
+        echo '<th scope="col">Updated At</th>';
         echo '</tr>';
         
         foreach ($trainers as $trainer) {
@@ -154,7 +164,7 @@ try {
     }
     
 } catch (PDOException $e) {
-    header('Location: trainers.php?error=Error exporting trainers: ' . urlencode($e->getMessage()));
+    header('Location: trainers.php?error=' . urlencode('Export failed.'));
     exit;
 }
 ?>

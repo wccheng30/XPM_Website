@@ -1,8 +1,8 @@
 /* Admin page styles: registrations.php */
         .status-badge {
-            padding: 6px 12px;
+            padding: 6px var(--space-3);
             border-radius: 20px;
-            font-size: 12px;
+            font-size: var(--text-xs);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -12,32 +12,32 @@
         }
         
         .status-pending {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #d97706;
-            border: 1px solid #f59e0b;
+            background: linear-gradient(135deg, var(--warning-bg) 0%, var(--warning-border) 100%);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
         }
         
         .status-confirmed {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #16a34a;
-            border: 1px solid #22c55e;
+            background: linear-gradient(135deg, var(--success-bg) 0%, var(--success-border) 100%);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
         
         .status-waitlisted {
-            background: linear-gradient(135deg, #f4f4f5 0%, #d9d9db 100%);
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border-secondary) 100%);
             color: var(--text-primary);
             border: 1px solid var(--text-primary);
         }
         
         .status-cancelled {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #dc2626;
-            border: 1px solid #ef4444;
+            background: linear-gradient(135deg, var(--danger-bg-hover) 0%, var(--danger-border) 100%);
+            color: var(--danger-text);
+            border: 1px solid var(--accent-danger);
         }
         
         .status-blacklisted {
-            background: #b91c1c;
-            color: #ffffff;
-            border: 1px solid #991b1b;
+            background: var(--danger-solid);
+            color: var(--text-on-danger);
+            border: 1px solid var(--accent-danger);
         }
     

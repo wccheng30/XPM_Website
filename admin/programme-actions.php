@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager', 'trainer']);
+csrf_guard();
 if (auth_is_trainer()) {
     header('Location: facilities.php');
     exit;
@@ -43,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $facilityService->restoreProgrammeFacilityBooking($programme_id);
                         $message = 'Programme activated successfully! Facility booking has been restored.';
                     } catch (Exception $e) {
-                        $message = 'Programme activated successfully! (Note: Could not restore facility booking - ' . $e->getMessage() . ')';
+                        $message = 'Programme activated successfully. The facility booking could not be restored.';
                     }
                     break;
                     
@@ -58,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $facilityService->cancelProgrammeFacilityBooking($programme_id);
                         $message = 'Programme deactivated successfully! Associated facility booking has been cancelled.';
                     } catch (Exception $e) {
-                        $message = 'Programme deactivated successfully! (Note: Could not cancel facility booking - ' . $e->getMessage() . ')';
+                        $message = 'Programme deactivated successfully. The facility booking could not be cancelled.';
                     }
                     break;
                     
@@ -114,6 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                     
                 case 'delete':
+                    if (($_SESSION['admin_role'] ?? '') === 'manager') {
+                        header('Location: programmes.php?error=' . urlencode('You do not have permission to delete programmes.'));
+                        exit;
+                    }
                     // Delete associated facility booking first
                     try {
                         $facilityService->deleteProgrammeFacilityBooking($programme_id);
@@ -143,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
             
         } catch (PDOException $e) {
-            $error = "Database error: " . $e->getMessage();
+            $error = 'The programme could not be updated.';
             header("Location: programmes.php?error=" . urlencode($error) . "#programme-" . $programme_id);
             exit;
         }

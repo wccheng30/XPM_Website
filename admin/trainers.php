@@ -1,9 +1,11 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
+require_once __DIR__ . '/includes/ui.php';
 
 $pdo = get_db_connection();
 $trainers = [];
@@ -14,7 +16,28 @@ $stats = [
 ];
 
 // Handle trainer actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+$can_delete_trainers = (($_SESSION['admin_role'] ?? 'admin') !== 'manager');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['bulk_delete', 'bulk_update_status'], true)) {
+    $ids = array_values(array_filter(array_map('intval', (array) ($_POST['ids'] ?? []))));
+    try {
+        if (($_POST['action'] ?? '') === 'bulk_delete' && $can_delete_trainers) {
+            $stmt = $pdo->prepare("DELETE FROM trainers WHERE id = ?");
+            foreach ($ids as $id) {
+                $stmt->execute([$id]);
+            }
+            $success_message = count($ids) . " trainer" . (count($ids) === 1 ? '' : 's') . " deleted.";
+        } elseif (in_array($_POST['status'] ?? '', ['active', 'inactive'], true)) {
+            $stmt = $pdo->prepare("UPDATE trainers SET is_active = ? WHERE id = ?");
+            $active = $_POST['status'] === 'active' ? 1 : 0;
+            foreach ($ids as $id) {
+                $stmt->execute([$active, $id]);
+            }
+            $success_message = count($ids) . " trainer" . (count($ids) === 1 ? '' : 's') . " updated.";
+        }
+    } catch (PDOException $e) {
+        $error_message = "Error performing action.";
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $trainer_id = $_POST['trainer_id'] ?? null;
     $action = $_POST['action'];
     
@@ -28,13 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     break;
                     
                 case 'delete':
+                    if (!$can_delete_trainers) {
+                        $error_message = "You do not have permission to delete trainers.";
+                        break;
+                    }
                     $stmt = $pdo->prepare("DELETE FROM trainers WHERE id = ?");
                     $stmt->execute([$trainer_id]);
                     $success_message = "Trainer deleted successfully!";
                     break;
             }
         } catch (PDOException $e) {
-            $error_message = "Error performing action: " . $e->getMessage();
+            $error_message = 'The change could not be saved.';
         }
     }
 }
@@ -43,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $filter = $_GET['filter'] ?? '';
 $search = $_GET['search'] ?? '';
 $page = max(1, intval($_GET['page'] ?? 1));
-$per_page = 20;
+$per_page = ui_page_size(25);
 $offset = ($page - 1) * $per_page;
 
 // Get trainers with filtering and pagination
@@ -91,7 +118,7 @@ if ($pdo) {
         $stats = $stats_stmt->fetch();
         
     } catch (PDOException $e) {
-        $error_message = "Error fetching trainers: " . $e->getMessage();
+        $error_message = 'The list could not be loaded.';
     }
 }
 
@@ -107,8 +134,9 @@ $total_pages = ceil($total_trainers / $per_page);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/list.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Trainers', 'fas fa-chalkboard-teacher'); ?>
@@ -117,196 +145,90 @@ $total_pages = ceil($total_trainers / $per_page);
         <!-- Navigation -->
         <?php include 'includes/navigation.php'; renderAdminNavigation('trainers'); ?>
 
-        <!-- Main Content -->
         <main class="admin-main">
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3><?php echo $stats['total']; ?></h3>
-                        <p>Total Trainers</p>
-                    </div>
+        <?php
+        $trainer_filter = (string) ($filter ?? '');
+        $trainer_search = (string) ($search ?? '');
+        renderPageHead(
+            'Trainers',
+            'Manage the people who deliver programmes.',
+            '<a class="btn btn-primary" href="add-trainer.php"><i class="fas fa-plus" aria-hidden="true"></i> New trainer</a>'
+        );
+        if (isset($success_message)) {
+            echo '<div class="alert alert-success"><i class="fas fa-check-circle" aria-hidden="true"></i> ' . $success_message . '</div>';
+        }
+        if (isset($error_message)) {
+            echo '<div class="alert alert-error"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> ' . ui_h($error_message) . '</div>';
+        }
+        renderStatusChips([
+            ['value' => '', 'label' => 'All', 'count' => (int) ($stats['total'] ?? 0)],
+            ['value' => 'active', 'label' => 'Active', 'count' => (int) ($stats['active'] ?? 0)],
+            ['value' => 'inactive', 'label' => 'Inactive', 'count' => (int) ($stats['inactive'] ?? 0)],
+        ], $trainer_filter);
+        $trainer_active = [];
+        if ($trainer_search !== '') {
+            $trainer_active[] = ['label' => 'Search: ' . $trainer_search, 'href' => ui_query(['search' => null], ['page'])];
+        }
+        if ($trainer_filter !== '') {
+            $trainer_active[] = ['label' => 'Status: ' . $trainer_filter, 'href' => ui_query(['filter' => null], ['page'])];
+        }
+        renderListToolbar('search', $trainer_search, 'Search trainers', '', '<button class="btn btn-secondary" type="button" onclick="exportTrainers()">Export</button>', 'trainers.php', $trainer_active);
+        ?>
+        <?php if (empty($trainers)): ?>
+            <?php
+            if ((int) $total_trainers === 0 && $trainer_search === '' && $trainer_filter === '') {
+                renderEmptyState('fas fa-chalkboard-teacher', 'No trainers yet', 'Add a trainer so they can be assigned to programmes.', 'add-trainer.php', 'New trainer');
+            } else {
+                renderEmptyState('fas fa-search', 'No matching trainers', 'Nothing matches the current search or status.', 'trainers.php', 'Clear filters');
+            }
+            ?>
+        <?php else: ?>
+            <form method="post" id="listBulkForm">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="action" id="bulkAction" value="">
+                <?php renderBulkBar(['active' => 'Active', 'inactive' => 'Inactive'], $can_delete_trainers); ?>
+                <div class="list-table-wrap">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th scope="col"><input type="checkbox" id="listSelectAll" aria-label="Select all rows"></th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Experience</th>
+                                <th scope="col">Status</th>
+                                <th scope="col"><span class="u-clip">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($trainers as $trainer): ?>
+                            <tr>
+                                <td class="list-select" data-label=""><input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $trainer['id']; ?>" aria-label="Select <?php echo ui_h($trainer['name']); ?>"></td>
+                                <td data-label="Name"><?php echo ui_h($trainer['name']); ?></td>
+                                <td data-label="Title"><?php echo ui_h($trainer['title']); ?></td>
+                                <td data-label="Experience"><?php echo (int) $trainer['experience_years']; ?>+ years</td>
+                                <td data-label="Status"><?php renderStatusBadge($trainer['is_active'] ? 'active' : 'inactive'); ?></td>
+                                <td data-label="Actions">
+                                    <?php
+                                    $actions = [
+                                        ['label' => 'Edit', 'icon' => 'fas fa-edit', 'href' => 'edit-trainer.php?id=' . (int) $trainer['id']],
+                                        ['label' => $trainer['is_active'] ? 'Deactivate' : 'Activate', 'icon' => 'fas fa-power-off', 'onclick' => 'postTrainer(' . (int) $trainer['id'] . ', "toggle_active")'],
+                                    ];
+                                    if ($can_delete_trainers) {
+                                        $actions[] = ['label' => 'Delete', 'icon' => 'fas fa-trash', 'danger' => true, 'onclick' => 'postTrainer(' . (int) $trainer['id'] . ', "delete")'];
+                                    }
+                                    renderRowActions($actions);
+                                    ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3><?php echo $stats['active']; ?></h3>
-                        <p>Active Trainers</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-pause-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3><?php echo $stats['inactive']; ?></h3>
-                        <p>Inactive Trainers</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filters and Search -->
-            <div class="filters-section">
-                <form method="GET" class="filters-form">
-                    <div class="filter-group">
-                        <label for="filter">Filter by:</label>
-                        <select name="filter" id="filter">
-                            <option value="">All Trainers</option>
-                            <option value="active" <?php echo $filter === 'active' ? 'selected' : ''; ?>>Active</option>
-                            <option value="inactive" <?php echo $filter === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="search">Search:</label>
-                        <input type="text" name="search" id="search" placeholder="Search trainers..." value="<?php echo htmlspecialchars($search); ?>">
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                    <a href="trainers.php" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Clear
-                    </a>
-                </form>
-            </div>
-
-            <!-- Messages -->
-            <?php if (isset($success_message)): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <?php echo $success_message; ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (isset($error_message)): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <?php echo $error_message; ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Trainers List -->
-            <div class="content-section">
-                <div class="section-header">
-                    <div>
-                        <h2>Trainers List</h2>
-                        <p>Manage your training team members</p>
-                    </div>
-                    <div class="section-actions">
-                        <a href="add-trainer.php" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Trainer
-                        </a>
-                        <a href="export-trainers.php" class="btn btn-secondary">
-                            <i class="fas fa-download"></i> Export
-                        </a>
-                    </div>
-                </div>
-
-                <?php if (empty($trainers)): ?>
-                    <div class="empty-state">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        <h3>No trainers found</h3>
-                        <p>Get started by adding your first trainer.</p>
-                        <a href="add-trainer.php" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add Trainer
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="trainers-grid">
-                        <?php foreach ($trainers as $trainer): ?>
-                            <div class="trainer-card" id="trainer-<?php echo $trainer['id']; ?>">
-                                <div class="trainer-image">
-                                    <?php if ($trainer['image_path']): ?>
-                                        <img src="../<?php echo htmlspecialchars($trainer['image_path']); ?>" alt="<?php echo htmlspecialchars($trainer['name']); ?>">
-                                    <?php else: ?>
-                                        <div class="default-avatar">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="trainer-badges">
-                                    <?php if ($trainer['is_active']): ?>
-                                        <span class="badge badge-active">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-inactive">Inactive</span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="trainer-info">
-                                    <h3><?php echo htmlspecialchars($trainer['name']); ?></h3>
-                                    <p class="trainer-title"><?php echo htmlspecialchars($trainer['title']); ?></p>
-                                    <p class="trainer-experience"><?php echo $trainer['experience_years']; ?>+ Years Experience</p>
-                                    
-                                    <?php if ($trainer['specialties']): ?>
-                                        <div class="trainer-specialties">
-                                            <?php 
-                                            $specialties = json_decode($trainer['specialties'], true);
-                                            if ($specialties && is_array($specialties)):
-                                                foreach (array_slice($specialties, 0, 3) as $specialty):
-                                            ?>
-                                                <span class="specialty-tag"><?php echo htmlspecialchars($specialty); ?></span>
-                                            <?php 
-                                                endforeach;
-                                            endif;
-                                            ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <div class="trainer-actions">
-                                        <a href="edit-trainer.php?id=<?php echo $trainer['id']; ?>" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                        
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="trainer_id" value="<?php echo $trainer['id']; ?>">
-                                            <input type="hidden" name="action" value="toggle_active">
-                                            <button type="submit" class="btn btn-sm <?php echo $trainer['is_active'] ? 'btn-warning' : 'btn-success'; ?>">
-                                                <i class="fas fa-power-off"></i> <?php echo $trainer['is_active'] ? 'Deactivate' : 'Activate'; ?>
-                                            </button>
-                                        </form>
-                                        
-                                        <?php if (($_SESSION['admin_role'] ?? 'admin') !== 'manager'): ?>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="trainer_id" value="<?php echo $trainer['id']; ?>">
-                                            <input type="hidden" name="action" value="delete">
-                                            <button type="submit" class="btn btn-sm btn-danger" data-confirm-title="Delete this trainer?" data-confirm="This action cannot be undone." data-confirm-ok="Delete" data-confirm-icon="fas fa-trash">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <!-- Pagination -->
-                    <?php if ($total_pages > 1): ?>
-                        <div class="pagination">
-                            <?php if ($page > 1): ?>
-                                <a href="?page=<?php echo $page - 1; ?>&filter=<?php echo $filter; ?>&search=<?php echo urlencode($search); ?>" class="btn btn-secondary">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
-                            <?php endif; ?>
-                            
-                            <span class="pagination-info">
-                                Page <?php echo $page; ?> of <?php echo $total_pages; ?> 
-                                (<?php echo $total_trainers; ?> total trainers)
-                            </span>
-                            
-                            <?php if ($page < $total_pages): ?>
-                                <a href="?page=<?php echo $page + 1; ?>&filter=<?php echo $filter; ?>&search=<?php echo urlencode($search); ?>" class="btn btn-secondary">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
+            </form>
+            <?php renderPagination($page, $per_page, (int) $total_trainers); ?>
+        <?php endif; ?>
         </main>
+
     </div>
 
     <script>
@@ -319,6 +241,35 @@ $total_pages = ceil($total_trainers / $per_page);
             });
         }, 5000);
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
+    <script>
+        function exportTrainers(ids) {
+            var params = new URLSearchParams(window.location.search);
+            var url = 'export-trainers.php?format=csv&search=' + encodeURIComponent(params.get('search') || '') + '&filter=' + encodeURIComponent(params.get('filter') || '');
+            if (ids && ids.length) url += '&ids=' + encodeURIComponent(ids.join(','));
+            if (window.xpmExportDownload) window.xpmExportDownload(url, 'trainers.csv');
+            else window.location.href = url;
+        }
+        window.exportApplications = exportTrainers;
+        function postTrainer(id, action) {
+            var labels = {
+                toggle_active: ['Change trainer status?', 'This switches whether the trainer is active.', 'Update', 'fas fa-power-off'],
+                delete: ['Delete this trainer?', 'This action cannot be undone.', 'Delete', 'fas fa-trash']
+            };
+            var run = function () {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'trainers.php';
+                form.innerHTML = '<input type="hidden" name="action" value="' + action + '"><input type="hidden" name="trainer_id" value="' + id + '">';
+                document.body.appendChild(form);
+                form.submit();
+            };
+            if (labels[action] && window.xpmConfirm) {
+                window.xpmConfirm({ title: labels[action][0], message: labels[action][1], confirmText: labels[action][2], icon: labels[action][3] }).then(function (ok) { if (ok) run(); });
+            } else {
+                run();
+            }
+        }
+    </script>
+    <script defer src="<?php echo admin_asset('js/list.js'); ?>"></script>
 </body>
 </html>

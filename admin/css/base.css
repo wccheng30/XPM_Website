@@ -1,0 +1,282 @@
+/* Admin shell: reset, type, tokens. Built into admin.min.css. */
+/* ==========================================================================
+   XPM Admin: white monochrome panel built on the shared design tokens.
+   Class names are unchanged because the PHP templates output them.
+   ========================================================================== */
+
+/* ---------- Theme variables (legacy names kept for page styles) ----------
+   Breakpoints (custom properties cannot be used inside media queries):
+   sm 640px · md 768px · lg 1024px · xl 1280px.
+   ------------------------------------------------------------------------- */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #fafafa;
+    --bg-tertiary: #f4f4f5;
+    --text-primary: #1E2328;
+    --text-secondary: #4E575E;
+    --text-muted: #5A6269;
+    --border-primary: #ececec;
+    --border-secondary: #d9d9db;
+    --border-light: #f1f1f2;
+    --accent-primary: var(--c-red);
+    --accent-secondary: var(--c-red-hover);
+    --accent-success: #15803d;
+    --accent-warning: #a16207;
+    --accent-danger: #b91c1c;
+    --accent-info: var(--c-teal-deep);
+    --on-accent: #ffffff;
+    --gradient-primary: var(--c-red);
+    --ring: #1F6A6E;
+    --ring-danger: rgba(185, 28, 28, 0.18);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 6px 16px -6px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 18px 40px -14px rgba(0, 0, 0, 0.16);
+    --shadow-xl: 0 28px 60px -20px rgba(0, 0, 0, 0.22);
+    --admin-header-h: 68px;
+    --admin-sidebar-w: 260px;
+    --admin-rail-w: 76px;
+    --r-card: 14px;
+
+    /* Soft status surfaces. Solid fills stay dark enough for white text. */
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+    --success-text: #166534;
+    --success-solid: #166534;
+    --warning-bg: #fefce8;
+    --warning-border: #fde68a;
+    --warning-text: #854d0e;
+    --warning-solid: #a16207;
+    --danger-bg: #fef2f2;
+    --danger-bg-hover: #fee2e2;
+    --danger-border: #fecaca;
+    --danger-text: #991b1b;
+    --danger-solid: #b91c1c;
+    --text-on-danger: #ffffff;
+    --info-bg: #f3fafa;
+    --info-border: #c5e4e4;
+    --info-text: #1f6a6e;
+    --info-solid: #1f6a6e;
+    --neutral-solid: #374151;
+    --neutral-solid-hover: #1f2937;
+    --text-on-solid: #ffffff;
+    --surface-hover: #f4f4f5;
+    --overlay: rgba(30, 35, 40, 0.55);
+    --mask-opaque: #000000;
+    --print-paper: #ffffff;
+    --print-ink: #000000;
+
+    /* Spacing: 4, 8, 12, 16, 24, 32, 48, 64 */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+
+    /* Type */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 2rem;
+
+    color-scheme: light;
+}
+
+html[data-theme="dark"] {
+    --bg-primary: #141414;
+    --bg-secondary: #0b0b0b;
+    --bg-tertiary: #1e1e1f;
+    --text-primary: #f4f4f5;
+    --text-secondary: #b4b4b8;
+    --text-muted: #A8A8AD;
+    --border-primary: #262627;
+    --border-secondary: #3a3a3c;
+    --border-light: #1f1f20;
+    --accent-primary: var(--c-red);
+    --accent-secondary: var(--c-red-hover);
+    --accent-success: #4ade80;
+    --accent-warning: #facc15;
+    --accent-danger: #f87171;
+    --accent-info: var(--c-teal);
+    --on-accent: #ffffff;
+    --gradient-primary: var(--c-red);
+    --ring: #B8E0E0;
+    --ring-danger: rgba(248, 113, 113, 0.35);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 6px 16px -6px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 18px 40px -14px rgba(0, 0, 0, 0.7);
+    --shadow-xl: 0 28px 60px -20px rgba(0, 0, 0, 0.8);
+    --c-white: #141414;
+    --c-surface: #0b0b0b;
+    --c-surface-2: #1e1e1f;
+    --c-surface-3: #262627;
+    --c-border: #262627;
+    --c-text: #f4f4f5;
+    --c-text-2: #b4b4b8;
+    --c-text-3: #A8A8AD;
+    --c-teal-deep: #B8E0E0;
+    --c-red-soft: rgba(179, 27, 1, 0.28);
+
+    --success-bg: rgba(74, 222, 128, 0.12);
+    --success-border: rgba(74, 222, 128, 0.35);
+    --success-text: #86efac;
+    --success-solid: #166534;
+    --warning-bg: rgba(250, 204, 21, 0.12);
+    --warning-border: rgba(250, 204, 21, 0.45);
+    --warning-text: #fde047;
+    --warning-solid: #a16207;
+    --danger-bg: rgba(248, 113, 113, 0.14);
+    --danger-bg-hover: rgba(248, 113, 113, 0.22);
+    --danger-border: rgba(248, 113, 113, 0.45);
+    --danger-text: #fecaca;
+    --danger-solid: #b91c1c;
+    --text-on-danger: #ffffff;
+    --info-bg: rgba(184, 224, 224, 0.12);
+    --info-border: rgba(184, 224, 224, 0.4);
+    --info-text: #b8e0e0;
+    --info-solid: #1f6a6e;
+    --neutral-solid: #3f3f46;
+    --neutral-solid-hover: #52525b;
+    --text-on-solid: #ffffff;
+    --surface-hover: #2a2a2c;
+    --overlay: rgba(0, 0, 0, 0.62);
+    --mask-opaque: #000000;
+    --print-paper: #ffffff;
+    --print-ink: #000000;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.5rem;
+    --text-2xl: 2rem;
+
+    color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-head);
+    color: var(--text-primary);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: inherit;
+}
+
+img {
+    max-width: 100%;
+}
+
+::selection {
+    background: var(--c-teal);
+    color: var(--c-charcoal);
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-secondary);
+    border: 3px solid var(--bg-secondary);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+:focus-visible {
+    outline: 2px solid var(--c-teal-deep);
+    outline-offset: 2px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--c-teal-deep);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    z-index: 400;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 14px;
+    color: var(--on-accent);
+    background: var(--accent-primary);
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    transform: translateY(-160%);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    transform: none;
+    outline: 2px solid var(--c-teal-deep);
+    outline-offset: 3px;
+}
+
+
+svg.icon {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+    fill: currentColor;
+    overflow: visible;
+    flex-shrink: 0;
+}

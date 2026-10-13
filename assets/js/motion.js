@@ -345,23 +345,27 @@
             });
         }
 
+    }
+
+    function initBackToTop() {
         var topBtn = document.getElementById('adminBackToTop');
-        if (topBtn) {
-            var toggleTop = function () {
-                topBtn.hidden = window.scrollY < 400;
-            };
-            window.addEventListener('scroll', toggleTop, { passive: true });
-            toggleTop();
-            topBtn.addEventListener('click', function () {
-                var behavior = reduceMotion ? 'auto' : 'smooth';
-                window.scrollTo({ top: 0, behavior: behavior });
-            });
-        }
+        if (!topBtn || topBtn.getAttribute('data-bound') === '1') return;
+        topBtn.setAttribute('data-bound', '1');
+        var toggleTop = function () {
+            topBtn.hidden = window.scrollY < 400;
+        };
+        window.addEventListener('scroll', toggleTop, { passive: true });
+        toggleTop();
+        topBtn.addEventListener('click', function () {
+            var behavior = reduceMotion ? 'auto' : 'smooth';
+            window.scrollTo({ top: 0, behavior: behavior });
+        });
     }
 
     function initAdmin() {
         if (!isAdmin) return;
 
+        initBackToTop();
         initAdminNav();
 
         document.querySelectorAll('tbody, .table-body, .stats-grid, .key-metrics, .trainers-grid').forEach(function (group) {

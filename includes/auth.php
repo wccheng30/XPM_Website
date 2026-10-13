@@ -10,9 +10,23 @@ function auth_start() {
         return;
     }
 
-    ini_set('session.cookie_httponly', '1');
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
+    $path = ini_get('session.cookie_path') ?: '/';
+
+    ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
-    ini_set('session.cookie_secure', '0');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_secure', $https ? '1' : '0');
+    ini_set('session.cookie_samesite', 'Lax');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => $path,
+        'secure' => $https,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 
@@ -209,6 +223,142 @@ function auth_csrf_token() {
 function auth_verify_csrf($token) {
     auth_start();
     return is_string($token) && isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+function csrf_field() {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(auth_csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function csrf_verify($token = null) {
+    if ($token === null) {
+        $token = $_POST['csrf_token'] ?? '';
+    }
+    return auth_verify_csrf($token);
+}
+
+function csrf_guard() {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        return;
+    }
+    if (!csrf_verify()) {
+        http_response_code(403);
+        exit('Invalid request.');
+    }
+}
+
+function auth_remove_managed_image($relative) {
+    $relative = str_replace('\\', '/', (string) $relative);
+    if (!preg_match('#^assets/images/(logos|trainers|programmes)/[A-Za-z0-9._-]+$#', $relative)) {
+        return;
+    }
+    $full = dirname(__DIR__) . '/' . $relative;
+    if (is_file($full)) {
+        unlink($full);
+    }
+}
+
+function auth_deny_script_execution($directory) {
+    $htaccess = rtrim((string) $directory, "/\\") . DIRECTORY_SEPARATOR . '.htaccess';
+    if (is_file($htaccess)) {
+        return;
+    }
+    $rules = "<FilesMatch \"\\.(php|phtml|php3|php4|php5|phar|cgi|pl|asp|aspx)$\">\n    Require all denied\n</FilesMatch>\n";
+    @file_put_contents($htaccess, $rules);
+}
+
+function auth_save_image(array $file, $relativeDir, $prefix = 'upload') {
+    $maxBytes = 5 * 1024 * 1024;
+    $allowed = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+    ];
+    $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error === UPLOAD_ERR_NO_FILE) {
+        return ['ok' => false, 'error' => '', 'path' => ''];
+    }
+    if ($error !== UPLOAD_ERR_OK) {
+        return ['ok' => false, 'error' => 'The file could not be uploaded.', 'path' => ''];
+    }
+    if ((int) ($file['size'] ?? 0) > $maxBytes) {
+        return ['ok' => false, 'error' => 'Use an image under 5 MB.', 'path' => ''];
+    }
+    $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+    if (!isset($allowed[$extension])) {
+        return ['ok' => false, 'error' => 'Use a JPG, PNG, GIF, or WebP image.', 'path' => ''];
+    }
+    $tmp = (string) ($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        return ['ok' => false, 'error' => 'The file could not be uploaded.', 'path' => ''];
+    }
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
+    if ($mime !== $allowed[$extension]) {
+        return ['ok' => false, 'error' => 'The file contents do not match an allowed image type.', 'path' => ''];
+    }
+    $relativeDir = trim(str_replace('\\', '/', (string) $relativeDir), '/');
+    if (!preg_match('#^assets/images/(logos|trainers|programmes)$#', $relativeDir)) {
+        return ['ok' => false, 'error' => 'That upload folder is not allowed.', 'path' => ''];
+    }
+    $directory = dirname(__DIR__) . '/' . $relativeDir;
+    if (!is_dir($directory) && !mkdir($directory, 0755, true)) {
+        return ['ok' => false, 'error' => 'The upload folder could not be created.', 'path' => ''];
+    }
+    auth_deny_script_execution($directory);
+    $filename = preg_replace('/[^a-z0-9_-]/', '', strtolower((string) $prefix)) . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+    $destination = $directory . '/' . $filename;
+    if (!move_uploaded_file($tmp, $destination)) {
+        return ['ok' => false, 'error' => 'The file could not be saved.', 'path' => ''];
+    }
+    return ['ok' => true, 'error' => '', 'path' => $relativeDir . '/' . $filename];
+}
+
+function auth_remove_stored_file($relative, $prefix) {
+    $relative = str_replace('\\', '/', ltrim((string) $relative, '/'));
+    $prefix = trim(str_replace('\\', '/', (string) $prefix), '/');
+    if ($prefix === '' || $relative === '' || strpos($relative, '..') !== false || strpos($relative, $prefix . '/') !== 0) {
+        return;
+    }
+    $root = realpath(dirname(__DIR__) . '/' . $prefix);
+    $full = dirname(__DIR__) . '/' . $relative;
+    if (!$root || !is_file($full)) {
+        return;
+    }
+    $real = realpath($full);
+    $rootPrefix = rtrim($root, '/\\') . DIRECTORY_SEPARATOR;
+    if ($real && strpos($real, $rootPrefix) === 0) {
+        unlink($real);
+    }
+}
+
+function auth_import_file_error(array $file, array $extensions = ['csv', 'xlsx', 'xls']) {
+    $maxBytes = 8 * 1024 * 1024;
+    $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error === UPLOAD_ERR_NO_FILE) {
+        return 'Please select a file to upload.';
+    }
+    if ($error !== UPLOAD_ERR_OK) {
+        return 'The file could not be uploaded.';
+    }
+    if ((int) ($file['size'] ?? 0) > $maxBytes) {
+        return 'Use a spreadsheet under 8 MB.';
+    }
+    $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+    $extensions = array_map('strtolower', $extensions);
+    if (!in_array($extension, $extensions, true)) {
+        return 'Please upload a ' . implode(', ', $extensions) . ' file.';
+    }
+    $tmp = (string) ($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        return 'The file could not be uploaded.';
+    }
+    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
+    $blocked = ['text/html', 'application/x-httpd-php', 'application/x-php', 'text/x-php', 'application/javascript'];
+    if (in_array($mime, $blocked, true)) {
+        return 'That file type cannot be imported.';
+    }
+    return '';
 }
 
 function auth_owns_programme($programme) {

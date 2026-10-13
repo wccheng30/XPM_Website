@@ -1,0 +1,343 @@
+/* Shared record-detail layout. */
+
+.detail-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.detail-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.detail-head-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 650;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.detail-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: clamp(1.45rem, 2vw, 1.85rem);
+    letter-spacing: -0.03em;
+}
+
+.detail-head-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.detail-main,
+.detail-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.detail-side {
+    position: sticky;
+    top: 12px;
+}
+
+.admin-container .detail-side {
+    top: calc(var(--admin-header-h) + 16px);
+}
+
+.detail-card {
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--r-card);
+}
+
+.detail-card h3 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-base);
+}
+
+.detail-card .kv-row:last-child {
+    border-bottom: 0;
+}
+
+.detail-card .kv-row {
+    align-items: flex-start;
+}
+
+.detail-card .kv-value{
+    max-width: none;
+    flex: 1;
+    text-align: right;
+}
+
+.detail-prose {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.detail-status-form,
+.detail-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-status-form select,
+.detail-comment-form textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 10px;
+}
+
+.detail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-actions .btn,
+.detail-actions form,
+.detail-stack .btn {
+    width: 100%;
+}
+
+.detail-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.detail-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detail-timeline li {
+    display: grid;
+    grid-template-columns: 12px 1fr;
+    gap: 10px;
+}
+
+.detail-timeline li::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    margin-top: 4px;
+    border-radius: 999px;
+    background: var(--accent-primary);
+}
+
+.detail-timeline time,
+.detail-timeline p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.doc-switch {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.doc-panels {
+    flex: 1 0 100%;
+}
+
+.doc-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.doc-switch label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border-primary);
+    border-radius: 999px;
+    font-size: var(--text-sm);
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.doc-switch input:focus-visible + label,
+.detail-back:focus-visible,
+.pipeline a:focus-visible,
+.detail-actions a:focus-visible,
+.detail-status-form select:focus-visible,
+.detail-comment-form textarea:focus-visible {
+    outline: 2px solid var(--c-teal-deep);
+    outline-offset: 2px;
+}
+
+.doc-switch input:checked + label {
+    color: var(--on-accent);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.doc-panel {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doc-switch input:nth-of-type(1):checked ~ .doc-panels .doc-panel:nth-child(1),
+.doc-switch input:nth-of-type(2):checked ~ .doc-panels .doc-panel:nth-child(2) {
+    display: flex;
+}
+
+.doc-frame {
+    width: 100%;
+    height: 420px;
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+}
+
+.doc-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#detailsModal .modal-dialog.modal-wide,
+#detailsModal .modal-dialog.modal-scroll {
+    width: min(1120px, 96vw);
+    max-width: min(1120px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 1023px) {
+    .detail-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-side {
+        position: static;
+    }
+
+    .detail-page {
+        padding-bottom: 84px;
+    }
+
+    .detail-actions {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 40;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .admin-container .detail-actions {
+        left: var(--admin-rail-w);
+    }
+
+    .detail-actions .btn,
+    .detail-actions form {
+        width: auto;
+        flex: 1 1 140px;
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-container .detail-actions {
+        left: 0;
+    }
+}
+
+@media print {
+    .admin-header,
+    .admin-sidebar,
+    #sidebarOverlay,
+    #sidebarTip,
+    #adminBackToTop,
+    .detail-back,
+    .detail-actions,
+    .detail-status-form button,
+    .detail-comment-form button,
+    .doc-switch > label,
+    .doc-switch > input,
+    .doc-frame {
+        display: none !important;
+    }
+
+    .doc-panel {
+        display: flex !important;
+    }
+
+    .detail-layout,
+    .detail-side {
+        display: block;
+        position: static;
+    }
+
+    .detail-card,
+    .detail-page,
+    body {
+        background: #fff !important;
+        color: #111 !important;
+        box-shadow: none !important;
+    }
+
+    .detail-page {
+        padding-bottom: 0;
+    }
+}

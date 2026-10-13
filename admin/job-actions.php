@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager']);
+csrf_guard();
 
 // Include database connection
 require_once '../includes/database.php';
@@ -80,6 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                     
                 case 'delete':
+                    if (($_SESSION['admin_role'] ?? '') === 'manager') {
+                        header('Location: jobs.php?error=' . urlencode('You do not have permission to delete jobs.'));
+                        exit;
+                    }
                     $stmt = $pdo->prepare("DELETE FROM jobs WHERE id = ?");
                     $stmt->execute([$job_id]);
                     $message = 'Job deleted successfully!';
@@ -95,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
             
         } catch (PDOException $e) {
-            $error = "Database error: " . $e->getMessage();
+            $error = 'The job could not be updated.';
             header("Location: jobs.php?error=" . urlencode($error) . "#job-" . $job_id);
             exit;
         }

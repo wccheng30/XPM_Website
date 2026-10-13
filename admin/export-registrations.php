@@ -48,6 +48,16 @@ if ($pdo) {
             $where_conditions[] = "pr.status = ?";
             $params[] = $_GET['filter'];
         }
+
+        if (!empty($_GET['ids'])) {
+            $ids = array_values(array_filter(array_map('intval', explode(',', (string) $_GET['ids']))));
+            if ($ids) {
+                $where_conditions[] = 'pr.id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+                foreach ($ids as $id) {
+                    $params[] = $id;
+                }
+            }
+        }
         
         // Build the final query
         $sql = "SELECT pr.*, p.title as programme_title, p.duration, p.price, p.modules 
@@ -100,7 +110,7 @@ if ($pdo) {
         
     } catch (PDOException $e) {
         http_response_code(500);
-        exit('Database error: ' . $e->getMessage());
+        exit('The request could not be completed.');
     }
 } else {
     http_response_code(500);

@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 auth_require(['admin', 'manager', 'trainer']);
+csrf_guard();
 
 // Include shared database connection
 require_once '../includes/database.php';
@@ -65,12 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Password - XpressPoint Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-styles.css?v=20261005-5">
-    <link rel="stylesheet" href="css/auth.css?v=20261005-1">
+    <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
+    <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/auth.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('Change Password', 'fas fa-key', ['url' => 'dashboard.php', 'label' => 'Dashboard']); ?>
@@ -81,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="password-layout">
             <div class="password-form">
                 <div class="form-header">
-                    <i class="fas fa-lock"></i>
+                    <i class="fas fa-lock" aria-hidden="true"></i>
                     <div>
                         <h2>Change admin password</h2>
                         <p>Update your admin panel password for enhanced security</p>
@@ -90,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php if ($error_message): ?>
                     <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
+                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($error_message); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($success_message): ?>
                     <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($success_message); ?>
                     </div>
                 <?php endif; ?>
@@ -112,12 +113,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <form method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="form-group">
                         <label for="current_password">Current Password</label>
                         <div class="password-toggle">
                             <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
                             <button type="button" onclick="togglePassword('current_password')" aria-label="Show or hide password">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -127,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="password-toggle">
                             <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" required>
                             <button type="button" onclick="togglePassword('new_password')" aria-label="Show or hide password">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -137,13 +139,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="password-toggle">
                             <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" required>
                             <button type="button" onclick="togglePassword('confirm_password')" aria-label="Show or hide password">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-eye" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
 
                     <button type="submit" class="submit-btn btn btn-primary">
-                        <i class="fas fa-key"></i>
+                        <i class="fas fa-key" aria-hidden="true"></i>
                         Change Password
                     </button>
                 </form>
@@ -192,6 +194,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
     </script>
-    <script src="../assets/js/motion.js?v=20261002-10"></script>
 </body>
 </html>
