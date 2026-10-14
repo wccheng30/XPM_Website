@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TIMESTAMP NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default admin user (password: xpresspoint2024)
+-- Insert default admin user
 INSERT INTO users (username, password, email, role) VALUES
 ('admin', '$2y$10$K4qYAoRQFAOUVddAiM24vemorAhhGuVBvkmJ/YaAIQ8QiMX2CM8mq', 'admin@xpresspoint.com', 'admin')
 ON DUPLICATE KEY UPDATE id=id;
