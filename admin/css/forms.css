@@ -118,6 +118,10 @@
     min-width: 0;
 }
 
+.form-field[hidden] {
+    display: none !important;
+}
+
 .form-label,
 .form-toggle-label {
     font-size: var(--text-sm);
@@ -303,6 +307,13 @@ textarea.form-control {
     background: var(--bg-primary);
     border: 1px solid var(--border-primary);
     font-weight: 700;
+    transition: transform var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur) var(--ease-out);
+}
+
+.file-control:hover .file-control-button {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .current-upload {

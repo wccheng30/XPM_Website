@@ -41,6 +41,23 @@
         });
     }
 
+    function setDialogIcon(name) {
+        var use = dialog.querySelector('.leave-dialog-icon use');
+        if (use) {
+            var current = use.getAttribute('href') || use.getAttribute('xlink:href') || '';
+            var hash = current.indexOf('#');
+            var prefix = window.XPM_ICON_SPRITE || (hash >= 0 ? current.slice(0, hash) : '');
+            if (prefix) {
+                use.setAttribute('href', prefix + '#' + name);
+            }
+            return;
+        }
+        var icon = dialog.querySelector('.leave-dialog-icon i');
+        if (icon) {
+            icon.className = 'fas fa-' + name;
+        }
+    }
+
     function openDialog(href, reload) {
         if (!dialog) {
             buildDialog();
@@ -51,17 +68,16 @@
         var title = dialog.querySelector('#leave-dialog-title');
         var text = dialog.querySelector('#leave-dialog-text');
         var go = dialog.querySelector('.leave-dialog-go');
-        var icon = dialog.querySelector('.leave-dialog-icon i');
         if (pendingReload) {
             title.textContent = 'Reload this page?';
             text.textContent = 'You have unsaved changes. If you reload now, this form will not be submitted.';
             go.textContent = 'Reload anyway';
-            icon.className = 'fas fa-rotate-right';
+            setDialogIcon('rotate-right');
         } else {
             title.textContent = 'Leave this page?';
             text.textContent = 'You have unsaved changes. If you leave now, this form will not be submitted.';
             go.textContent = 'Leave anyway';
-            icon.className = 'fas fa-right-from-bracket';
+            setDialogIcon('right-from-bracket');
         }
 
         if (dialog.hidden) {

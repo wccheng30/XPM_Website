@@ -434,59 +434,63 @@ try {
             const customIconClass = document.getElementById('custom_icon_class');
             const previewIcon = document.getElementById('preview-icon');
             
-            // Update icon preview
             function updatePreview(iconClass) {
-                previewIcon.className = iconClass || 'fas fa-briefcase';
+                if (window.xpmSetIcon) {
+                    window.xpmSetIcon(previewIcon, iconClass || 'fas fa-briefcase');
+                }
             }
-            
-            // Handle dropdown change
-            iconSelect.addEventListener('change', function() {
-                const value = this.value;
-                
-                if (value === 'custom') {
-                    customIconInput.style.display = 'block';
-                    customIconClass.focus();
-                } else {
-                    customIconInput.style.display = 'none';
-                    updatePreview(value);
-                }
-            });
-            
-            // Handle custom icon input
-            customIconClass.addEventListener('input', function() {
-                if (iconSelect.value === 'custom') {
-                    updatePreview(this.value);
-                }
-            });
-            
-            // Initialize with current icon
-            updatePreview(iconSelect.value);
 
-            
-            // Custom job type functionality
+            function showCustomIcon(visible, focus) {
+                if (!customIconInput) return;
+                customIconInput.hidden = !visible;
+                if (visible && focus && customIconClass) customIconClass.focus();
+            }
+
+            if (iconSelect) {
+                iconSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        showCustomIcon(true, true);
+                        if (customIconClass && customIconClass.value) updatePreview(customIconClass.value);
+                    } else {
+                        showCustomIcon(false, false);
+                        updatePreview(this.value);
+                    }
+                });
+            }
+
+            if (customIconClass) {
+                customIconClass.addEventListener('input', function() {
+                    if (iconSelect && iconSelect.value === 'custom') updatePreview(this.value);
+                });
+            }
+
+            if (iconSelect) {
+                if (iconSelect.value === 'custom') {
+                    showCustomIcon(true, false);
+                    updatePreview((customIconClass && customIconClass.value) || 'fas fa-briefcase');
+                } else {
+                    showCustomIcon(false, false);
+                    updatePreview(iconSelect.value);
+                }
+            }
+
             const jobTypeSelect = document.getElementById('type');
             const customTypeInput = document.getElementById('custom-type-input');
-            
-            function handleJobTypeChange() {
-                if (jobTypeSelect.value === 'custom') {
-                    customTypeInput.style.display = 'block';
-                } else {
-                    customTypeInput.style.display = 'none';
+
+            function handleJobTypeChange(focus) {
+                if (!customTypeInput || !jobTypeSelect) return;
+                const custom = jobTypeSelect.value === 'custom';
+                customTypeInput.hidden = !custom;
+                if (custom && focus) {
+                    const customJobTypeInput = document.getElementById('custom_job_type');
+                    if (customJobTypeInput) customJobTypeInput.focus();
                 }
             }
-            
-            // Initialize custom job type display based on current selection
-            function initializeCustomJobType() {
-                // The PHP already handles the initial state, so we just need to ensure
-                // the display matches the current selection
-                handleJobTypeChange();
+
+            if (jobTypeSelect) {
+                jobTypeSelect.addEventListener('change', function() { handleJobTypeChange(true); });
+                handleJobTypeChange(false);
             }
-            
-            jobTypeSelect.addEventListener('change', handleJobTypeChange);
-            
-            // Initialize job type
-            handleJobTypeChange();
-            initializeCustomJobType();
             
             // Handle work hours not specified checkbox
             const hoursNotSpecifiedCheckbox = document.getElementById('hours_not_specified');

@@ -42,24 +42,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Restore facility booking if programme requires facility
                     try {
                         $facilityService->restoreProgrammeFacilityBooking($programme_id);
-                        $message = 'Programme activated successfully! Facility booking has been restored.';
+                        $message = 'Programme activated and the facility booking was restored. Registration stays closed until you open it.';
                     } catch (Exception $e) {
-                        $message = 'Programme activated successfully. The facility booking could not be restored.';
+                        $message = 'Programme activated. The facility booking could not be restored. Registration stays closed until you open it.';
                     }
                     break;
                     
                     
                 case 'deactivate':
                     // Deactivate programme
-                    $stmt = $pdo->prepare("UPDATE programmes SET is_active = 0, updated_at = NOW() WHERE id = ?");
+                    $stmt = $pdo->prepare("UPDATE programmes SET is_active = 0, registration_status = 'closed', updated_at = NOW() WHERE id = ?");
                     $stmt->execute([$programme_id]);
                     
                     // Cancel associated facility booking if it exists (mark as cancelled instead of deleting)
                     try {
                         $facilityService->cancelProgrammeFacilityBooking($programme_id);
-                        $message = 'Programme deactivated successfully! Associated facility booking has been cancelled.';
+                        $message = 'Programme deactivated and registration is closed. The facility booking has been cancelled.';
                     } catch (Exception $e) {
-                        $message = 'Programme deactivated successfully. The facility booking could not be cancelled.';
+                        $message = 'Programme deactivated and registration is closed. The facility booking could not be cancelled.';
                     }
                     break;
                     

@@ -144,7 +144,7 @@ if ($schedule !== '' && !in_array($schedule, ['in_person', 'online', 'hybrid'], 
                 <input class="form-control" type="text" id="custom_icon_class" name="custom_icon_class" placeholder="e.g., fas fa-custom-icon" value="<?php echo form_h(form_value('custom_icon_class')); ?>">
                 <p class="form-hint">Enter a Font Awesome class such as fas fa-custom-icon.</p>
             </div>
-            <div class="icon-preview"><i id="preview-icon" class="<?php echo form_h($current_icon !== '' && $current_icon !== 'custom' ? $current_icon : 'fas fa-graduation-cap'); ?>"></i><span class="form-hint">Icon preview</span></div>
+            <div class="icon-preview" id="preview-icon"><i class="<?php echo form_h($current_icon !== '' && $current_icon !== 'custom' ? $current_icon : 'fas fa-graduation-cap'); ?>" aria-hidden="true"></i><span class="form-hint">Icon preview</span></div>
             <?php form_toggle('is_active', 'is_active', 'Active programme', ['value' => '1', 'default' => true, 'hint' => 'Active programmes are visible on the website.']); ?>
             <?php if ($mode === 'edit'): ?>
                 <?php form_select('registration_status', 'registration_status', 'Registration status', [
@@ -239,7 +239,7 @@ if ($schedule !== '' && !in_array($schedule, ['in_person', 'online', 'hybrid'], 
                             </select>
                         </div>
                     </div>
-                    <div class="form-field">
+                    <div class="form-field question-options"<?php echo $inputType === 'select' ? '' : ' hidden'; ?>>
                         <label class="form-label" for="q<?php echo (int) $index; ?>_options">Dropdown options</label>
                         <textarea class="form-control" id="q<?php echo (int) $index; ?>_options" rows="2" name="question_configs[<?php echo (int) $index; ?>][field_options]" placeholder="value|Label (one option per line)"><?php echo form_h($fieldOptions); ?></textarea>
                         <p class="form-hint">Used when the input type is a dropdown. One option per line, written as value|Label.</p>

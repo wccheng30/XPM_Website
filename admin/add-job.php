@@ -343,107 +343,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const customIconInput = document.getElementById('custom-icon-input');
             const customIconClass = document.getElementById('custom_icon_class');
             const previewIcon = document.getElementById('preview-icon');
-            
-            console.log('Icon elements found:', {
-                iconSelect: !!iconSelect,
-                customIconInput: !!customIconInput,
-                customIconClass: !!customIconClass,
-                previewIcon: !!previewIcon
-            });
-            
-            // Enhanced form interactions
-            
-            // Handle custom icon input changes (separate from dropdown change)
-            customIconClass.addEventListener('input', function() {
-                const previewIconElement = previewIcon.querySelector('i');
-                previewIconElement.className = this.value || 'fas fa-briefcase';
-            });
-            
-            // Handle dropdown change
-            iconSelect.addEventListener('change', function() {
-                const selectedValue = this.value;
-                const previewIconElement = previewIcon.querySelector('i');
-                
-                console.log('Icon dropdown changed to:', selectedValue);
-                
-                if (selectedValue === 'custom') {
-                    // Show custom input
-                    customIconInput.style.display = 'block';
+
+            function updateJobIconPreview(iconClass) {
+                if (window.xpmSetIcon) {
+                    window.xpmSetIcon(previewIcon, iconClass || 'fas fa-briefcase');
+                }
+            }
+
+            function showCustomIcon(visible, focus) {
+                if (!customIconInput) return;
+                customIconInput.hidden = !visible;
+                if (visible && focus && customIconClass) {
                     customIconClass.focus();
-                    console.log('Custom icon input shown');
-                    
-                    // Set preview to current custom value if it exists
-                    if (customIconClass.value) {
-                        previewIconElement.className = customIconClass.value;
-                    }
-                } else {
-                    // Hide custom input
-                    customIconInput.style.display = 'none';
-                    console.log('Custom icon input hidden');
-                    
-                    // Update preview with selected icon
-                    if (selectedValue) {
-                        previewIconElement.className = selectedValue;
+                }
+            }
+
+            if (customIconClass) {
+                customIconClass.addEventListener('input', function() {
+                    updateJobIconPreview(this.value || 'fas fa-briefcase');
+                });
+            }
+
+            if (iconSelect) {
+                iconSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        showCustomIcon(true, true);
+                        if (customIconClass && customIconClass.value) {
+                            updateJobIconPreview(customIconClass.value);
+                        }
                     } else {
-                        previewIconElement.className = 'fas fa-briefcase';
+                        showCustomIcon(false, false);
+                        updateJobIconPreview(this.value || 'fas fa-briefcase');
                     }
+                });
+
+                form.addEventListener('submit', function() {
+                    if (iconSelect.value === 'custom' && customIconClass && customIconClass.value.trim()) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'job_icon';
+                        hiddenInput.value = customIconClass.value.trim();
+                        this.appendChild(hiddenInput);
+                    }
+                });
+
+                if (iconSelect.value === 'custom') {
+                    showCustomIcon(true, false);
+                    updateJobIconPreview((customIconClass && customIconClass.value) || 'fas fa-briefcase');
+                } else {
+                    showCustomIcon(false, false);
+                    updateJobIconPreview(iconSelect.value || 'fas fa-briefcase');
                 }
-            });
-            
-            // Handle form submission for custom icons
-            form.addEventListener('submit', function(e) {
-                if (iconSelect.value === 'custom' && customIconClass.value.trim()) {
-                    // Create a hidden input with the custom icon value
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'job_icon';
-                    hiddenInput.value = customIconClass.value.trim();
-                    this.appendChild(hiddenInput);
-                }
-            });
-            
-            // Initialize icon preview on page load
-            const initialIconValue = iconSelect.value || 'fas fa-briefcase';
-            const previewIconElement = previewIcon.querySelector('i');
-            previewIconElement.className = initialIconValue;
-            
+            }
+
             // Custom job type functionality
             const jobTypeSelect = document.getElementById('type');
             const customTypeInput = document.getElementById('custom-type-input');
-            
-            function handleJobTypeChange() {
-                console.log('Job type changed to:', jobTypeSelect.value);
-                if (jobTypeSelect.value === 'custom') {
-                    customTypeInput.style.display = 'block';
-                    console.log('Custom job type input shown');
-                    // Focus on the custom input field
+
+            function handleJobTypeChange(focus) {
+                if (!customTypeInput || !jobTypeSelect) return;
+                const custom = jobTypeSelect.value === 'custom';
+                customTypeInput.hidden = !custom;
+                if (custom && focus) {
                     const customJobTypeInput = document.getElementById('custom_job_type');
-                    if (customJobTypeInput) {
-                        customJobTypeInput.focus();
-                    }
-                } else {
-                    customTypeInput.style.display = 'none';
-                    console.log('Custom job type input hidden');
+                    if (customJobTypeInput) customJobTypeInput.focus();
                 }
             }
-            
-            jobTypeSelect.addEventListener('change', handleJobTypeChange);
-            
-            // Initialize job type on page load
-            handleJobTypeChange();
-            
-            // Initialize icon functionality on page load
-            const initialIconSelectValue = iconSelect.value;
-            if (initialIconSelectValue === 'custom') {
-                customIconInput.style.display = 'block';
-                if (customIconClass.value) {
-                    previewIconElement.className = customIconClass.value;
-                }
-            } else {
-                customIconInput.style.display = 'none';
-                if (initialIconSelectValue) {
-                    previewIconElement.className = initialIconSelectValue;
-                }
+
+            if (jobTypeSelect) {
+                jobTypeSelect.addEventListener('change', function() { handleJobTypeChange(true); });
+                handleJobTypeChange(false);
             }
             
             // Handle work hours not specified checkbox

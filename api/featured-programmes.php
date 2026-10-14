@@ -14,7 +14,8 @@ try {
                tax_inclusive, tax_amount, original_price, max_participants, 
                certification, location, start_date, end_date, 
                start_time, end_time, programme_icon, programme_badge, 
-               schedule_type, modules, poster_image, banner_image 
+               schedule_type, modules, poster_image, banner_image,
+               is_active, registration_status 
         FROM programmes 
         WHERE is_active = 1 AND is_featured = 1 AND banner_image IS NOT NULL AND banner_image != ''
         ORDER BY updated_at DESC

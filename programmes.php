@@ -297,7 +297,7 @@ if ($pdo) {
                                         <span class="price-note"><?php echo htmlspecialchars($sst_note); ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <?php if (isset($programme['registration_status']) && $programme['registration_status'] === 'open'): ?>
+                                <?php if (programme_registration_is_open($programme)): ?>
                                     <a href="programme-registration.php?programme_id=<?php echo $programme['id']; ?>" class="btn btn-primary btn-sm">
                                         Register <i class="fas fa-arrow-right"></i>
                                     </a>

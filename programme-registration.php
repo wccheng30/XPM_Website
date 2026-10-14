@@ -27,6 +27,7 @@ $success_message = '';
 $error_message = '';
 $programme = null;
 $programme_question_map = [];
+$registration_block_message = '';
 
 // Email notification function
 function sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_number, $company, $position, $billing_address, $billing_contact_no, $vehicle_type, $vehicle_type_other, $plate_number, $payment_method, $how_did_you_hear, $how_did_you_hear_other, $spicy_preference, $allergies, $allergies_other, $dietary_preference, $dietary_restrictions, $interested_programs, $interested_programs_other, $additional_notes) {
@@ -145,18 +146,36 @@ function sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_
 if (isset($_GET['programme_id'])) {
     $programme_id = (int)$_GET['programme_id'];
     try {
-        $stmt = $pdo->prepare("SELECT * FROM programmes WHERE id = ? AND is_active = 1");
+        $stmt = $pdo->prepare("SELECT * FROM programmes WHERE id = ?");
         $stmt->execute([$programme_id]);
-        $programme = $stmt->fetch();
+        $requested_programme = $stmt->fetch();
+        if ($requested_programme && programme_registration_is_open($requested_programme)) {
+            $programme = $requested_programme;
+        } elseif ($requested_programme) {
+            $registration_block_message = programme_registration_block_message($requested_programme);
+        }
     } catch (PDOException $e) {
         $error_message = "Error loading programme details.";
     }
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
-    $error_message = 'Log in or create an account before you register.';
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $posted_programme_id = $_POST['programme_id'] ?? null;
+    $target_programme = null;
+    if ($pdo && $posted_programme_id !== null && $posted_programme_id !== '' && is_numeric($posted_programme_id)) {
+        $status_stmt = $pdo->prepare("SELECT * FROM programmes WHERE id = ?");
+        $status_stmt->execute([(int) $posted_programme_id]);
+        $target_programme = $status_stmt->fetch() ?: null;
+    }
+    if (!$target_programme || !programme_registration_is_open($target_programme)) {
+        $error_message = programme_registration_block_message($target_programme);
+        $registration_block_message = '';
+    } elseif ($xpm_guest) {
+        $error_message = 'Log in or create an account before you register.';
+    }
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error_message === '') {
     $programme_id = $_POST['programme_id'] ?? null;
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -276,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
 $all_programmes = [];
 if ($pdo) {
     try {
-        $stmt = $pdo->query("SELECT id, title, duration, price, tax_inclusive, tax_amount FROM programmes WHERE is_active = 1 ORDER BY created_at DESC");
+        $stmt = $pdo->query("SELECT id, title, duration, price, tax_inclusive, tax_amount FROM programmes WHERE is_active = 1 AND registration_status = 'open' ORDER BY created_at DESC");
         $all_programmes = $stmt->fetchAll();
         foreach ($all_programmes as $programme_option) {
             $programme_question_map[(int)$programme_option['id']] = getProgrammeQuestionConfigs($pdo, (int)$programme_option['id'], true);
@@ -318,6 +337,13 @@ $xpm_prefilled = $pdo ? xpm_apply_account_prefill($pdo, 'programme') : false;
 
         <section id="programme-registration" class="section form-page">
             <div class="container">
+                <?php if ($registration_block_message && !$error_message && !$success_message): ?>
+                    <div class="alert alert-error" data-reveal>
+                        <i class="fas fa-lock"></i>
+                        <span><?php echo htmlspecialchars($registration_block_message); ?></span>
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($error_message): ?>
                     <div class="alert alert-error" data-reveal>
                         <i class="fas fa-exclamation-circle"></i>

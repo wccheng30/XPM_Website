@@ -1696,13 +1696,19 @@ async function loadFeaturedProgrammes() {
 
                 if (!bannerSrc) return; // Skip programmes without banner
 
+                const canRegister = prog.registration_status === 'open';
+                const slideHref = canRegister
+                    ? `programme-registration.php?programme_id=${encodeURIComponent(prog.id)}`
+                    : 'programmes.php';
+                const slideLabel = (canRegister ? 'Register for ' : '') + title.replace(/"/g, '&quot;');
+
                 slidesHtml += `
-                    <a href="programme-registration.php?programme_id=${prog.id}" 
+                    <a href="${slideHref}" 
                        class="slideshow-slide${i === 0 ? ' active' : ''}" 
                        data-index="${i}" 
                        draggable="false"
                        title="${title.replace(/"/g, '&quot;')}"
-                       aria-label="Register for ${title.replace(/"/g, '&quot;')}">
+                       aria-label="${slideLabel}">
                         <div class="slide-ambient" style="background-image: url('${bannerSrc.replace(/'/g, '%27')}');" aria-hidden="true"></div>
                         <div class="slide-frame">
                             <img src="${bannerSrc}" 

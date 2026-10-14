@@ -90,10 +90,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo && in_array($_POST['action'] ?
         }
         $message = count($ids) . ' programme' . (count($ids) === 1 ? '' : 's') . ' deleted.';
     } elseif (in_array($_POST['status'] ?? '', ['active', 'inactive'], true)) {
-        $stmt = $pdo->prepare("UPDATE programmes SET is_active = ? WHERE id = ?");
         $active = $_POST['status'] === 'active' ? 1 : 0;
+        $stmt = $active
+            ? $pdo->prepare("UPDATE programmes SET is_active = 1 WHERE id = ?")
+            : $pdo->prepare("UPDATE programmes SET is_active = 0, registration_status = 'closed' WHERE id = ?");
         foreach ($ids as $id) {
-            $stmt->execute([$active, $id]);
+            $stmt->execute([$id]);
         }
         $message = count($ids) . ' programme' . (count($ids) === 1 ? '' : 's') . ' updated.';
     }
@@ -299,7 +301,7 @@ if ($pdo) {
         function postProgramme(id, action) {
             var labels = {
                 duplicate: ['Duplicate this programme?', 'A copy will be created as inactive.', 'Duplicate', 'fas fa-copy'],
-                deactivate: ['Deactivate this programme?', 'This training programme will be marked inactive.', 'Deactivate', 'fas fa-pause'],
+                deactivate: ['Deactivate this programme?', 'This programme will be hidden and registration will be closed.', 'Deactivate', 'fas fa-pause'],
                 delete: ['Delete this programme?', 'This action cannot be undone.', 'Delete', 'fas fa-trash']
             };
             var run = function () {

@@ -38,10 +38,38 @@
     var menuRelease = null;
     var menuTrigger = null;
 
+    function placeMenu(btn, panel) {
+        panel.classList.add('is-floating');
+        var gap = 4;
+        var margin = 8;
+        panel.style.top = '0px';
+        panel.style.left = '0px';
+        var width = panel.offsetWidth;
+        var height = panel.offsetHeight;
+        var rect = btn.getBoundingClientRect();
+        var spaceBelow = window.innerHeight - rect.bottom - margin;
+        var spaceAbove = rect.top - margin;
+        var top = (height + gap <= spaceBelow || spaceBelow >= spaceAbove)
+            ? rect.bottom + gap
+            : rect.top - height - gap;
+        top = Math.max(margin, Math.min(top, window.innerHeight - Math.min(height, window.innerHeight - margin * 2) - margin));
+        var left = rect.right - width;
+        left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+        panel.style.top = top + 'px';
+        panel.style.left = left + 'px';
+    }
+
+    function resetPanel(panel) {
+        panel.classList.remove('is-floating');
+        panel.style.top = '';
+        panel.style.left = '';
+    }
+
     function closeMenus(except) {
         document.querySelectorAll('.row-menu-panel').forEach(function (panel) {
             if (panel === except) return;
             panel.hidden = true;
+            resetPanel(panel);
             var btn = panel.parentNode.querySelector('.row-menu-btn');
             if (btn) btn.setAttribute('aria-expanded', 'false');
         });
@@ -74,6 +102,8 @@
                 closeMenus(open ? panel : null);
                 panel.hidden = !open;
                 menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) placeMenu(menuBtn, panel);
+                else resetPanel(panel);
                 if (open && typeof window.xpmFocusTrap === 'function') {
                     menuTrigger = menuBtn;
                     menuRelease = window.xpmFocusTrap(panel, {
@@ -89,6 +119,17 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') closeMenus(null);
         });
+
+        function repositionOpenMenu() {
+            document.querySelectorAll('.row-menu-panel.is-floating').forEach(function (panel) {
+                if (panel.hidden) return;
+                var btn = panel.parentNode.querySelector('.row-menu-btn');
+                if (btn) placeMenu(btn, panel);
+            });
+        }
+
+        window.addEventListener('resize', repositionOpenMenu);
+        window.addEventListener('scroll', repositionOpenMenu, true);
 
         var statusBtn = document.getElementById('bulkStatusBtn');
         var deleteBtn = document.getElementById('bulkDeleteBtn');

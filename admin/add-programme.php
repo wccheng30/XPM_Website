@@ -293,8 +293,9 @@ function removeFilePreview(inputId) {
     const fileInput = document.getElementById(inputId);
     
     if (previewContainer && uploadContainer && fileInput) {
-        // Clear the file input
+        // Clear the file input and the Choose file label
         fileInput.value = '';
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
         
         // Hide the preview
         previewContainer.style.display = 'none';
@@ -366,10 +367,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let customIconListener = null; // Track custom icon listener to prevent duplicates
         
         function updateIconPreview(iconClass) {
-            if (previewIcon && iconClass) {
-                previewIcon.className = iconClass;
-            } else if (previewIcon) {
-                previewIcon.className = 'fas fa-graduation-cap';
+            if (window.xpmSetIcon) {
+                window.xpmSetIcon(previewIcon, iconClass || 'fas fa-graduation-cap');
             }
         }
         
@@ -378,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (selectedValue === 'custom') {
                 // Show custom input
-                customIconInput.style.display = 'block';
+                customIconInput.hidden = false;
                 if (customIconClass) {
                     customIconClass.focus();
                     
@@ -395,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 // Hide custom input
-                customIconInput.style.display = 'none';
+                customIconInput.hidden = true;
                 
                 // Remove custom icon listener
                 if (customIconListener && customIconClass) {
@@ -431,8 +430,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Initialize icon preview with default value
-        if (programmeIcon.value) {
+        if (programmeIcon.value === 'custom') {
+            customIconInput.hidden = false;
+            updateIconPreview((customIconClass && customIconClass.value) || 'fas fa-graduation-cap');
+        } else if (programmeIcon.value) {
+            customIconInput.hidden = true;
             updateIconPreview(programmeIcon.value);
         }
     } else {

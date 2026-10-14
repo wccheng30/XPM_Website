@@ -100,6 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         $registration_status = trim($_POST['registration_status'] ?? 'open');
+        if (!in_array($registration_status, ['open', 'closed', 'full'], true)) {
+            $registration_status = 'closed';
+        }
+        if (!$is_active) {
+            $registration_status = 'closed';
+        }
         $requires_facility = isset($_POST['requires_facility']) ? 1 : 0;
         $facility_type = !empty($_POST['facility_type']) ? $_POST['facility_type'] : null;
         $auto_create_facility_booking = isset($_POST['auto_create_facility_booking']) ? 1 : 0;
@@ -397,6 +403,7 @@ function removeFilePreview(inputId) {
     const fileInput = document.getElementById(inputId);
     if (previewContainer && uploadContainer && fileInput) {
         fileInput.value = '';
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
         previewContainer.style.display = 'none';
         previewContainer.innerHTML = '';
         uploadContainer.style.display = 'block';
@@ -478,12 +485,10 @@ function handleFileUpload(input) {
                 
                 // Update icon preview safely
                 function updateIconPreview(iconClass) {
-                    if (previewIcon && iconClass) {
-                        previewIcon.className = iconClass;
-                    } else if (previewIcon) {
-                        previewIcon.className = 'fas fa-graduation-cap';
+                    if (window.xpmSetIcon) {
+                        window.xpmSetIcon(previewIcon, iconClass || 'fas fa-graduation-cap');
                     }
-            }
+                }
             
             // Handle dropdown change
             iconSelect.addEventListener('change', function() {
@@ -491,7 +496,7 @@ function handleFileUpload(input) {
                 
                 if (selectedValue === 'custom') {
                     // Show custom input
-                    customIconInput.style.display = 'block';
+                    customIconInput.hidden = false;
                         if (customIconClass) {
                     customIconClass.focus();
                     
@@ -508,7 +513,7 @@ function handleFileUpload(input) {
                         }
                 } else {
                     // Hide custom input
-                    customIconInput.style.display = 'none';
+                    customIconInput.hidden = true;
                         
                         // Remove custom icon listener
                         if (customIconListener && customIconClass) {
@@ -564,7 +569,7 @@ function handleFileUpload(input) {
                 if (isCustomIcon && currentIcon !== 'custom') {
                     // Set the select to 'custom' and show the custom input
                     iconSelect.value = 'custom';
-                    customIconInput.style.display = 'block';
+                    customIconInput.hidden = false;
                     customIconClass.value = currentIcon;
                     
                     // Update preview
