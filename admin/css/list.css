@@ -438,15 +438,28 @@
     gap: 8px;
 }
 
-.list-inline-form select {
+.list-inline-form select,
+.list-bulk-status select {
     min-height: 44px;
-    padding: 0 8px;
+    min-width: 9rem;
+    padding: 0 40px 0 12px;
     font: inherit;
     font-size: var(--text-sm);
     color: var(--text-primary);
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236A737A' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
     border: 1px solid var(--border-primary);
     border-radius: 8px;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+[data-theme="dark"] .list-inline-form select,
+[data-theme="dark"] .list-bulk-status select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2386868b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
 }
 
 .list-empty i, .list-empty .icon {
@@ -470,7 +483,9 @@
 .row-menu-btn:focus-visible,
 .list-search input:focus-visible,
 .list-toolbar select:focus-visible,
-.list-page-size select:focus-visible {
+.list-page-size select:focus-visible,
+.list-inline-form select:focus-visible,
+.list-bulk-status select:focus-visible {
     outline: 2px solid var(--c-teal-deep);
     outline-offset: 2px;
 }

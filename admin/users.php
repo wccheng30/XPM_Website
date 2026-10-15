@@ -208,6 +208,7 @@ $roleLabels = [
             <form method="post" id="listBulkForm">
                 <input type="hidden" name="csrf_token" value="<?php echo ui_h(auth_csrf_token()); ?>">
                 <input type="hidden" name="action" id="bulkAction" value="">
+            </form>
                 <?php renderBulkBar(['user' => 'Member', 'trainer' => 'Trainer'], true, false); ?>
                 <div class="list-table-wrap">
                     <table class="list-table">
@@ -228,7 +229,7 @@ $roleLabels = [
                             <tr>
                                 <td class="list-select" data-label="">
                                     <?php if ($editable): ?>
-                                        <input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $row['id']; ?>" aria-label="Select <?php echo ui_h($row['display_name'] ?: $row['username']); ?>">
+                                        <input type="checkbox" class="list-check" name="ids[]" value="<?php echo (int) $row['id']; ?>" form="listBulkForm" aria-label="Select <?php echo ui_h($row['display_name'] ?: $row['username']); ?>">
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Name"><?php echo ui_h($row['display_name'] ?: $row['username']); ?></td>
@@ -261,7 +262,6 @@ $roleLabels = [
                         </tbody>
                     </table>
                 </div>
-            </form>
             <?php renderPagination($list_page, $list_per_page, $list_total); ?>
         <?php endif; ?>
     </div>

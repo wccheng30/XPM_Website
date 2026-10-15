@@ -243,6 +243,7 @@ $total_pages = ceil($total_trainers / $per_page);
     </script>
     <script>
         function exportTrainers(ids) {
+            if (!ids || !ids.length) ids = window.xpmCheckedIds ? window.xpmCheckedIds() : [];
             var params = new URLSearchParams(window.location.search);
             var url = 'export-trainers.php?format=csv&search=' + encodeURIComponent(params.get('search') || '') + '&filter=' + encodeURIComponent(params.get('filter') || '');
             if (ids && ids.length) url += '&ids=' + encodeURIComponent(ids.join(','));

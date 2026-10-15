@@ -15,6 +15,10 @@
         return checks().filter(function (box) { return box.checked; });
     }
 
+    window.xpmCheckedIds = function () {
+        return selected().map(function (box) { return box.value; }).filter(function (value) { return value !== ''; });
+    };
+
     function updateBulk() {
         var bar = document.getElementById('listBulk');
         var summary = document.getElementById('listBulkSummary');

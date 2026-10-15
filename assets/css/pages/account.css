@@ -1,9 +1,9 @@
 .auth-main {
-    min-height: calc(100vh - var(--nav-h));
+    min-height: 100vh;
     display: grid;
-    align-items: start;
+    align-items: center;
     justify-items: center;
-    padding: calc(var(--nav-h) + clamp(1.5rem, 4vw, 2.5rem)) 1rem clamp(2.5rem, 6vw, 4rem);
+    padding: calc(var(--nav-h) + 1.5rem) 1rem 1.5rem;
     background: var(--c-surface);
 }
 
@@ -12,8 +12,9 @@
 }
 
 .auth-card h1 {
-    margin-bottom: 0.4rem;
-    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    margin-bottom: var(--sp-2);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
 }
 
 .auth-card .lead {
@@ -238,68 +239,82 @@
 
 .auth-shell {
     display: grid;
-    grid-template-columns: minmax(18rem, 0.9fr) minmax(22rem, 1.1fr);
+    grid-template-columns: minmax(22rem, 32rem) minmax(14rem, 1fr);
     align-items: stretch;
     width: 100%;
     min-height: calc(100vh - var(--nav-h));
-    background: var(--c-surface);
+    background: var(--c-white);
 }
 
 .auth-brand {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: var(--sp-6);
-    padding: var(--sp-8) var(--sp-7);
-    background: var(--c-charcoal);
-    color: var(--c-white);
+    order: 2;
+    gap: var(--sp-4);
+    padding: var(--sp-8) clamp(1.5rem, 4vw, 3rem);
+    background: var(--c-surface);
+    color: var(--c-text);
+    border-left: 1px solid var(--c-border);
 }
 
-.auth-brand-logo {
-    width: min(15rem, 100%);
-    padding: var(--sp-3) var(--sp-4);
-    background: var(--c-white);
-    border-radius: var(--r-lg);
+.auth-kicker {
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal-deep);
 }
 
 .auth-brand h2 {
     max-width: 16rem;
     margin: 0;
-    font-size: var(--fs-2xl);
+    font-size: var(--fs-xl);
+    font-weight: 600;
     line-height: var(--lh-tight);
-    color: var(--c-white);
+    color: var(--c-text);
+}
+
+.auth-brand p {
+    max-width: 18rem;
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--c-text-2);
 }
 
 .auth-benefits {
     display: grid;
-    gap: var(--sp-4);
-    margin: 0;
+    gap: var(--sp-3);
+    margin: var(--sp-2) 0 0;
     padding: 0;
 }
 
 .auth-benefits li {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--sp-3);
-    max-width: 22rem;
+    max-width: 18rem;
     font-size: var(--fs-sm);
     line-height: var(--lh-snug);
-    color: var(--c-white);
+    color: var(--c-text-2);
 }
 
 .auth-benefits i {
     flex: 0 0 1.25rem;
-    margin-top: 0.15rem;
-    color: var(--c-teal);
+    color: var(--c-teal-deep);
     text-align: center;
 }
 
 .auth-shell .auth-card {
     align-self: center;
-    justify-self: center;
+    justify-self: end;
+    order: 1;
     width: min(420px, calc(100% - var(--sp-7)));
-    margin: var(--sp-6) 0;
-    box-shadow: var(--sh-md);
+    margin: var(--sp-6) clamp(1rem, 3vw, 2.5rem) var(--sp-6) var(--sp-4);
+    border: 0;
+    box-shadow: none;
 }
 
 .password-field {
@@ -349,6 +364,50 @@
     display: none;
 }
 
+.auth-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: 0.4rem;
+}
+
+.auth-label-row label {
+    margin-bottom: 0;
+}
+
+.auth-label-row a {
+    font-size: var(--fs-sm);
+    color: var(--c-text-2);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.auth-label-row a:hover {
+    color: var(--c-charcoal);
+}
+
+.auth-card .password-length-hint.is-met {
+    color: var(--c-success);
+}
+
+.auth-consent {
+    margin: var(--sp-4) 0 var(--sp-5);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--c-text-2);
+}
+
+.auth-consent a {
+    color: var(--c-teal-deep);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.auth-consent a:hover {
+    color: var(--c-charcoal);
+}
+
 .auth-card .btn.is-loading,
 .account-page .btn.is-loading {
     cursor: progress;
@@ -381,7 +440,7 @@
 }
 
 .auth-brand :focus-visible {
-    outline-color: var(--c-teal);
+    outline-color: var(--c-teal-deep);
 }
 
 @keyframes auth-spin {
@@ -397,18 +456,22 @@
     }
 
     .auth-brand {
-        align-items: center;
-        gap: 0;
-        padding: var(--sp-4);
+        align-items: flex-start;
+        order: 2;
+        gap: var(--sp-2);
+        padding: var(--sp-5);
+        border-left: 0;
+        border-top: 1px solid var(--c-border);
     }
 
-    .auth-brand-copy {
+    .auth-shell .auth-card {
+        justify-self: center;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .auth-benefits {
         display: none;
-    }
-
-    .auth-brand-logo {
-        width: 9.5rem;
-        padding: var(--sp-2) var(--sp-3);
     }
 
     .auth-shell .auth-card {

@@ -57,11 +57,6 @@ $cardError = [
     'shortcuts' => '',
 ];
 $nameValue = $account['name'];
-$passwordValue = [
-    'current' => '',
-    'new' => '',
-    'confirm' => '',
-];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar') {
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
@@ -151,11 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
     $current = $_POST['current_password'] ?? '';
     $new = $_POST['new_password'] ?? '';
     $confirm = $_POST['confirm_password'] ?? '';
-    $passwordValue = [
-        'current' => $current,
-        'new' => $new,
-        'confirm' => $confirm,
-    ];
 
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
         $cardError['security'] = 'The form expired. Please try again.';
@@ -340,7 +330,7 @@ $emailLabel = $account['email'] !== '' ? $account['email'] : '—';
                             <div class="form-group">
                                 <label for="current_password">Current password</label>
                                 <div class="password-field">
-                                    <input type="password" id="current_password" name="current_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['current']); ?>" autocomplete="current-password" required>
+                                    <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
                                     <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                     </button>
@@ -349,7 +339,7 @@ $emailLabel = $account['email'] !== '' ? $account['email'] : '—';
                             <div class="form-group">
                                 <label for="new_password">New password</label>
                                 <div class="password-field">
-                                    <input type="password" id="new_password" name="new_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['new']); ?>" autocomplete="new-password" minlength="8" aria-describedby="new-password-hint" required>
+                                    <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" aria-describedby="new-password-hint" required>
                                     <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                     </button>
@@ -359,7 +349,7 @@ $emailLabel = $account['email'] !== '' ? $account['email'] : '—';
                             <div class="form-group">
                                 <label for="confirm_password">Confirm new password</label>
                                 <div class="password-field">
-                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['confirm']); ?>" autocomplete="new-password" minlength="8" required>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
                                     <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                     </button>

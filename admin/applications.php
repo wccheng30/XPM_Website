@@ -1060,7 +1060,8 @@ if ($pdo) {
             const searchParams = new URLSearchParams(window.location.search);
             const search = searchParams.get('search') || '';
             const filter = searchParams.get('filter') || '';
-            const selected = (exportSelection || []).join(',');
+            const liveIds = window.xpmCheckedIds ? window.xpmCheckedIds() : [];
+            const selected = (liveIds.length ? liveIds : (exportSelection || [])).join(',');
             
             // Create export URL with format
             const exportUrl = `export-applications.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');

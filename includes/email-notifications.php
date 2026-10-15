@@ -272,6 +272,18 @@ class EmailNotifications {
     }
     
     /**
+     * Email a one-hour password reset link.
+     */
+    public function sendPasswordReset($to, $resetUrl) {
+        $safeUrl = htmlspecialchars((string) $resetUrl, ENT_QUOTES, 'UTF-8');
+        $subject = 'Reset your XpressPoint password';
+        $message = '<p>We received a request to reset your XpressPoint password.</p>'
+            . '<p><a href="' . $safeUrl . '">Choose a new password</a></p>'
+            . '<p>This link expires in one hour and works once. If you did not ask for this, you can ignore this email.</p>';
+        return $this->sendEmail($to, $subject, $message);
+    }
+
+    /**
      * Send email using PHP mail function
      */
     private function sendEmail($to, $subject, $message) {

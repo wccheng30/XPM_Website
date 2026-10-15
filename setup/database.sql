@@ -46,6 +46,19 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     INDEX idx_login_attempts_login (login_name, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Single-use password reset tokens. Only the SHA-256 hash is stored.
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_password_resets_user (user_id, used_at),
+    INDEX idx_password_resets_hash (token_hash),
+    CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert default admin user
 INSERT INTO users (username, password, email, role) VALUES
 ('admin', '$2y$10$K4qYAoRQFAOUVddAiM24vemorAhhGuVBvkmJ/YaAIQ8QiMX2CM8mq', 'admin@xpresspoint.com', 'admin')

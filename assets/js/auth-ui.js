@@ -41,4 +41,16 @@
             }, 0);
         });
     });
+
+    document.querySelectorAll('.auth-card .password-length-hint').forEach(function (hint) {
+        var input = document.getElementById(hint.getAttribute('data-for') || '');
+        if (!input) {
+            return;
+        }
+        function refresh() {
+            hint.classList.toggle('is-met', input.value.length >= 8);
+        }
+        input.addEventListener('input', refresh);
+        refresh();
+    });
 })();

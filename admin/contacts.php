@@ -599,7 +599,8 @@ $status_labels = [
             const filter = searchParams.get('filter') || '';
             
             // Create export URL with format
-            const selected = (exportSelection || []).join(',');
+            const liveIds = window.xpmCheckedIds ? window.xpmCheckedIds() : [];
+            const selected = (liveIds.length ? liveIds : (exportSelection || [])).join(',');
             const exportUrl = `export-contacts.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
             var exportName = `contacts.${format}`;

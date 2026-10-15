@@ -532,7 +532,8 @@ if ($pdo) {
             const filter = searchParams.get('filter') || '';
             
             // Create export URL with format
-            const selected = (exportSelection || []).join(',');
+            const liveIds = window.xpmCheckedIds ? window.xpmCheckedIds() : [];
+            const selected = (liveIds.length ? liveIds : (exportSelection || [])).join(',');
             const exportUrl = `export-programmes.php?format=${format}&search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
             var exportName = `training_programmes.${format}`;

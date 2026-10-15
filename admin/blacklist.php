@@ -311,7 +311,8 @@ $total_pages = ceil($total_trainers / $per_page);
             const search = searchParams.get('search') || '';
             
             // Create export URL with format
-            const selected = (window.exportSelection || []).join(',');
+            const liveIds = window.xpmCheckedIds ? window.xpmCheckedIds() : [];
+            const selected = (liveIds.length ? liveIds : (window.exportSelection || [])).join(',');
             const exportUrl = `export-blacklist.php?format=${format}&search=${encodeURIComponent(search)}` + (selected ? `&ids=${encodeURIComponent(selected)}` : '');
             
             var exportName = `export`;

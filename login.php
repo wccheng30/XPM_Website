@@ -103,6 +103,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+function login_return_lead($returnTo) {
+    if (preg_match('/\Aprogramme-registration\.php\?/', (string) $returnTo)) {
+        return 'Log in to finish registering for this programme';
+    }
+    if (preg_match('/\Ajob-application\.php\?/', (string) $returnTo)) {
+        return 'Log in to finish your job application';
+    }
+    if ($returnTo === 'index.html#contact') {
+        return 'Log in to send your enquiry';
+    }
+    return 'Use your email and password.';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <?php include 'partials/site-nav.php'; ?>
     <main id="main" class="auth-main">
-        <div class="card auth-card">
+            <div class="card auth-card">
             <?php if ($error): ?>
                 <div class="alert alert-error" role="alert">
                     <i class="fas fa-circle-exclamation"></i>
@@ -128,8 +141,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <span>Your account is ready. Log in to continue.</span>
                 </div>
             <?php endif; ?>
+            <?php if (isset($_GET['reset'])): ?>
+                <div class="alert alert-success" role="status">
+                    <i class="fas fa-circle-check"></i>
+                    <span>Your password was updated. Log in with the new password.</span>
+                </div>
+            <?php endif; ?>
             <h1>Log in</h1>
-            <p class="lead"><?php echo $returnTo !== '' ? 'Log in to continue with the form you opened.' : 'Use the email and password from your XpressPoint account.'; ?></p>
+            <p class="lead"><?php echo htmlspecialchars(login_return_lead($returnTo)); ?></p>
             <form method="POST" class="form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
                 <?php if ($returnTo !== ''): ?>
@@ -140,15 +159,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="email" id="login" name="login" class="form-control" value="<?php echo htmlspecialchars($_POST['login'] ?? ''); ?>" autocomplete="username" inputmode="email" autofocus required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required>
+                    <div class="auth-label-row">
+                        <label for="password">Password</label>
+                        <a href="forgot-password.php">Forgot password?</a>
+                    </div>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-block">Log in <i class="fas fa-arrow-right"></i></button>
             </form>
-            <p class="auth-switch">New here? <a href="register.php<?php echo $returnTo !== '' ? '?next=' . urlencode($returnTo) : ''; ?>">Create an account</a></p>
-        </div>
+            <p class="auth-switch">Need an account? <a href="register.php<?php echo $returnTo !== '' ? '?next=' . urlencode($returnTo) : ''; ?>">Register</a></p>
+            </div>
     </main>
     <?php include 'partials/site-footer.php'; ?>
     <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/auth-ui.js?v=20261015-8"></script>
 </body>
 </html>
