@@ -31,25 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$userId, $account['username'] ?? '']);
             $user = $stmt->fetch();
 
-            if ($user) {
-                $matches = password_verify($current_password, $user['password']);
-                if (!$matches && $user['username'] === 'admin' && $current_password === 'xpresspoint2024') {
-                    $matches = true;
-                }
-                if ($matches) {
-                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-                    $stmt->execute([$hashed_password, $user['id']]);
-                    $success_message = "Password changed successfully!";
-                    $_POST = [];
-                } else {
-                    $error_message = "Current password is incorrect.";
-                }
-            } elseif (($account['username'] ?? '') === 'admin' && $current_password === 'xpresspoint2024') {
+            if ($user && password_verify($current_password, $user['password'])) {
                 $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password, email, display_name, role, created_at) VALUES ('admin', ?, 'admin@xpresspoint.com', 'Admin', 'admin', NOW())");
-                $stmt->execute([$hashed_password]);
-                $success_message = "Admin account created and password set successfully!";
+                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt->execute([$hashed_password, $user['id']]);
+                $success_message = "Password changed successfully!";
                 $_POST = [];
             } else {
                 $error_message = "Current password is incorrect.";

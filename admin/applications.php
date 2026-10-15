@@ -605,8 +605,8 @@ if ($pdo) {
                     <div class="alert alert-error">
                         <i class="fas fa-exclamation-triangle is-danger u-mt-1" aria-hidden="true"></i>
                         <div>
-                            <p class="subhead is-danger">You are about to blacklist:</p>
-                            <p class="page-sub" id="blacklistCandidateDisplay"></p>
+                            <p class="subhead is-danger">Add this candidate to the blacklist?</p>
+                            <p class="name-line" id="blacklistCandidateDisplay"></p>
                         </div>
                     </div>
                     <div class="u-mb-4">

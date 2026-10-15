@@ -929,7 +929,7 @@ function initPerformanceOptimizations() {
         'assets/images/about-team.jpg',
         'assets/images/conference-room.jpg',
         'assets/images/simulation-center.jpg',
-        'assets/images/breakout-area.jpg'
+        'assets/images/breakout-area.jpeg'
     ];
     
     criticalImages.forEach(src => {

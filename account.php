@@ -41,18 +41,35 @@ function xpm_square_avatar($path, $mime) {
     imagedestroy($dest);
 }
 
+function xpm_account_done($message) {
+    $_SESSION['flash'] = ['type' => 'success', 'message' => $message];
+    header('Location: account.php', true, 303);
+    exit;
+}
+
+
 $account = auth_require_account();
 $pdo = get_db_connection();
-$error = '';
-$success = '';
+$cardError = [
+    'avatar' => '',
+    'profile' => '',
+    'security' => '',
+    'shortcuts' => '',
+];
+$nameValue = $account['name'];
+$passwordValue = [
+    'current' => '',
+    'new' => '',
+    'confirm' => '',
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar') {
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
-        $error = 'The form expired. Please try again.';
+        $cardError['avatar'] = 'The form expired. Please try again.';
     } elseif (!$pdo) {
-        $error = 'Database connection failed.';
+        $cardError['avatar'] = 'Database connection failed.';
     } elseif (empty($_FILES['avatar']['name'])) {
-        $error = 'Choose a photo to upload.';
+        $cardError['avatar'] = 'Choose a photo to upload.';
     } else {
         $file = $_FILES['avatar'];
         $allowed = [
@@ -67,9 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
             $type = $info['mime'] ?? '';
         }
         if ($file['error'] !== UPLOAD_ERR_OK || !isset($allowed[$type])) {
-            $error = 'Upload a JPG, PNG, GIF, or WebP photo.';
+            $cardError['avatar'] = 'Upload a JPG, PNG, GIF, or WebP photo.';
         } elseif ($file['size'] > 2 * 1024 * 1024) {
-            $error = 'Photo must be 2 MB or smaller.';
+            $cardError['avatar'] = 'Photo must be 2 MB or smaller.';
         } else {
             $dir = __DIR__ . '/assets/images/avatars';
             if (!is_dir($dir)) {
@@ -78,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
             $filename = 'user-' . (int) $account['id'] . '-' . bin2hex(random_bytes(4)) . '.' . $allowed[$type];
             $dest = $dir . '/' . $filename;
             if (!move_uploaded_file($file['tmp_name'], $dest)) {
-                $error = 'Could not save the photo. Please try again.';
+                $cardError['avatar'] = 'Could not save the photo. Please try again.';
             } else {
                 xpm_square_avatar($dest, $type);
                 $relative = 'assets/images/avatars/' . $filename;
@@ -92,20 +109,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
                 }
                 $_SESSION['user_avatar'] = $relative;
                 $account['avatar'] = $relative;
-                $success = 'Profile photo updated.';
+                xpm_account_done('Profile photo updated.');
             }
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'name') {
     $name = trim($_POST['display_name'] ?? '');
+    $nameValue = $name;
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
-        $error = 'The form expired. Please try again.';
+        $cardError['profile'] = 'The form expired. Please try again.';
     } elseif ($name === '') {
-        $error = 'Enter your name.';
+        $cardError['profile'] = 'Enter your name.';
     } elseif (strlen($name) > 100) {
-        $error = 'Name must be 100 characters or fewer.';
+        $cardError['profile'] = 'Name must be 100 characters or fewer.';
     } elseif (!$pdo) {
-        $error = 'Database connection failed.';
+        $cardError['profile'] = 'Database connection failed.';
     } else {
         try {
             $stmt = $pdo->prepare("UPDATE users SET display_name = ? WHERE id = ?");
@@ -115,48 +133,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
             }
             $_SESSION['user_name'] = $name;
             $account['name'] = $name;
-            $success = 'Name updated.';
+            xpm_account_done('Name updated.');
         } catch (PDOException $e) {
-            $error = 'Could not update your name. Please try again.';
+            $cardError['profile'] = 'Could not update your name. Please try again.';
         }
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'forget-landing') {
+    if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
+        $cardError['shortcuts'] = 'The form expired. Please try again.';
+    } elseif (!in_array($account['role'], ['admin', 'manager', 'trainer'], true)) {
+        $cardError['shortcuts'] = 'That action is not available for this account.';
+    } else {
+        auth_clear_staff_landing();
+        xpm_account_done('Landing choice forgotten.');
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $current = $_POST['current_password'] ?? '';
     $new = $_POST['new_password'] ?? '';
     $confirm = $_POST['confirm_password'] ?? '';
+    $passwordValue = [
+        'current' => $current,
+        'new' => $new,
+        'confirm' => $confirm,
+    ];
 
     if (!auth_verify_csrf($_POST['csrf_token'] ?? '')) {
-        $error = 'The form expired. Please try again.';
+        $cardError['security'] = 'The form expired. Please try again.';
     } elseif ($current === '' || $new === '' || $confirm === '') {
-        $error = 'Fill in every password field.';
+        $cardError['security'] = 'Fill in every password field.';
     } elseif ($new !== $confirm) {
-        $error = 'New passwords do not match.';
+        $cardError['security'] = 'New passwords do not match.';
     } elseif (strlen($new) < 8) {
-        $error = 'New password must be at least 8 characters.';
+        $cardError['security'] = 'New password must be at least 8 characters.';
     } elseif (!$pdo) {
-        $error = 'Database connection failed.';
+        $cardError['security'] = 'Database connection failed.';
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT password, username FROM users WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
             $stmt->execute([(int) $account['id']]);
             $row = $stmt->fetch();
             $matches = $row && password_verify($current, $row['password']);
-            if (!$matches && $row && $row['username'] === 'admin' && $current === 'xpresspoint2024') {
-                $matches = true;
-            }
             if (!$matches) {
-                $error = 'Current password is incorrect.';
+                $cardError['security'] = 'Current password is incorrect.';
             } else {
                 $hash = password_hash($new, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
                 $stmt->execute([$hash, (int) $account['id']]);
-                $success = 'Password updated.';
+                xpm_account_done('Password updated.');
             }
         } catch (PDOException $e) {
-            $error = 'Could not update the password. Please try again.';
+            $cardError['security'] = 'Could not update the password. Please try again.';
         }
     }
 }
+
+$flash = null;
+if (!empty($_SESSION['flash']) && is_array($_SESSION['flash'])) {
+    $flashType = (($_SESSION['flash']['type'] ?? '') === 'error') ? 'error' : 'success';
+    $flashMessage = trim((string) ($_SESSION['flash']['message'] ?? ''));
+    unset($_SESSION['flash']);
+    if ($flashMessage !== '') {
+        $flash = ['type' => $flashType, 'message' => $flashMessage];
+    }
+}
+
+$memberSince = '';
+if ($pdo) {
+    try {
+        $createdStmt = $pdo->prepare("SELECT created_at FROM users WHERE id = ?");
+        $createdStmt->execute([(int) $account['id']]);
+        $createdAt = $createdStmt->fetchColumn();
+        $createdTime = $createdAt ? strtotime((string) $createdAt) : false;
+        if ($createdTime) {
+            $memberSince = date('F j, Y', $createdTime);
+        }
+    } catch (PDOException $e) {
+        $memberSince = '';
+    }
+}
+
+$isStaff = in_array($account['role'], ['admin', 'manager', 'trainer'], true);
+$workspace = $isStaff ? auth_home_path($account['role'], false) : '';
+$hasLandingChoice = $isStaff && auth_staff_landing_value() !== '';
+$roleLabels = [
+    'admin' => 'Admin',
+    'manager' => 'Manager',
+    'trainer' => 'Trainer',
+    'user' => 'Member',
+];
+$roleLabel = $roleLabels[$account['role']] ?? ucfirst((string) $account['role']);
+$roleBadgeClass = 'badge';
+if ($account['role'] === 'admin') {
+    $roleBadgeClass = 'badge badge-dark';
+} elseif ($account['role'] === 'trainer') {
+    $roleBadgeClass = 'badge badge-success';
+} elseif ($account['role'] === 'manager') {
+    $roleBadgeClass = 'badge badge-warning';
+}
+$displayName = $account['name'] !== '' ? $account['name'] : 'Your account';
+$emailLabel = $account['email'] !== '' ? $account['email'] : '—';
 
 ?>
 <!DOCTYPE html>
@@ -169,79 +244,191 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
 </head>
 <body>
     <?php include 'partials/site-nav.php'; ?>
-    <main id="main" class="auth-main">
-        <div class="card auth-card">
-            <?php if ($error): ?>
+    <main id="main" class="account-page">
+        <div class="account-wrap">
+            <div class="account-hero-block">
+            <header class="account-hero">
+                <div class="account-identity">
+                    <form method="POST" enctype="multipart/form-data" class="account-avatar-form" id="avatar-form">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
+                        <input type="hidden" name="form" value="avatar">
+                        <label class="sr-only" for="avatar">Profile photo</label>
+                        <input type="file" id="avatar" name="avatar" class="account-file" accept="image/jpeg,image/png,image/gif,image/webp" tabindex="-1" required>
+                        <button type="button" class="account-avatar" id="avatar-pick" aria-label="Change profile photo">
+                            <span class="account-avatar-face" id="avatar-face">
+                                <?php if (!empty($account['avatar'])): ?>
+                                    <img src="<?php echo htmlspecialchars($account['avatar']); ?>" alt="">
+                                <?php else: ?>
+                                    <span><?php echo htmlspecialchars(auth_initial($account['name'])); ?></span>
+                                <?php endif; ?>
+                            </span>
+                            <span class="account-avatar-camera" aria-hidden="true"><i class="fas fa-camera"></i></span>
+                        </button>
+                        <div class="account-avatar-actions" id="avatar-actions" hidden>
+                            <p class="form-hint" id="avatar-file-name"></p>
+                            <div class="account-avatar-buttons">
+                                <button type="submit" class="btn btn-primary">Save photo</button>
+                                <button type="button" class="btn btn-ghost" id="avatar-cancel">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="account-id-copy">
+                        <h1><?php echo htmlspecialchars($displayName); ?></h1>
+                        <p class="account-id-email"><?php echo htmlspecialchars($emailLabel); ?></p>
+                        <p class="account-id-meta">
+                            <span class="<?php echo $roleBadgeClass; ?>"><?php echo htmlspecialchars($roleLabel); ?></span>
+                            <?php if ($memberSince !== ''): ?>
+                                <span>Member since <?php echo htmlspecialchars($memberSince); ?></span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+                <a class="btn btn-ghost account-logout" href="logout.php">Log out</a>
+            </header>
+            <?php if ($cardError['avatar'] !== ''): ?>
                 <div class="alert alert-error" role="alert">
-                    <i class="fas fa-circle-exclamation"></i>
-                    <span><?php echo htmlspecialchars($error); ?></span>
+                    <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                    <span><?php echo htmlspecialchars($cardError['avatar']); ?></span>
                 </div>
             <?php endif; ?>
-            <?php if ($success): ?>
-                <div class="alert alert-success" role="status">
-                    <i class="fas fa-circle-check"></i>
-                    <span><?php echo htmlspecialchars($success); ?></span>
-                </div>
-            <?php endif; ?>
-            <h1>Your account</h1>
-            <p class="lead">Update your name or password. Your email stays with this login.</p>
-            <div class="account-photo">
-                <span class="nav-avatar" aria-hidden="true">
-                    <?php if (!empty($account['avatar'])): ?>
-                        <img src="<?php echo htmlspecialchars($account['avatar']); ?>" alt="">
-                    <?php else: ?>
-                        <span><?php echo htmlspecialchars(auth_initial($account['name'])); ?></span>
-                    <?php endif; ?>
-                </span>
-                <form method="POST" enctype="multipart/form-data" class="form">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
-                    <input type="hidden" name="form" value="avatar">
-                    <label for="avatar">Profile photo</label>
-                    <input type="file" id="avatar" name="avatar" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp" required>
-                    <button type="submit" class="btn btn-secondary">Save photo</button>
-                </form>
             </div>
-            <dl class="account-facts">
-                <div>
-                    <dt>Email</dt>
-                    <dd><?php echo htmlspecialchars($account['email'] !== '' ? $account['email'] : '—'); ?></dd>
+
+            <div class="account-layout">
+                <nav class="account-nav" aria-label="Account sections">
+                    <a href="#profile" aria-current="true">Profile</a>
+                    <a href="#security">Security</a>
+                    <a href="#shortcuts">Shortcuts</a>
+                </nav>
+                <div class="account-content">
+                    <section id="profile" class="card account-card" tabindex="-1">
+                        <h2>Profile</h2>
+                        <?php if ($cardError['profile'] !== ''): ?>
+                            <div class="alert alert-error" role="alert">
+                                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                                <span><?php echo htmlspecialchars($cardError['profile']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" class="form" id="name-form">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
+                            <input type="hidden" name="form" value="name">
+                            <div class="account-name-line">
+                                <div class="form-group">
+                                    <label for="display_name">Name</label>
+                                    <input type="text" id="display_name" name="display_name" class="form-control" value="<?php echo htmlspecialchars($nameValue); ?>" data-original="<?php echo htmlspecialchars($account['name']); ?>" autocomplete="name" maxlength="100" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="save-name" disabled>Save changes</button>
+                            </div>
+                        </form>
+                        <div class="form-group account-email-block">
+                            <label for="account-email">Email</label>
+                            <input type="email" id="account-email" class="form-control" value="<?php echo htmlspecialchars($emailLabel); ?>" readonly aria-readonly="true">
+                            <p class="form-hint">To change your email, <a href="index.html#contact">contact us</a>.</p>
+                        </div>
+                    </section>
+
+                    <section id="security" class="card account-card" tabindex="-1">
+                        <h2>Security</h2>
+                        <?php if ($cardError['security'] !== ''): ?>
+                            <div class="alert alert-error" role="alert">
+                                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                                <span><?php echo htmlspecialchars($cardError['security']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" class="form" id="password-form">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
+                            <input type="hidden" name="form" value="password">
+                            <div class="form-group">
+                                <label for="current_password">Current password</label>
+                                <div class="password-field">
+                                    <input type="password" id="current_password" name="current_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['current']); ?>" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="new_password">New password</label>
+                                <div class="password-field">
+                                    <input type="password" id="new_password" name="new_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['new']); ?>" autocomplete="new-password" minlength="8" aria-describedby="new-password-hint" required>
+                                    <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <p class="form-hint" id="new-password-hint">At least 8 characters.</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm_password">Confirm new password</label>
+                                <div class="password-field">
+                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" value="<?php echo htmlspecialchars($passwordValue['confirm']); ?>" autocomplete="new-password" minlength="8" required>
+                                    <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                                        <i class="fas fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="account-actions">
+                                <button type="submit" class="btn btn-primary">Update password</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section id="shortcuts" class="card account-card" tabindex="-1">
+                        <h2>Shortcuts</h2>
+                        <?php if ($cardError['shortcuts'] !== ''): ?>
+                            <div class="alert alert-error" role="alert">
+                                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                                <span><?php echo htmlspecialchars($cardError['shortcuts']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <ul class="account-links">
+                            <li>
+                                <a href="my-bookings.php">
+                                    <span class="icon-box icon-box-sm" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                                    <span>My bookings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="programmes.php">
+                                    <span class="icon-box icon-box-sm" aria-hidden="true"><i class="fas fa-user-graduate"></i></span>
+                                    <span>Programmes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="jobs.php">
+                                    <span class="icon-box icon-box-sm" aria-hidden="true"><i class="fas fa-briefcase"></i></span>
+                                    <span>Jobs</span>
+                                </a>
+                            </li>
+                            <?php if ($workspace !== ''): ?>
+                                <li>
+                                    <a href="<?php echo htmlspecialchars($workspace); ?>">
+                                        <span class="icon-box icon-box-sm" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                                        <span>Open your workspace</span>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                        <?php if ($hasLandingChoice): ?>
+                            <form method="POST" class="account-forget">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
+                                <input type="hidden" name="form" value="forget-landing">
+                                <button type="submit" class="account-forget-link">Forget my choice</button>
+                            </form>
+                        <?php endif; ?>
+                    </section>
                 </div>
-            </dl>
-            <form method="POST" class="form">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
-                <input type="hidden" name="form" value="name">
-                <h2>Your name</h2>
-                <div class="form-group">
-                    <label for="display_name">Name</label>
-                    <input type="text" id="display_name" name="display_name" class="form-control" value="<?php echo htmlspecialchars($account['name']); ?>" autocomplete="name" maxlength="100" required>
-                </div>
-                <button type="submit" class="btn btn-secondary btn-block">Save name</button>
-            </form>
-            <?php if (in_array($account['role'], ['admin', 'manager', 'trainer'], true)): ?>
-                <p class="auth-switch"><a href="<?php echo htmlspecialchars(auth_home_path($account['role'], false)); ?>">Open your workspace</a></p>
-            <?php endif; ?>
-            <form method="POST" class="form">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(auth_csrf_token()); ?>">
-                <input type="hidden" name="form" value="password">
-                <h2>Change password</h2>
-                <div class="form-group">
-                    <label for="current_password">Current password</label>
-                    <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
-                </div>
-                <div class="form-group">
-                    <label for="new_password">New password</label>
-                    <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirm_password">Confirm new password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-lg btn-block">Update password</button>
-            </form>
-            <p class="auth-switch"><a href="logout.php">Log out</a></p>
+            </div>
         </div>
+        <?php if ($flash): ?>
+            <div class="account-toast<?php echo $flash['type'] === 'error' ? ' account-toast-error' : ''; ?>" role="status"<?php echo $flash['type'] === 'error' ? '' : ' data-autohide="5000"'; ?>>
+                <i class="fas <?php echo $flash['type'] === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'; ?>" aria-hidden="true"></i>
+                <span><?php echo htmlspecialchars($flash['message']); ?></span>
+                <button type="button" class="account-toast-close" aria-label="Dismiss"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+        <?php endif; ?>
     </main>
     <?php include 'partials/site-footer.php'; ?>
     <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/auth-ui.js?v=20261015-3"></script>
+    <script src="assets/js/account.js?v=20261015-3"></script>
 </body>
 </html>

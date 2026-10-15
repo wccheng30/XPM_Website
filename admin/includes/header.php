@@ -9,7 +9,20 @@
  */
 function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null) {
     $username = $_SESSION['user_name'] ?? ($_SESSION['admin_username'] ?? 'Admin');
-    $initial = function_exists('mb_substr') ? mb_substr($username, 0, 1) : substr($username, 0, 1);
+    $avatarUrl = '';
+    if (function_exists('auth_user')) {
+        $account = auth_user();
+        if ($account) {
+            if (($account['name'] ?? '') !== '') {
+                $username = $account['name'];
+            }
+            $path = str_replace('\\', '/', (string) ($account['avatar'] ?? ''));
+            if (preg_match('#^assets/images/avatars/[A-Za-z0-9._-]+$#', $path)) {
+                $avatarUrl = '../' . $path;
+            }
+        }
+    }
+    $initial = function_exists('auth_initial') ? auth_initial($username) : strtoupper(substr($username, 0, 1));
     ?>
     <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-tokens.css'); ?>">
     <link rel="stylesheet" href="<?php echo admin_asset('../assets/css/xpm-motion.css'); ?>">
@@ -37,7 +50,7 @@ function renderAdminHeader($title, $icon = 'fas fa-tachometer-alt', $back = null
         </div>
         <div class="user-menu">
             <button type="button" class="user-menu-btn" id="userMenuBtn" aria-expanded="false" aria-haspopup="true" aria-controls="userMenu" aria-label="Account menu">
-                <span class="user-avatar"><?php echo htmlspecialchars($initial, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span class="user-avatar"><?php if ($avatarUrl !== ''): ?><img src="<?php echo htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8'); ?>" alt=""><?php else: ?><?php echo htmlspecialchars($initial, ENT_QUOTES, 'UTF-8'); ?><?php endif; ?></span>
                 <span class="user-menu-name"><?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></span>
                 <i class="fas fa-chevron-down" aria-hidden="true"></i>
             </button>

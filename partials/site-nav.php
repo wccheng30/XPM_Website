@@ -64,4 +64,4 @@ $xpm_nav_links = [
             </div>
         </div>
     </nav>
-    <script src="assets/js/nav-account.js?v=20261008-3"></script>
+    <script src="assets/js/nav-account.js?v=20261015-5"></script>

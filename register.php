@@ -63,8 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <?php include 'partials/site-nav.php'; ?>
-    <main id="main" class="auth-main">
-        <div class="card auth-card">
+    <main id="main" class="auth-main auth-split">
+        <div class="auth-shell">
+            <section class="auth-brand" aria-label="What your account is for">
+                <img class="auth-brand-logo" src="assets/images/XPMLogo.png" alt="Xpress Point Management Services" width="280" height="120">
+                <div class="auth-brand-copy">
+                    <h2>Your account, in one place.</h2>
+                    <ul class="auth-benefits">
+                        <li><i class="fas fa-user-graduate" aria-hidden="true"></i><span>Register for training programmes</span></li>
+                        <li><i class="fas fa-building" aria-hidden="true"></i><span>Book facilities</span></li>
+                        <li><i class="fas fa-clipboard-list" aria-hidden="true"></i><span>Track bookings and apply for jobs</span></li>
+                    </ul>
+                </div>
+            </section>
+            <div class="card auth-card">
             <?php if ($error): ?>
                 <div class="alert alert-error" role="alert">
                     <i class="fas fa-circle-exclamation"></i>
@@ -89,18 +101,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" minlength="8" required>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" minlength="8" aria-describedby="password-error" required>
+                        <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <p class="field-error" id="password-error" hidden></p>
                 </div>
                 <div class="form-group">
                     <label for="confirm_password">Confirm password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                    <div class="password-field">
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" aria-describedby="confirm-password-error" required>
+                        <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <p class="field-error" id="confirm-password-error" hidden></p>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-block">Create account <i class="fas fa-arrow-right"></i></button>
             </form>
             <p class="auth-switch">Already have an account? <a href="login.php<?php echo $returnTo !== '' ? '?next=' . urlencode($returnTo) : ''; ?>">Log in</a></p>
+            </div>
         </div>
     </main>
     <?php include 'partials/site-footer.php'; ?>
     <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/auth-ui.js?v=20261015-1"></script>
 </body>
 </html>

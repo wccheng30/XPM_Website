@@ -9,15 +9,54 @@ if ($existing) {
         header('Location: ' . $returnTo);
         exit;
     }
-    $next = in_array($existing['role'], ['admin', 'manager', 'trainer'], true)
-        ? 'continue.php'
-        : auth_home_path($existing['role'], false);
+    $next = auth_after_login_path($existing['role']);
     header('Location: ' . $next);
     exit;
 }
 
 $error = '';
 $pdo = get_db_connection();
+
+function login_client_ip() {
+    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+}
+
+function login_attempt_name($login) {
+    return substr(strtolower(trim((string) $login)), 0, 255);
+}
+
+function login_ensure_attempts(PDO $pdo) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS login_attempts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ip_address VARCHAR(45) NOT NULL,
+        login_name VARCHAR(255) NOT NULL,
+        attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_login_attempts_ip (ip_address, attempted_at),
+        INDEX idx_login_attempts_login (login_name, attempted_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function login_recent_failures(PDO $pdo, $column, $value) {
+    $columns = ['ip_address' => 'ip_address', 'login_name' => 'login_name'];
+    $col = $columns[$column];
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE {$col} = ? AND attempted_at > (NOW() - INTERVAL 15 MINUTE)");
+    $stmt->execute([$value]);
+    return (int) $stmt->fetchColumn();
+}
+
+function login_is_locked(PDO $pdo, $ip, $loginName) {
+    return login_recent_failures($pdo, 'ip_address', $ip) >= 5
+        || login_recent_failures($pdo, 'login_name', $loginName) >= 5;
+}
+
+function login_record_failure(PDO $pdo, $ip, $loginName) {
+    $pdo->prepare("DELETE FROM login_attempts WHERE attempted_at <= (NOW() - INTERVAL 15 MINUTE)")->execute();
+    $pdo->prepare("INSERT INTO login_attempts (ip_address, login_name) VALUES (?, ?)")->execute([$ip, $loginName]);
+}
+
+function login_clear_failures(PDO $pdo, $loginName) {
+    $pdo->prepare("DELETE FROM login_attempts WHERE login_name = ?")->execute([$loginName]);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = trim($_POST['login'] ?? '');
@@ -31,33 +70,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Database connection failed.';
     } else {
         try {
-            $user = auth_find_user($pdo, $login);
-            $valid = $user && password_verify($password, $user['password']);
+            login_ensure_attempts($pdo);
+            $ip = login_client_ip();
+            $loginName = login_attempt_name($login);
+            if (login_is_locked($pdo, $ip, $loginName)) {
+                $error = 'Too many attempts. Try again in a few minutes.';
+            } else {
+                $user = auth_find_user($pdo, $login);
+                $valid = $user && password_verify($password, $user['password']);
 
-            if (!$valid && $login === 'admin' && $password === 'xpresspoint2024') {
-                $user = auth_find_user($pdo, 'admin');
-                $valid = (bool) $user;
-                if ($user) {
-                    $user['role'] = 'admin';
-                }
-            }
-
-            if ($valid && $user) {
-                auth_establish_session($user);
-                auth_touch_login($pdo, $user['id']);
-                if ($returnTo !== '') {
-                    header('Location: ' . $returnTo);
+                if ($valid && $user) {
+                    login_clear_failures($pdo, $loginName);
+                    auth_establish_session($user);
+                    auth_touch_login($pdo, $user['id']);
+                    if ($returnTo !== '') {
+                        header('Location: ' . $returnTo);
+                        exit;
+                    }
+                    $role = $user['role'] ?? 'user';
+                    $next = auth_after_login_path($role);
+                    header('Location: ' . $next);
                     exit;
                 }
-                $role = $user['role'] ?? 'user';
-                $next = in_array($role, ['admin', 'manager', 'trainer'], true)
-                    ? 'continue.php'
-                    : auth_home_path($role, false);
-                header('Location: ' . $next);
-                exit;
-            }
 
-            $error = 'Invalid email or password.';
+                login_record_failure($pdo, $ip, $loginName);
+                $error = login_is_locked($pdo, $ip, $loginName)
+                    ? 'Too many attempts. Try again in a few minutes.'
+                    : 'Invalid email or password.';
+            }
         } catch (PDOException $e) {
             $error = 'Login error. Please try again.';
         }
@@ -97,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 <div class="form-group">
                     <label for="login">Email</label>
-                    <input type="text" id="login" name="login" class="form-control" value="<?php echo htmlspecialchars($_POST['login'] ?? ''); ?>" autocomplete="username" required>
+                    <input type="email" id="login" name="login" class="form-control" value="<?php echo htmlspecialchars($_POST['login'] ?? ''); ?>" autocomplete="username" inputmode="email" autofocus required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>

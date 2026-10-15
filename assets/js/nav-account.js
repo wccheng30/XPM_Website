@@ -1,16 +1,17 @@
 (function () {
     function bindMenus(root) {
-        (root || document).querySelectorAll('.nav-avatar').forEach(function (button) {
+        (root || document).querySelectorAll('button.nav-avatar').forEach(function (button) {
             if (button.dataset.bound) return;
+            var menu = button.parentElement ? button.parentElement.querySelector('.nav-account-menu') : null;
+            if (!menu) return;
             button.dataset.bound = '1';
-            var menu = button.parentElement.querySelector('.nav-account-menu');
             button.addEventListener('click', function (event) {
                 event.stopPropagation();
                 var open = menu.hasAttribute('hidden');
                 document.querySelectorAll('.nav-account-menu').forEach(function (other) {
                     other.setAttribute('hidden', '');
                 });
-                document.querySelectorAll('.nav-avatar').forEach(function (other) {
+                document.querySelectorAll('button.nav-avatar').forEach(function (other) {
                     other.setAttribute('aria-expanded', 'false');
                 });
                 if (open) {
@@ -25,7 +26,7 @@
         document.querySelectorAll('.nav-account-menu').forEach(function (menu) {
             menu.setAttribute('hidden', '');
         });
-        document.querySelectorAll('.nav-avatar').forEach(function (button) {
+        document.querySelectorAll('button.nav-avatar').forEach(function (button) {
             button.setAttribute('aria-expanded', 'false');
         });
     });

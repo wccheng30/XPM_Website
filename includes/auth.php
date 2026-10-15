@@ -133,6 +133,85 @@ function auth_home_path($role, $fromAdmin = false) {
     return $fromAdmin ? '../account.php' : 'account.php';
 }
 
+function auth_request_https() {
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
+}
+
+function auth_app_cookie_paths() {
+    $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    $paths = ['/'];
+    if ($dir !== '/' && $dir !== '.' && $dir !== '') {
+        $paths[] = rtrim($dir, '/') . '/';
+        $paths[] = rtrim($dir, '/');
+    }
+    return array_values(array_unique($paths));
+}
+
+function auth_staff_landing_value() {
+    $value = (string) ($_COOKIE['xpm_staff_landing'] ?? '');
+    return ($value === 'workspace' || $value === 'site') ? $value : '';
+}
+
+function auth_staff_landing_target($role) {
+    $choice = auth_staff_landing_value();
+    if ($choice === 'workspace') {
+        return auth_home_path($role, false);
+    }
+    if ($choice === 'site') {
+        return 'index.html';
+    }
+    return '';
+}
+
+function auth_after_login_path($role) {
+    if ($role === 'admin') {
+        return 'continue.php';
+    }
+    if ($role === 'manager' || $role === 'trainer') {
+        $remembered = auth_staff_landing_target($role);
+        return $remembered !== '' ? $remembered : 'continue.php';
+    }
+    return auth_home_path($role, false);
+}
+
+function auth_remember_staff_landing($choice) {
+    if ($choice !== 'workspace' && $choice !== 'site') {
+        return false;
+    }
+    $path = '/';
+    foreach (auth_app_cookie_paths() as $candidate) {
+        if ($candidate !== '/') {
+            $path = rtrim($candidate, '/') . '/';
+            break;
+        }
+    }
+    setcookie('xpm_staff_landing', $choice, [
+        'expires' => time() + 31536000,
+        'path' => $path,
+        'secure' => auth_request_https(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    $_COOKIE['xpm_staff_landing'] = $choice;
+    return true;
+}
+
+function auth_clear_staff_landing() {
+    $https = auth_request_https();
+    foreach (auth_app_cookie_paths() as $path) {
+        setcookie('xpm_staff_landing', '', [
+            'expires' => time() - 42000,
+            'path' => $path,
+            'secure' => $https,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+    unset($_COOKIE['xpm_staff_landing']);
+}
+
 function auth_require(array $roles, $deny = 'redirect') {
     auth_start();
     $user = auth_user();
