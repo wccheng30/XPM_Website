@@ -10,10 +10,10 @@ define('JOB_APPLICATION_EMAIL', 'june.lim@xpresspointservices.com'); // Email fo
 define('JOB_APPLICATION_EMAIL_2', 'xpjob@xpresspointservices.com'); // Second email for job applications
 
 // Email settings
-define('FROM_EMAIL', 'noreply@xpresspoint.com'); // Change this to your domain email
-define('FROM_NAME', 'Xpress Point Management');
+define('FROM_EMAIL', 'XPM-noreply@xpresspointservices.com'); // Change this to your domain email
+define('FROM_NAME', 'Xpress Point Management Services Sdn Bhd');
 
 // Company information
-define('COMPANY_NAME', 'Xpress Point Management');
-define('COMPANY_WEBSITE', 'https://xpresspoint.com');
+define('COMPANY_NAME', 'Xpress Point Management Services Sdn Bhd');
+define('COMPANY_WEBSITE', 'https://xpresspointservices.com');
 ?>

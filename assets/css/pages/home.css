@@ -10,6 +10,11 @@
     border-bottom: 1px solid var(--c-border);
 }
 
+/* Spotlight sits under the navbar, so the hero no longer needs that top clearance. */
+#featured-slideshow:not([hidden]) + #hero {
+    padding-top: clamp(2.5rem, 4vw, 3.5rem);
+}
+
 .hero-grid-bg {
     position: absolute;
     inset: 0;

@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Please check the highlighted fields.';
             }
             
-        } catch (PDOException $e) {
+        } catch (Throwable $e) {
             $error = 'The request could not be completed.';
         }
     } else {

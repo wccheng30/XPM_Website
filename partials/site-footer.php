@@ -46,8 +46,8 @@ $xpm_asset_version = isset($xpm_asset_version) ? $xpm_asset_version : '20261005-
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-location-dot"></i> No.6, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
-                        <li><i class="fas fa-phone"></i> <a href="tel:+60167721113">016 772 1113</a></li>
+                        <li><i class="fas fa-location-dot"></i> No.6&8, Jalan Berkat 12, Taman Malim Jaya, 75250 Melaka</li>
+                        <li><i class="fas fa-phone"></i> <a href="tel:+60167721113">016 772 1113</a> / <a href="tel:+60167723555">016 772 3555</a></li>
                         <li><i class="fas fa-envelope"></i> <a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a></li>
                     </ul>
                     <div class="footer-help">

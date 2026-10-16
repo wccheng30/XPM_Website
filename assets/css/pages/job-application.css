@@ -310,6 +310,10 @@
     margin-bottom: var(--sp-5);
 }
 
+.form-section > .form-row + .sub-section {
+    margin-top: var(--sp-5);
+}
+
 .sub-section + .sub-section {
     margin-top: var(--sp-6);
     padding-top: var(--sp-6);

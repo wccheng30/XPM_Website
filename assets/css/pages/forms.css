@@ -80,11 +80,8 @@
     font-size: var(--fs-sm);
     color: var(--c-text-2);
     margin-bottom: var(--sp-4);
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
 }
 
 .summary-list {

@@ -15,9 +15,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/xpm-tokens.css?v=20261008-2">
     <link rel="stylesheet" href="assets/css/xpm-base.css?v=20261008-2">
-    <link rel="stylesheet" href="assets/css/xpm-components.css?v=20261008-6">
-    <link rel="stylesheet" href="assets/css/xpm-motion.css?v=20261008-2">
-    <link rel="stylesheet" href="assets/css/pages/home.css?v=20261008-5">
+    <link rel="stylesheet" href="assets/css/xpm-components.css?v=20261016-5">
+    <link rel="stylesheet" href="assets/css/xpm-motion.css?v=20261016-1">
+    <link rel="stylesheet" href="assets/css/pages/home.css?v=20261016-1">
     <link rel="stylesheet" href="assets/css/pages/founder.css?v=20261002-4">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
 </head>
@@ -55,6 +55,43 @@
     </nav>
 
     <main id="main">
+
+    <!-- ================= Spotlight ================= -->
+    <section id="featured-slideshow" class="featured-slideshow" aria-roledescription="carousel" aria-label="Featured programmes">
+        <div class="slideshow-wash" id="slideshow-wash" aria-hidden="true"></div>
+        <div class="spotlight-scrim" aria-hidden="true"></div>
+        <div class="container spotlight-inner">
+            <div class="slideshow-container" id="featured-programmes-container">
+                <div class="slideshow-loader">
+                    <div class="spotlight-layout spotlight-skeleton" aria-hidden="true">
+                        <div class="spotlight-details">
+                            <span class="skeleton spotlight-sk spotlight-sk-badge"></span>
+                            <span class="skeleton spotlight-sk spotlight-sk-title"></span>
+                            <span class="skeleton spotlight-sk spotlight-sk-line"></span>
+                            <span class="skeleton spotlight-sk spotlight-sk-line spotlight-sk-short"></span>
+                            <span class="skeleton spotlight-sk spotlight-sk-chips"></span>
+                            <span class="skeleton spotlight-sk spotlight-sk-actions"></span>
+                        </div>
+                        <div class="spotlight-poster">
+                            <div class="slide-frame skeleton"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spotlight-controls">
+                <button type="button" class="spotlight-arrow" id="slideshow-prev" aria-label="Previous programme" hidden>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="slideshow-dots" id="slideshow-dots" role="group" aria-label="Choose a featured programme"></div>
+                <button type="button" class="spotlight-arrow" id="slideshow-next" aria-label="Next programme" hidden>
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="slideshow-thumbs" id="slideshow-thumbs" hidden></div>
+            <p class="slideshow-hint" id="slideshow-hint" hidden>Swipe to see more</p>
+            <p class="sr-only" id="slideshow-status" aria-live="polite"></p>
+        </div>
+    </section>
 
     <!-- ================= Hero ================= -->
     <section id="hero" class="hero">
@@ -108,28 +145,6 @@
                 <li><i class="fas fa-handshake"></i> Dedicated Support</li>
                 <li><i class="fas fa-scale-balanced"></i> Compliance Assured</li>
             </ul>
-        </div>
-    </section>
-
-    <!-- ================= Featured Slideshow ================= -->
-    <section id="featured-slideshow" class="featured-slideshow">
-        <div class="container">
-            <div class="section-header" data-reveal>
-                <span class="eyebrow"><i class="fas fa-star"></i> Featured now</span>
-                <h2 class="section-title">Highlighted programme</h2>
-                <p class="section-subtitle">Curated training picks worth your attention.</p>
-            </div>
-            <div class="slideshow-shell" data-reveal="scale">
-                <div class="slideshow-wash" id="slideshow-wash" aria-hidden="true"></div>
-                <div class="slideshow-container" id="featured-programmes-container">
-                    <div class="slideshow-loader">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>Loading featured programmes...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="slideshow-dots" id="slideshow-dots"></div>
-            <p class="slideshow-hint" id="slideshow-hint" hidden>Swipe to see more</p>
         </div>
     </section>
 
@@ -965,7 +980,7 @@
         </div> 
     </footer>
 
-    <script src="assets/js/main.js?v=20261015-2"></script>
+    <script src="assets/js/main.js?v=20261016-1"></script>
     <script src="assets/js/nav-account.js?v=20261008-3"></script>
     <script src="assets/js/motion.js?v=20261002-10"></script>
 </body>
