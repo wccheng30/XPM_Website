@@ -61,7 +61,9 @@
     padding: var(--sp-4);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 

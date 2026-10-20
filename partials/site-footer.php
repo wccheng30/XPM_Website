@@ -72,4 +72,4 @@ $xpm_asset_version = isset($xpm_asset_version) ? $xpm_asset_version : '20261005-
     <script src="assets/js/main.js?v=<?php echo $xpm_asset_version; ?>"></script>
 <?php endif; ?>
     <script src="assets/js/motion.js?v=<?php echo $xpm_asset_version; ?>"></script>
-    <script src="assets/js/xpm-dialog.js?v=20261006-5"></script>
+    <script src="assets/js/xpm-dialog.js?v=20261020-1"></script>

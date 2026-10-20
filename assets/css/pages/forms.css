@@ -34,6 +34,7 @@
 .summary-card {
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-xl);
     overflow: hidden;
     box-shadow: var(--sh-sm);
@@ -111,9 +112,11 @@
     display: grid;
     gap: 0.5rem;
     padding: var(--sp-5);
-    background: var(--c-surface);
+    background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     font-size: var(--fs-sm);
 }
 
