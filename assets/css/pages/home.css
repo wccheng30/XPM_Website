@@ -7,7 +7,11 @@
     position: relative;
     padding: clamp(3.5rem, 8vw, 6.5rem) 0 var(--sp-7);
     overflow: hidden;
-    border-bottom: 1px solid var(--c-border);
+    color: #fff;
+    border-bottom: 3px solid var(--color-accent);
+    background: linear-gradient(120deg, #3F2A66 0%, #5E3F8F 38%, #9C1301 72%, #5E3F8F 100%);
+    background-size: 220% 220%;
+    animation: xpmGradientShift 18s ease-in-out infinite;
 }
 
 /* Spotlight sits under the navbar, so the hero no longer needs that top clearance. */
@@ -19,9 +23,9 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(var(--c-border) 1px, transparent 1px) 0 0 / 64px 64px,
-        linear-gradient(90deg, var(--c-border) 1px, transparent 1px) 0 0 / 64px 64px;
-    opacity: 0.55;
+        linear-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 64px 64px,
+        linear-gradient(90deg, rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 64px 64px;
+    opacity: 0.45;
     mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000 20%, transparent 75%);
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, #000 20%, transparent 75%);
     pointer-events: none;
@@ -44,16 +48,18 @@
     line-height: 1.05;
     letter-spacing: -0.035em;
     margin-bottom: var(--sp-5);
+    color: #fff;
 }
 
 .hero-title em {
     font-style: normal;
-    color: var(--c-red);
+    color: var(--color-primary-on-dark);
 }
 
 .hero-lead {
     max-width: 560px;
     margin-bottom: var(--sp-6);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .hero-actions {
@@ -65,7 +71,27 @@
 .hero .hero-stats {
     padding-top: var(--sp-6);
     margin-top: var(--sp-7);
-    border-top: 1px solid var(--c-border);
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.hero .stat-value {
+    color: #fff;
+}
+
+.hero .stat-caption {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.hero .btn-outline {
+    --btn-fg: #fff;
+    --btn-bd: rgba(255, 255, 255, 0.75);
+    --btn-bg: transparent;
+}
+
+.hero .btn-outline:hover {
+    --btn-fg: #fff;
+    --btn-bd: #fff;
+    --btn-bg: rgba(255, 255, 255, 0.12);
 }
 
 /* Visual composition */
@@ -78,8 +104,10 @@
     position: absolute;
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-xl);
     box-shadow: var(--sh-lg);
+    color: var(--c-text);
 }
 
 .hero-card-main {
@@ -125,7 +153,7 @@
 }
 
 .hero-bars span:last-child {
-    background: var(--c-teal-deep);
+    background: var(--color-primary-fill);
 }
 
 .hero-bars span:nth-child(1) { animation-delay: 0.5s; }
@@ -181,7 +209,7 @@
     margin-top: var(--sp-7);
     list-style: none;
     padding: 0;
-    color: var(--c-text-3);
+    color: rgba(255, 255, 255, 0.9);
     font-size: var(--fs-sm);
     font-weight: 500;
 }
@@ -193,7 +221,7 @@
 }
 
 .trust-row i {
-    color: var(--c-teal-deep);
+    color: var(--color-accent);
 }
 
 /* ---------- About ---------- */
@@ -249,7 +277,7 @@
 }
 
 .timeline-item:hover .timeline-dot {
-    background: var(--c-teal-deep);
+    background: var(--color-primary-fill);
     color: var(--c-white);
     transform: scale(1.08);
 }
@@ -258,12 +286,14 @@
     padding: var(--sp-4) var(--sp-5);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
 }
 
 .timeline-item:hover .timeline-body {
-    border-color: var(--c-border-strong);
+    border-color: var(--color-bg-lavender);
     box-shadow: var(--sh-md);
     transform: translateX(4px);
 }
@@ -299,8 +329,9 @@
 .mission-card {
     padding: var(--sp-6);
     color: var(--c-white);
-    background: var(--c-text);
+    background: var(--gradient-brand);
     border-radius: var(--r-xl);
+    box-shadow: var(--sh-lg);
 }
 
 .mission-card .icon-box {
@@ -339,19 +370,22 @@
     padding: var(--sp-4);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
-    transition: transform var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+    box-shadow: var(--sh-xs);
+    transition: transform var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 
 .value-item:hover {
     transform: translateY(-3px);
-    border-color: var(--c-border-strong);
+    border-color: var(--color-bg-lavender);
+    box-shadow: var(--sh-md);
 }
 
 .value-item i {
     font-size: 1.05rem;
     margin-bottom: var(--sp-3);
-    color: var(--c-text);
+    color: var(--color-accent-ink);
 }
 
 .value-item h4 {
@@ -378,13 +412,16 @@
     padding: clamp(1.5rem, 3vw, 2.25rem);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-xl);
+    box-shadow: var(--sh-sm);
     transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
 }
 
 .division:hover {
-    border-color: var(--c-border-strong);
-    box-shadow: var(--sh-lg);
+    border-color: var(--color-bg-lavender);
+    border-top-color: var(--color-accent);
+    box-shadow: var(--sh-glow);
     transform: translateY(-4px);
 }
 
@@ -405,7 +442,7 @@
 }
 
 .division:hover .division-index {
-    color: var(--c-text);
+    color: var(--color-secondary);
 }
 
 .division h3 {
@@ -441,8 +478,8 @@
     width: 36px;
     height: 36px;
     border-radius: var(--r-sm);
-    background: var(--c-surface-2);
-    color: var(--c-text);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-ink);
     font-size: 0.85rem;
 }
 
@@ -487,15 +524,18 @@
     flex-direction: column;
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-xl);
+    box-shadow: var(--sh-sm);
     overflow: hidden;
     transition: box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out), border-color var(--dur) var(--ease-out);
 }
 
 .facility-card:hover {
     transform: translateY(-5px);
-    border-color: var(--c-border-strong);
-    box-shadow: var(--sh-lg);
+    border-color: var(--color-bg-lavender);
+    border-top-color: var(--color-accent);
+    box-shadow: var(--sh-glow);
 }
 
 .facility-media {
@@ -580,7 +620,9 @@
     padding: var(--sp-4) var(--sp-5);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     font-size: var(--fs-sm);
     color: var(--c-text-2);
 }
@@ -601,8 +643,11 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     margin-bottom: var(--sp-7);
+    background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-sm);
     overflow: hidden;
 }
 
@@ -626,20 +671,24 @@
     padding: var(--sp-5);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     transition: box-shadow var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
 }
 
 .testimonial-card:hover {
-    border-color: var(--c-border-strong);
-    box-shadow: var(--sh-md);
+    border-color: var(--color-bg-lavender);
+    border-top-color: var(--color-accent);
+    box-shadow: var(--sh-glow);
+    transform: translateY(-4px);
 }
 
 .stars {
     display: flex;
     gap: 3px;
     margin-bottom: var(--sp-3);
-    color: var(--c-text);
+    color: var(--color-primary-fill);
     font-size: 0.75rem;
 }
 
@@ -720,7 +769,9 @@
     padding: var(--sp-5);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
+    box-shadow: var(--sh-xs);
     transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 
@@ -732,7 +783,7 @@
 .stat-card > i {
     display: block;
     margin-bottom: var(--sp-4);
-    color: var(--c-text-3);
+    color: var(--color-accent-ink);
 }
 
 .marquee {
@@ -861,6 +912,7 @@
     padding: clamp(1.5rem, 3vw, 2.5rem);
     background: var(--c-white);
     border: 1px solid var(--c-border);
+    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-xl);
     box-shadow: var(--sh-md);
 }

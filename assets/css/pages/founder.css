@@ -16,7 +16,7 @@
     overflow: hidden;
     isolation: isolate;
     color: var(--f-ink);
-    background: linear-gradient(180deg, var(--c-white) 0%, var(--f-bg) 12%, var(--lavender-100) 55%, var(--f-bg) 88%, var(--c-white) 100%);
+    background: linear-gradient(180deg, var(--color-bg-soft) 0%, var(--f-bg) 12%, var(--lavender-100) 55%, var(--f-bg) 88%, var(--color-bg-soft) 100%);
 }
 
 /* ---------- Background layers ---------- */
