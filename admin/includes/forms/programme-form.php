@@ -255,7 +255,7 @@ if ($schedule !== '' && !in_array($schedule, ['in_person', 'online', 'hybrid'], 
             <?php form_section_open('images', 'Images', 'A banner places the programme on the homepage slideshow.'); ?>
             <?php
             $uploads = [
-                'banner_image' => ['Banner', 'Recommended 1920×520px. PNG, JPG, GIF, or WebP up to 5MB.', 'Current banner'],
+                'banner_image' => ['Banner', 'Featured poster shown at the top of the homepage. Square 1080×1080px recommended (wide banners also work). PNG, JPG, GIF, or WebP up to 5MB.', 'Current banner'],
                 'poster_image' => ['Primary poster', 'PNG, JPG, or GIF up to 5MB.', 'Current poster'],
                 'poster_image_2' => ['Secondary poster', 'PNG, JPG, or GIF up to 5MB. Optional.', 'Current secondary poster'],
             ];

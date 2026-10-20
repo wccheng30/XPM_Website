@@ -1680,425 +1680,716 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadFeaturedProgrammes() {
     const container = document.getElementById('featured-programmes-container');
     const dotsContainer = document.getElementById('slideshow-dots');
-    if (!container) return;
+    const section = document.getElementById('featured-slideshow');
+    const prevBtn = document.getElementById('slideshow-prev');
+    const nextBtn = document.getElementById('slideshow-next');
+    const thumbsContainer = document.getElementById('slideshow-thumbs');
+    const hint = document.getElementById('slideshow-hint');
+    const statusEl = document.getElementById('slideshow-status');
+    if (!container || !section) return;
+
+    function hideSection() {
+        section.hidden = true;
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function plainText(value) {
+        return String(value == null ? '' : value)
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function usableText(value) {
+        const text = plainText(value);
+        if (!text) return '';
+        const lower = text.toLowerCase();
+        if (lower === 'null' || lower === 'undefined' || lower === 'n/a' || text === '-') return '';
+        return text;
+    }
+
+    function safeMediaPath(value) {
+        const src = String(value == null ? '' : value).trim();
+        if (!src || src.includes('..') || /[\u0000-\u001F"'()<>\\]/.test(src)) return '';
+        if (/^(javascript|data|vbscript):/i.test(src)) return '';
+        return src;
+    }
+
+    function parseISODate(value) {
+        const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!match) return null;
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        if (year < 2000 || month < 1 || month > 12 || day < 1 || day > 31) return null;
+        const date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+        return date;
+    }
+
+    function formatLongDate(date) {
+        const month = new Intl.DateTimeFormat('en-MY', { month: 'short' }).format(date).replace(/\./g, '');
+        const weekday = new Intl.DateTimeFormat('en-MY', { weekday: 'short' }).format(date).replace(/\./g, '');
+        return date.getDate() + ' ' + month + ' ' + date.getFullYear() + ' (' + weekday + ')';
+    }
+
+    function formatDateRange(startValue, endValue) {
+        const start = parseISODate(startValue);
+        if (!start) return '';
+        const startLabel = formatLongDate(start);
+        const end = parseISODate(endValue);
+        if (!end || end.getTime() === start.getTime()) return startLabel;
+        return startLabel + ' \u2013 ' + formatLongDate(end);
+    }
+
+    function formatClock(value) {
+        const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})/);
+        if (!match) return '';
+        let hour = Number(match[1]);
+        if (hour > 23) return '';
+        const suffix = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return hour + ':' + match[2] + ' ' + suffix;
+    }
+
+    function formatTimeRange(startValue, endValue) {
+        const start = formatClock(startValue);
+        const end = formatClock(endValue);
+        if (start && end && start !== end) return start + ' \u2013 ' + end;
+        return start || end;
+    }
+
+    function badgeParts(prog) {
+        const custom = usableText(prog.programme_badge);
+        if (custom) return { text: custom, tone: 'is-brand', icon: 'fa-star' };
+        const start = parseISODate(prog.start_date);
+        if (start) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diff = Math.round((start.getTime() - today.getTime()) / 86400000);
+            if (diff === 0) return { text: 'Starts today', tone: 'is-soon', icon: 'fa-clock' };
+            if (diff === 1) return { text: 'Starts tomorrow', tone: 'is-soon', icon: 'fa-clock' };
+            if (diff > 1 && diff <= 14) return { text: 'Starts in ' + diff + ' days', tone: 'is-soon', icon: 'fa-clock' };
+        }
+        const status = String(prog.registration_status || '');
+        if (status === 'open') return { text: 'Registration open', tone: 'is-open', icon: 'fa-door-open' };
+        if (status === 'full') return { text: 'Registration full', tone: 'is-closed', icon: 'fa-users' };
+        if (status === 'closed') return { text: 'Registration closed', tone: 'is-closed', icon: 'fa-lock' };
+        return null;
+    }
+
+    function priceLabel(prog) {
+        const formatted = usableText(prog.formatted_price);
+        if (formatted) return formatted;
+        if (prog.price === 0 || prog.price === '0' || prog.price === '0.00') return 'Free';
+        const raw = usableText(prog.price);
+        return raw ? 'RM ' + raw : '';
+    }
+
+    function chipHtml(icon, text) {
+        const label = usableText(text);
+        if (!label) return '';
+        return '<li class="spotlight-chip"><i class="fas ' + icon + '" aria-hidden="true"></i><span>' + escapeHtml(label) + '</span></li>';
+    }
+
+    function classifyPoster(slide, img) {
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        if (ratio >= 1.6) {
+            slide.classList.add('is-wide');
+            slide.style.setProperty('--poster-ratio', ratio.toFixed(4));
+        } else {
+            slide.classList.remove('is-wide');
+            slide.style.removeProperty('--poster-ratio');
+        }
+    }
+
+    function watchPoster(slide) {
+        const img = slide.querySelector('.slide-banner-img');
+        if (!img) return Promise.resolve();
+        const apply = () => classifyPoster(slide, img);
+        if (img.complete) {
+            apply();
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+            img.addEventListener('load', () => { apply(); resolve(); }, { once: true });
+            img.addEventListener('error', () => resolve(), { once: true });
+        });
+    }
 
     try {
         const response = await fetch('api/featured-programmes.php');
         const result = await response.json();
+        const programmes = (result && result.success && Array.isArray(result.data) ? result.data : []).filter((prog) => {
+            return !!safeMediaPath(prog && prog.banner_image);
+        });
 
-        if (result.success && result.data && result.data.length > 0) {
-            const programmes = result.data;
-            let slidesHtml = '';
+        if (!programmes.length) {
+            hideSection();
+            return;
+        }
 
-            programmes.forEach((prog, i) => {
-                const title = prog.title || 'Training Programme';
-                const bannerSrc = prog.banner_image || '';
+        const slidesHtml = programmes.map((prog, i) => {
+            const title = usableText(prog.title) || 'Training Programme';
+            const bannerSrc = safeMediaPath(prog.banner_image);
+            const description = usableText(prog.description);
+            const canRegister = prog.registration_status === 'open' && prog.id != null && String(prog.id) !== '';
+            const href = canRegister
+                ? 'programme-registration.php?programme_id=' + encodeURIComponent(String(prog.id))
+                : 'programmes.php';
+            const actionLabel = canRegister ? 'Register now' : 'View details';
+            const posterLabel = canRegister ? 'Register for ' + title : 'View details for ' + title;
+            const badge = badgeParts(prog);
+            const chips = [
+                chipHtml('fa-calendar', formatDateRange(prog.start_date, prog.end_date)),
+                chipHtml('fa-clock', formatTimeRange(prog.start_time, prog.end_time)),
+                chipHtml('fa-location-dot', prog.location),
+                chipHtml('fa-hourglass-half', prog.duration),
+                chipHtml('fa-tag', priceLabel(prog))
+            ].join('');
+            const safeTitle = escapeHtml(title);
+            const safeSrc = escapeHtml(bannerSrc);
+            const badgeMarkup = badge
+                ? '<span class="spotlight-badge ' + badge.tone + '"><i class="fas ' + badge.icon + '" aria-hidden="true"></i>' + escapeHtml(badge.text) + '</span>'
+                : '';
 
-                if (!bannerSrc) return; // Skip programmes without banner
+            return ''
+                + '<article class="slideshow-slide' + (i === 0 ? ' active' : '') + '"'
+                + ' role="group" aria-roledescription="slide"'
+                + ' aria-label="' + (i + 1) + ' of ' + programmes.length + '"'
+                + (i === 0 ? '' : ' aria-hidden="true"')
+                + ' data-index="' + i + '"'
+                + ' data-title="' + safeTitle + '"'
+                + ' data-image="' + safeSrc + '">'
+                + '<div class="spotlight-layout">'
+                + '<div class="spotlight-details">'
+                + badgeMarkup
+                + '<h2 class="spotlight-title">' + safeTitle + '</h2>'
+                + (description ? '<p class="spotlight-desc">' + escapeHtml(description) + '</p>' : '')
+                + (chips ? '<ul class="spotlight-chips">' + chips + '</ul>' : '')
+                + '<div class="spotlight-actions">'
+                + '<a class="btn btn-primary" href="' + href + '">' + actionLabel + ' <i class="fas fa-arrow-right" aria-hidden="true"></i></a>'
+                + '<a class="spotlight-all" href="programmes.php">View all programmes</a>'
+                + '</div></div>'
+                + '<a class="spotlight-poster" href="' + href + '" draggable="false" aria-label="' + escapeHtml(posterLabel) + '">'
+                + '<span class="slide-frame">'
+                + '<span class="slide-ambient" style="background-image: url(\'' + safeSrc + '\')" aria-hidden="true"></span>'
+                + '<img src="' + safeSrc + '" alt="' + safeTitle + '" class="slide-banner-img" draggable="false"'
+                + ' loading="eager" decoding="async">'
+                + '</span></a></div></article>';
+        }).join('');
 
-                const canRegister = prog.registration_status === 'open';
-                const slideHref = canRegister
-                    ? `programme-registration.php?programme_id=${encodeURIComponent(prog.id)}`
-                    : 'programmes.php';
-                const slideLabel = (canRegister ? 'Register for ' : '') + title.replace(/"/g, '&quot;');
+        container.innerHTML = slidesHtml;
 
-                slidesHtml += `
-                    <a href="${slideHref}" 
-                       class="slideshow-slide${i === 0 ? ' active' : ''}" 
-                       data-index="${i}" 
-                       draggable="false"
-                       title="${title.replace(/"/g, '&quot;')}"
-                       aria-label="${slideLabel}">
-                        <div class="slide-ambient" style="background-image: url('${bannerSrc.replace(/'/g, '%27')}');" aria-hidden="true"></div>
-                        <div class="slide-frame">
-                            <img src="${bannerSrc}" 
-                                 alt="${title.replace(/"/g, '&quot;')}" 
-                                 draggable="false"
-                                 loading="${i === 0 ? 'eager' : 'lazy'}" 
-                                 class="slide-banner-img"
-                                 onerror="this.closest('.slideshow-slide').style.display='none';">
-                        </div>
-                    </a>
-                `;
-            });
+        const rendered = [...container.querySelectorAll('.slideshow-slide')];
+        await Promise.race([
+            Promise.all(rendered.map(watchPoster)),
+            new Promise((resolve) => setTimeout(resolve, 1200))
+        ]);
 
-            container.innerHTML = slidesHtml;
+        rendered.forEach((slide) => {
+            const img = slide.querySelector('.slide-banner-img');
+            if (img && img.complete && !img.naturalWidth) slide.remove();
+        });
 
-            // Recount visible slides (some may be hidden via onerror)
-            const allSlides = container.querySelectorAll('.slideshow-slide');
-            const wash = document.getElementById('slideshow-wash');
-            const hint = document.getElementById('slideshow-hint');
-            let washTimer = null;
+        let allSlides = [...container.querySelectorAll('.slideshow-slide')];
+        if (!allSlides.length) {
+            hideSection();
+            return;
+        }
 
-            function paintWash(slide) {
-                if (!wash || !slide) return;
-                const ambient = slide.querySelector('.slide-ambient');
-                const image = ambient ? ambient.style.backgroundImage : '';
-                if (!image || wash.style.backgroundImage === image) return;
-                if (!wash.style.backgroundImage) {
-                    wash.style.backgroundImage = image;
+        allSlides.forEach((slide, i) => {
+            slide.dataset.index = String(i);
+            slide.classList.toggle('active', i === 0);
+            slide.setAttribute('aria-label', (i + 1) + ' of ' + allSlides.length);
+            if (i === 0) slide.removeAttribute('aria-hidden');
+            else slide.setAttribute('aria-hidden', 'true');
+            const img = slide.querySelector('.slide-banner-img');
+            if (img && !img.complete) {
+                img.addEventListener('load', () => classifyPoster(slide, img), { once: true });
+            }
+        });
+
+        const wash = document.getElementById('slideshow-wash');
+        let washTimer = null;
+
+        function paintWash(slide) {
+            if (!wash || !slide) return;
+            const ambient = slide.querySelector('.slide-ambient');
+            const image = ambient ? ambient.style.backgroundImage : '';
+            if (!image || wash.style.backgroundImage === image) return;
+            if (!wash.style.backgroundImage) {
+                wash.style.backgroundImage = image;
+                return;
+            }
+            if (washTimer) clearTimeout(washTimer);
+            wash.classList.add('is-fading');
+            washTimer = setTimeout(() => {
+                wash.style.backgroundImage = image;
+                wash.classList.remove('is-fading');
+                washTimer = null;
+            }, 390);
+        }
+
+        paintWash(allSlides[0]);
+        if (hint) hint.hidden = allSlides.length < 2;
+
+        function announce(index) {
+            if (!statusEl || !allSlides[index]) return;
+            const title = allSlides[index].dataset.title || 'Featured programme';
+            statusEl.textContent = 'Showing ' + (index + 1) + ' of ' + allSlides.length + ', ' + title;
+        }
+
+        if (dotsContainer) {
+            if (allSlides.length > 1) {
+                dotsContainer.innerHTML = allSlides.map((slide, i) => {
+                    const title = slide.dataset.title || ('Programme ' + (i + 1));
+                    return '<button type="button" class="slideshow-dot' + (i === 0 ? ' active' : '') + '"'
+                        + ' data-index="' + i + '" aria-label="Show ' + escapeHtml(title) + ', slide ' + (i + 1) + ' of ' + allSlides.length + '"'
+                        + (i === 0 ? ' aria-current="true"' : '') + '></button>';
+                }).join('');
+            } else {
+                dotsContainer.innerHTML = '';
+            }
+        }
+
+        if (thumbsContainer) {
+            if (allSlides.length > 1) {
+                thumbsContainer.innerHTML = allSlides.map((slide, i) => {
+                    const title = slide.dataset.title || ('Programme ' + (i + 1));
+                    const src = slide.dataset.image || '';
+                    return '<button type="button" class="slideshow-thumb' + (i === 0 ? ' active' : '') + '"'
+                        + ' data-index="' + i + '" aria-label="Show ' + escapeHtml(title) + '"'
+                        + (i === 0 ? ' aria-current="true"' : '') + '>'
+                        + '<img src="' + escapeHtml(src) + '" alt=""></button>';
+                }).join('');
+            } else {
+                thumbsContainer.innerHTML = '';
+                thumbsContainer.hidden = true;
+            }
+        }
+
+        const narrowQuery = window.matchMedia('(max-width: 991px)');
+
+        function syncChrome() {
+            const multi = allSlides.length > 1;
+            const arrowsHidden = !multi || narrowQuery.matches;
+            if (prevBtn) prevBtn.hidden = arrowsHidden;
+            if (nextBtn) nextBtn.hidden = arrowsHidden;
+            if (thumbsContainer) thumbsContainer.hidden = !multi || narrowQuery.matches;
+            if (hint) hint.hidden = !multi;
+            if (allSlides.length < 2) section.removeAttribute('aria-roledescription');
+        }
+
+        syncChrome();
+        if (typeof narrowQuery.addEventListener === 'function') {
+            narrowQuery.addEventListener('change', syncChrome);
+        }
+
+        announce(0);
+
+        if (allSlides.length > 1) {
+            let current = 0;
+            const slides = allSlides;
+            const dots = dotsContainer ? [...dotsContainer.querySelectorAll('.slideshow-dot')] : [];
+            const thumbs = thumbsContainer ? [...thumbsContainer.querySelectorAll('.slideshow-thumb')] : [];
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            let autoTimer = null;
+            let paused = reduceMotion;
+            let dragging = false;
+            let pointerId = null;
+            let startX = 0;
+            let startY = 0;
+            let dx = 0;
+            let axis = null;
+            let moved = false;
+            let startTime = 0;
+            let settleTimer = null;
+            let pendingIndex = null;
+
+            container.classList.add('is-swipeable');
+
+            function wrapIndex(index) {
+                return (index + slides.length) % slides.length;
+            }
+
+            function setActiveDot(index) {
+                const active = wrapIndex(index);
+                dots.forEach((dot, i) => {
+                    const on = i === active;
+                    dot.classList.toggle('active', on);
+                    if (on) dot.setAttribute('aria-current', 'true');
+                    else dot.removeAttribute('aria-current');
+                });
+                thumbs.forEach((thumb, i) => {
+                    const on = i === active;
+                    thumb.classList.toggle('active', on);
+                    if (on) thumb.setAttribute('aria-current', 'true');
+                    else thumb.removeAttribute('aria-current');
+                });
+            }
+
+            function clearDragStyles() {
+                slides.forEach(slide => {
+                    slide.style.transition = 'none';
+                    slide.style.transform = '';
+                    slide.style.opacity = '';
+                    slide.style.visibility = '';
+                    slide.style.zIndex = '';
+                });
+                void container.offsetWidth;
+                slides.forEach(slide => {
+                    slide.style.transition = '';
+                });
+            }
+
+            function goToSlide(index) {
+                cancelSettle();
+                current = wrapIndex(index);
+                slides.forEach((slide, i) => {
+                    const on = i === current;
+                    slide.classList.toggle('active', on);
+                    if (on) slide.removeAttribute('aria-hidden');
+                    else slide.setAttribute('aria-hidden', 'true');
+                });
+                setActiveDot(current);
+                paintWash(slides[current]);
+                announce(current);
+                clearDragStyles();
+            }
+
+            function animateTo(index) {
+                if (dragging) return;
+                if (settleTimer) {
+                    clearTimeout(settleTimer);
+                    settleTimer = null;
+                    if (pendingIndex !== null) {
+                        const commit = pendingIndex;
+                        pendingIndex = null;
+                        goToSlide(commit);
+                    }
+                }
+
+                const next = wrapIndex(index);
+                if (next === current) return;
+                setActiveDot(next);
+                if (reduceMotion) {
+                    goToSlide(next);
                     return;
                 }
-                if (washTimer) clearTimeout(washTimer);
-                wash.classList.add('is-fading');
-                washTimer = setTimeout(() => {
-                    wash.style.backgroundImage = image;
-                    wash.classList.remove('is-fading');
-                    washTimer = null;
-                }, 390);
+
+                const dir = index >= current ? 1 : -1;
+                const width = container.offsetWidth || 1;
+                const active = slides[current];
+                const incoming = slides[next];
+                paintWash(incoming);
+                const ms = 780;
+                const ease = 'transform ' + ms + 'ms var(--ease-out)';
+
+                slides.forEach(slide => {
+                    if (slide === active || slide === incoming) return;
+                    slide.style.transition = 'none';
+                    slide.style.opacity = '0';
+                    slide.style.visibility = 'hidden';
+                    slide.style.transform = '';
+                    slide.style.zIndex = '0';
+                });
+
+                incoming.style.transition = 'none';
+                incoming.style.visibility = 'visible';
+                incoming.style.opacity = '1';
+                incoming.style.zIndex = '1';
+                incoming.style.transform = 'translateX(' + (dir > 0 ? width : -width) + 'px)';
+
+                active.style.transition = 'none';
+                active.style.visibility = 'visible';
+                active.style.opacity = '1';
+                active.style.zIndex = '2';
+                active.style.transform = 'translateX(0px)';
+
+                void container.offsetWidth;
+
+                active.style.transition = ease;
+                active.style.transform = 'translateX(' + (dir > 0 ? -width : width) + 'px)';
+                incoming.style.transition = ease;
+                incoming.style.transform = 'translateX(0px)';
+
+                pendingIndex = next;
+                container.classList.add('is-settling');
+                settleTimer = setTimeout(() => {
+                    settleTimer = null;
+                    container.classList.remove('is-settling');
+                    const commit = pendingIndex;
+                    pendingIndex = null;
+                    if (commit !== null) goToSlide(commit);
+                }, ms);
             }
 
-            if (allSlides.length) paintWash(allSlides[0]);
-            if (hint) hint.hidden = allSlides.length < 2;
-
-            // Build dots
-            if (dotsContainer) {
-                if (allSlides.length > 1) {
-                    let dotsHtml = '';
-                    allSlides.forEach((_, i) => {
-                        dotsHtml += `<button class="slideshow-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Slide ${i + 1}"></button>`;
-                    });
-                    dotsContainer.innerHTML = dotsHtml;
-                } else {
-                    dotsContainer.innerHTML = '';
+            function cancelSettle() {
+                if (settleTimer) {
+                    clearTimeout(settleTimer);
+                    settleTimer = null;
                 }
+                pendingIndex = null;
+                container.classList.remove('is-settling');
             }
 
-            // Controls, swipe & autoplay
-            if (allSlides.length > 1) {
-                let current = 0;
-                const slides = allSlides;
-                const dots = dotsContainer ? dotsContainer.querySelectorAll('.slideshow-dot') : [];
-                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                let autoTimer = null;
-                let dragging = false;
-                let pointerId = null;
-                let startX = 0;
-                let startY = 0;
-                let dx = 0;
-                let axis = null;
-                let moved = false;
-                let startTime = 0;
-                let settleTimer = null;
-                let pendingIndex = null;
+            function applyDrag(delta) {
+                const width = container.offsetWidth || 1;
+                const dir = delta < 0 ? 1 : -1;
+                const active = slides[current];
+                const incoming = slides[wrapIndex(current + dir)];
 
-                container.classList.add('is-swipeable');
+                slides.forEach(slide => {
+                    if (slide === active || slide === incoming) return;
+                    slide.style.transition = 'none';
+                    slide.style.opacity = '0';
+                    slide.style.visibility = 'hidden';
+                    slide.style.transform = '';
+                    slide.style.zIndex = '0';
+                });
 
-                function wrapIndex(index) {
-                    return (index + slides.length) % slides.length;
-                }
+                active.style.transition = 'none';
+                active.style.visibility = 'visible';
+                active.style.opacity = '1';
+                active.style.zIndex = '2';
+                active.style.transform = 'translateX(' + delta + 'px)';
 
-                function setActiveDot(index) {
-                    const active = wrapIndex(index);
-                    dots.forEach((dot, i) => {
-                        dot.classList.toggle('active', i === active);
-                    });
-                }
-
-                function clearDragStyles() {
-                    slides.forEach(slide => {
-                        slide.style.transition = 'none';
-                        slide.style.transform = '';
-                        slide.style.opacity = '';
-                        slide.style.visibility = '';
-                        slide.style.zIndex = '';
-                    });
-                    void container.offsetWidth;
-                    slides.forEach(slide => {
-                        slide.style.transition = '';
-                    });
-                }
-
-                function goToSlide(index) {
-                    cancelSettle();
-                    slides[current].classList.remove('active');
-                    if (dots[current]) dots[current].classList.remove('active');
-                    current = wrapIndex(index);
-                    slides[current].classList.add('active');
-                    if (dots[current]) dots[current].classList.add('active');
-                    paintWash(slides[current]);
-                    clearDragStyles();
-                }
-
-                function animateTo(index) {
-                    if (dragging) return;
-                    if (settleTimer) {
-                        clearTimeout(settleTimer);
-                        settleTimer = null;
-                        if (pendingIndex !== null) {
-                            const commit = pendingIndex;
-                            pendingIndex = null;
-                            goToSlide(commit);
-                        }
-                    }
-
-                    const next = wrapIndex(index);
-                    if (next === current) return;
-                    setActiveDot(next);
-                    if (reduceMotion) {
-                        goToSlide(next);
-                        return;
-                    }
-
-                    const dir = index >= current ? 1 : -1;
-                    const width = container.offsetWidth || 1;
-                    const active = slides[current];
-                    const incoming = slides[next];
-                    paintWash(incoming);
-                    const ms = 780;
-                    const ease = 'transform ' + ms + 'ms var(--ease-out)';
-
-                    slides.forEach(slide => {
-                        if (slide === active || slide === incoming) return;
-                        slide.style.transition = 'none';
-                        slide.style.opacity = '0';
-                        slide.style.visibility = 'hidden';
-                        slide.style.transform = '';
-                        slide.style.zIndex = '0';
-                    });
-
+                if (incoming !== active) {
+                    const incomingOffset = delta < 0 ? width + delta : -width + delta;
                     incoming.style.transition = 'none';
                     incoming.style.visibility = 'visible';
                     incoming.style.opacity = '1';
                     incoming.style.zIndex = '1';
-                    incoming.style.transform = 'translateX(' + (dir > 0 ? width : -width) + 'px)';
-
-                    active.style.transition = 'none';
-                    active.style.visibility = 'visible';
-                    active.style.opacity = '1';
-                    active.style.zIndex = '2';
-                    active.style.transform = 'translateX(0px)';
-
-                    void container.offsetWidth;
-
-                    active.style.transition = ease;
-                    active.style.transform = 'translateX(' + (dir > 0 ? -width : width) + 'px)';
-                    incoming.style.transition = ease;
-                    incoming.style.transform = 'translateX(0px)';
-
-                    pendingIndex = next;
-                    container.classList.add('is-settling');
-                    settleTimer = setTimeout(() => {
-                        settleTimer = null;
-                        container.classList.remove('is-settling');
-                        const commit = pendingIndex;
-                        pendingIndex = null;
-                        if (commit !== null) goToSlide(commit);
-                    }, ms);
+                    incoming.style.transform = 'translateX(' + incomingOffset + 'px)';
                 }
 
-                function cancelSettle() {
-                    if (settleTimer) {
-                        clearTimeout(settleTimer);
-                        settleTimer = null;
+                const shown = Math.abs(delta) > width / 2 ? wrapIndex(current + dir) : current;
+                setActiveDot(shown);
+            }
+
+            function finishDrag(commit, done) {
+                const width = container.offsetWidth || 1;
+                const delta = dx;
+                const dir = delta < 0 ? 1 : -1;
+                const active = slides[current];
+                const incoming = slides[wrapIndex(current + dir)];
+                const snapMs = reduceMotion ? 0 : 420;
+                const ease = 'transform ' + snapMs + 'ms var(--ease-out)';
+
+                if (Math.abs(delta) < 1) {
+                    clearDragStyles();
+                    if (done) done();
+                    return;
+                }
+
+                if (!commit) {
+                    active.style.transition = ease;
+                    active.style.transform = 'translateX(0)';
+                    if (incoming !== active) {
+                        const parked = delta < 0 ? width : -width;
+                        incoming.style.transition = ease;
+                        incoming.style.transform = 'translateX(' + parked + 'px)';
                     }
                     pendingIndex = null;
-                    container.classList.remove('is-settling');
-                }
-
-                function applyDrag(delta) {
-                    const width = container.offsetWidth || 1;
-                    const dir = delta < 0 ? 1 : -1;
-                    const active = slides[current];
-                    const incoming = slides[wrapIndex(current + dir)];
-
-                    slides.forEach(slide => {
-                        if (slide === active || slide === incoming) return;
-                        slide.style.transition = 'none';
-                        slide.style.opacity = '0';
-                        slide.style.visibility = 'hidden';
-                        slide.style.transform = '';
-                        slide.style.zIndex = '0';
-                    });
-
-                    active.style.transition = 'none';
-                    active.style.visibility = 'visible';
-                    active.style.opacity = '1';
-                    active.style.zIndex = '2';
-                    active.style.transform = 'translateX(' + delta + 'px)';
-
+                    setActiveDot(current);
+                } else {
+                    active.style.transition = ease;
+                    active.style.transform = 'translateX(' + (delta < 0 ? -width : width) + 'px)';
                     if (incoming !== active) {
-                        const incomingOffset = delta < 0 ? width + delta : -width + delta;
-                        incoming.style.transition = 'none';
-                        incoming.style.visibility = 'visible';
-                        incoming.style.opacity = '1';
-                        incoming.style.zIndex = '1';
-                        incoming.style.transform = 'translateX(' + incomingOffset + 'px)';
+                        incoming.style.transition = ease;
+                        incoming.style.transform = 'translateX(0)';
                     }
-
-                    const shown = Math.abs(delta) > width / 2 ? wrapIndex(current + dir) : current;
-                    setActiveDot(shown);
+                    pendingIndex = wrapIndex(current + dir);
+                    setActiveDot(pendingIndex);
                 }
 
-                function finishDrag(commit, done) {
-                    const width = container.offsetWidth || 1;
-                    const delta = dx;
-                    const dir = delta < 0 ? 1 : -1;
-                    const active = slides[current];
-                    const incoming = slides[wrapIndex(current + dir)];
-                    const snapMs = reduceMotion ? 0 : 420;
-                    const ease = 'transform ' + snapMs + 'ms var(--ease-out)';
-
-                    if (Math.abs(delta) < 1) {
+                settleTimer = setTimeout(() => {
+                    settleTimer = null;
+                    if (pendingIndex !== null) {
+                        const next = pendingIndex;
+                        pendingIndex = null;
+                        goToSlide(next);
+                    } else {
                         clearDragStyles();
-                        if (done) done();
+                    }
+                    if (done) done();
+                }, snapMs);
+            }
+
+            container.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (e.target.closest('.spotlight-actions a, button')) return;
+                if (settleTimer) {
+                    clearTimeout(settleTimer);
+                    settleTimer = null;
+                    if (pendingIndex !== null) {
+                        goToSlide(pendingIndex);
+                    } else {
+                        clearDragStyles();
+                    }
+                }
+                dragging = true;
+                moved = false;
+                axis = null;
+                dx = 0;
+                startX = e.clientX;
+                startY = e.clientY;
+                startTime = Date.now();
+                pointerId = e.pointerId;
+                if (e.pointerType === 'mouse') {
+                    container.setPointerCapture(e.pointerId);
+                }
+                container.classList.add('is-dragging');
+                clearInterval(autoTimer);
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!dragging || e.pointerId !== pointerId) return;
+                const moveX = e.clientX - startX;
+                const moveY = e.clientY - startY;
+                if (!axis) {
+                    if (Math.abs(moveX) < 8 && Math.abs(moveY) < 8) return;
+                    axis = Math.abs(moveX) > Math.abs(moveY) ? 'x' : 'y';
+                    if (axis === 'y') {
+                        dragging = false;
+                        container.classList.remove('is-dragging');
+                        if (container.hasPointerCapture(e.pointerId)) {
+                            container.releasePointerCapture(e.pointerId);
+                        }
+                        resetTimer();
                         return;
                     }
-
-                    if (!commit) {
-                        active.style.transition = ease;
-                        active.style.transform = 'translateX(0)';
-                        if (incoming !== active) {
-                            const parked = delta < 0 ? width : -width;
-                            incoming.style.transition = ease;
-                            incoming.style.transform = 'translateX(' + parked + 'px)';
-                        }
-                        pendingIndex = null;
-                        setActiveDot(current);
-                    } else {
-                        active.style.transition = ease;
-                        active.style.transform = 'translateX(' + (delta < 0 ? -width : width) + 'px)';
-                        if (incoming !== active) {
-                            incoming.style.transition = ease;
-                            incoming.style.transform = 'translateX(0)';
-                        }
-                        pendingIndex = wrapIndex(current + dir);
-                        setActiveDot(pendingIndex);
-                    }
-
-                    settleTimer = setTimeout(() => {
-                        settleTimer = null;
-                        if (pendingIndex !== null) {
-                            const next = pendingIndex;
-                            pendingIndex = null;
-                            goToSlide(next);
-                        } else {
-                            clearDragStyles();
-                        }
-                        if (done) done();
-                    }, snapMs);
-                }
-
-                container.addEventListener('pointerdown', (e) => {
-                    if (e.pointerType === 'mouse' && e.button !== 0) return;
-                    if (settleTimer) {
-                        clearTimeout(settleTimer);
-                        settleTimer = null;
-                        if (pendingIndex !== null) {
-                            goToSlide(pendingIndex);
-                        } else {
-                            clearDragStyles();
-                        }
-                    }
-                    dragging = true;
-                    moved = false;
-                    axis = null;
-                    dx = 0;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startTime = Date.now();
-                    pointerId = e.pointerId;
-                    if (e.pointerType === 'mouse') {
+                    if (e.pointerType !== 'mouse') {
                         container.setPointerCapture(e.pointerId);
                     }
-                    container.classList.add('is-dragging');
-                    clearInterval(autoTimer);
-                });
-
-                container.addEventListener('pointermove', (e) => {
-                    if (!dragging || e.pointerId !== pointerId) return;
-                    const moveX = e.clientX - startX;
-                    const moveY = e.clientY - startY;
-                    if (!axis) {
-                        if (Math.abs(moveX) < 8 && Math.abs(moveY) < 8) return;
-                        axis = Math.abs(moveX) > Math.abs(moveY) ? 'x' : 'y';
-                        if (axis === 'y') {
-                            dragging = false;
-                            container.classList.remove('is-dragging');
-                            if (container.hasPointerCapture(e.pointerId)) {
-                                container.releasePointerCapture(e.pointerId);
-                            }
-                            resetTimer();
-                            return;
-                        }
-                        if (e.pointerType !== 'mouse') {
-                            container.setPointerCapture(e.pointerId);
-                        }
-                    }
-                    if (axis !== 'x') return;
-                    if (Math.abs(moveX) > 8) moved = true;
-                    dx = moveX;
-                    applyDrag(dx);
-                });
-
-                function endDrag(e) {
-                    if (!dragging || e.pointerId !== pointerId) return;
-                    dragging = false;
-                    container.classList.remove('is-dragging');
-                    if (container.hasPointerCapture(e.pointerId)) {
-                        container.releasePointerCapture(e.pointerId);
-                    }
-                    if (axis !== 'x') {
-                        clearDragStyles();
-                        resetTimer();
-                        axis = null;
-                        dx = 0;
-                        return;
-                    }
-                    const width = container.offsetWidth || 1;
-                    const elapsed = Math.max(Date.now() - startTime, 1);
-                    const velocity = Math.abs(dx) / elapsed;
-                    const threshold = Math.max(48, width * 0.15);
-                    const commit = Math.abs(dx) > threshold || (Math.abs(dx) > 24 && velocity > 0.5);
-                    finishDrag(commit, resetTimer);
-                    axis = null;
-                    dx = 0;
                 }
+                if (axis !== 'x') return;
+                if (Math.abs(moveX) > 8) moved = true;
+                dx = moveX;
+                applyDrag(dx);
+            });
 
-                container.addEventListener('pointerup', endDrag);
-                container.addEventListener('pointercancel', (e) => {
-                    if (!dragging || e.pointerId !== pointerId) return;
-                    dragging = false;
-                    container.classList.remove('is-dragging');
+            function endDrag(e) {
+                if (!dragging || e.pointerId !== pointerId) return;
+                dragging = false;
+                container.classList.remove('is-dragging');
+                if (container.hasPointerCapture(e.pointerId)) {
+                    container.releasePointerCapture(e.pointerId);
+                }
+                if (axis !== 'x') {
+                    clearDragStyles();
+                    resetTimer();
                     axis = null;
-                    finishDrag(false, resetTimer);
                     dx = 0;
-                });
+                    return;
+                }
+                const width = container.offsetWidth || 1;
+                const elapsed = Math.max(Date.now() - startTime, 1);
+                const velocity = Math.abs(dx) / elapsed;
+                const threshold = Math.max(48, width * 0.15);
+                const commit = Math.abs(dx) > threshold || (Math.abs(dx) > 24 && velocity > 0.5);
+                finishDrag(commit, resetTimer);
+                axis = null;
+                dx = 0;
+            }
 
-                container.addEventListener('click', (e) => {
-                    if (!moved) return;
+            container.addEventListener('pointerup', endDrag);
+            container.addEventListener('pointercancel', (e) => {
+                if (!dragging || e.pointerId !== pointerId) return;
+                dragging = false;
+                container.classList.remove('is-dragging');
+                axis = null;
+                finishDrag(false, resetTimer);
+                dx = 0;
+            });
+
+            container.addEventListener('click', (e) => {
+                if (!moved) return;
+                e.preventDefault();
+                e.stopPropagation();
+                moved = false;
+            }, true);
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', (e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    moved = false;
-                }, true);
-
-                dots.forEach(dot => {
-                    dot.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        animateTo(parseInt(dot.dataset.index, 10));
-                        resetTimer();
-                    });
+                    animateTo(parseInt(dot.dataset.index, 10));
+                    resetTimer();
                 });
+            });
 
-                function resetTimer() {
-                    clearInterval(autoTimer);
-                    autoTimer = setInterval(() => {
-                        if (dragging || settleTimer) return;
-                        animateTo(current + 1);
-                    }, 5000);
-                }
+            thumbs.forEach(thumb => {
+                thumb.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    animateTo(parseInt(thumb.dataset.index, 10));
+                    resetTimer();
+                });
+            });
 
+            function step(direction) {
+                animateTo(current + direction);
                 resetTimer();
             }
-        } else {
-            // No featured programmes — hide the entire section
-            const section = document.getElementById('featured-slideshow');
-            if (section) section.style.display = 'none';
+
+            if (prevBtn) prevBtn.addEventListener('click', () => step(-1));
+            if (nextBtn) nextBtn.addEventListener('click', () => step(1));
+
+            section.addEventListener('keydown', (e) => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                const target = e.target;
+                if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) return;
+                e.preventDefault();
+                step(e.key === 'ArrowRight' ? 1 : -1);
+            });
+
+            function resetTimer() {
+                clearInterval(autoTimer);
+                if (paused || reduceMotion) return;
+                autoTimer = setInterval(() => {
+                    if (dragging || settleTimer) return;
+                    animateTo(current + 1);
+                }, 5000);
+            }
+
+            function pauseAutoplay() {
+                paused = true;
+                clearInterval(autoTimer);
+            }
+
+            function resumeAutoplay() {
+                paused = reduceMotion;
+                if (!paused) resetTimer();
+            }
+
+            if (canHover) {
+                section.addEventListener('mouseenter', pauseAutoplay);
+                section.addEventListener('mouseleave', () => {
+                    if (section.contains(document.activeElement)) return;
+                    resumeAutoplay();
+                });
+            }
+            section.addEventListener('focusin', pauseAutoplay);
+            section.addEventListener('focusout', (e) => {
+                if (section.contains(e.relatedTarget)) return;
+                if (canHover && section.matches(':hover')) return;
+                resumeAutoplay();
+            });
+
+            resetTimer();
         }
     } catch (error) {
         console.error('Error loading featured programmes:', error);
-        const section = document.getElementById('featured-slideshow');
-        if (section) section.style.display = 'none';
+        hideSection();
     }
 }
-

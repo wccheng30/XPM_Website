@@ -372,8 +372,16 @@ function auth_save_image(array $file, $relativeDir, $prefix = 'upload') {
     if ($tmp === '' || !is_uploaded_file($tmp)) {
         return ['ok' => false, 'error' => 'The file could not be uploaded.', 'path' => ''];
     }
-    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
-    if ($mime !== $allowed[$extension]) {
+    $imageTypes = [
+        'jpg' => IMAGETYPE_JPEG,
+        'jpeg' => IMAGETYPE_JPEG,
+        'png' => IMAGETYPE_PNG,
+        'gif' => IMAGETYPE_GIF,
+        'webp' => defined('IMAGETYPE_WEBP') ? IMAGETYPE_WEBP : 18,
+    ];
+    $info = @getimagesize($tmp);
+    $detected = is_array($info) ? (int) ($info[2] ?? 0) : 0;
+    if ($detected !== ($imageTypes[$extension] ?? 0)) {
         return ['ok' => false, 'error' => 'The file contents do not match an allowed image type.', 'path' => ''];
     }
     $relativeDir = trim(str_replace('\\', '/', (string) $relativeDir), '/');

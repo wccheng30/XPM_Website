@@ -142,6 +142,74 @@ function sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_
     mail($programme_email, $subject, $message, $headers);
 }
 
+function sendRegistrationConfirmation($programme_id, $name, $email) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT title, duration, price FROM programmes WHERE id = ?");
+    $stmt->execute([$programme_id]);
+    $programme = $stmt->fetch();
+
+    $programme_title = $programme ? $programme['title'] : 'the programme you registered for';
+    $programme_duration = $programme && !empty($programme['duration']) ? $programme['duration'] : '';
+    $programme_price = '';
+    if ($programme && $programme['price'] !== null && $programme['price'] !== '') {
+        $programme_price = is_numeric($programme['price'])
+            ? 'RM ' . number_format($programme['price'], 0)
+            : (string) $programme['price'];
+    }
+
+    $subject = "Registration received - " . $programme_title;
+    $duration_line = $programme_duration !== ''
+        ? "<div class='field'><strong>Duration:</strong> " . htmlspecialchars($programme_duration) . "</div>"
+        : '';
+    $price_line = $programme_price !== ''
+        ? "<div class='field'><strong>Price:</strong> " . htmlspecialchars($programme_price) . "</div>"
+        : '';
+
+    $message = "
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .header { background-color: #2c3e50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .section { margin-bottom: 20px; }
+            .section h3 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+            .field { margin-bottom: 10px; }
+            .field strong { color: #2c3e50; }
+            .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class='header'>
+            <h1>Registration received</h1>
+            <p>Thank you for registering</p>
+        </div>
+        <div class='content'>
+            <p>Dear " . htmlspecialchars($name) . ",</p>
+            <p>We have received your registration. Our team will contact you with the programme details.</p>
+            <div class='section'>
+                <h3>Programme</h3>
+                <div class='field'><strong>Programme:</strong> " . htmlspecialchars($programme_title) . "</div>
+                " . $duration_line . "
+                " . $price_line . "
+            </div>
+        </div>
+        <div class='footer'>
+            <p>This is an automated confirmation from " . htmlspecialchars(FROM_NAME) . "</p>
+            <p>Submitted on " . date('Y-m-d H:i:s') . "</p>
+        </div>
+    </body>
+    </html>
+    ";
+
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+    $headers .= 'From: "' . str_replace('"', '', FROM_NAME) . '" <' . FROM_EMAIL . ">\r\n";
+    $headers .= "Reply-To: " . PROGRAMME_REGISTRATION_EMAIL . "\r\n";
+
+    mail($email, $subject, $message, $headers);
+}
+
 // Get programme details if programme_id is provided
 if (isset($_GET['programme_id'])) {
     $programme_id = (int)$_GET['programme_id'];
@@ -277,10 +345,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error_message === '') {
                 $additional_notes
             ]);
             
-            $success_message = "Registration submitted successfully! We'll contact you soon with programme details.";
+            $success_message = "Registration submitted successfully! We'll contact you soon with programme details. A confirmation was sent to your email.";
             
-            // Send email notification to admin
-            sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_number, $company, $position, $billing_address, $billing_contact_no, $vehicle_type, $vehicle_type_other, $plate_number, $payment_method, $how_did_you_hear, $how_did_you_hear_other, $spicy_preference, $allergies, $allergies_other, $dietary_preference, $dietary_restrictions, $interested_programs, $interested_programs_other, $additional_notes);
+            // Send email notification to admin and a confirmation to the registrant
+            try {
+                sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_number, $company, $position, $billing_address, $billing_contact_no, $vehicle_type, $vehicle_type_other, $plate_number, $payment_method, $how_did_you_hear, $how_did_you_hear_other, $spicy_preference, $allergies, $allergies_other, $dietary_preference, $dietary_restrictions, $interested_programs, $interested_programs_other, $additional_notes);
+                sendRegistrationConfirmation($programme_id, $name, $email);
+            } catch (Exception $emailError) {
+                error_log("Registration email failed: " . $emailError->getMessage());
+            }
             
             // Clear form data
             $_POST = [];
