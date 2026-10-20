@@ -156,6 +156,139 @@ function job_application_positive_measure($value, $max) {
     return $number > 0 && $number <= $max;
 }
 
+function job_application_storage_columns() {
+    return [
+        'address' => 'TEXT NULL',
+        'state' => 'VARCHAR(100) NULL',
+        'city' => 'VARCHAR(100) NULL',
+        'age' => 'SMALLINT UNSIGNED NULL',
+        'weight' => 'DECIMAL(5,1) NULL',
+        'height' => 'DECIMAL(5,1) NULL',
+        'gender' => 'VARCHAR(20) NULL',
+        'race' => 'VARCHAR(50) NULL',
+        'nationality' => 'VARCHAR(100) NULL',
+        'marital_status' => 'VARCHAR(50) NULL',
+        'religion' => 'VARCHAR(50) NULL',
+        'smoker' => 'VARCHAR(10) NULL',
+        'convicted_of_crime' => 'VARCHAR(10) NULL',
+        'willing_to_relocate' => 'VARCHAR(10) NULL',
+        'own_transportation' => 'VARCHAR(10) NULL',
+        'having_relative_in_company' => 'VARCHAR(10) NULL',
+        'able_to_work_shift' => 'VARCHAR(10) NULL',
+        'current_health_medication' => 'TEXT NULL',
+    ];
+}
+
+function job_application_ensure_storage(PDO $pdo) {
+    foreach (job_application_storage_columns() as $column => $definition) {
+        try {
+            $stmt = $pdo->query('SHOW COLUMNS FROM applications WHERE Field = ' . $pdo->quote($column));
+            if ($stmt && !$stmt->fetch()) {
+                $pdo->exec("ALTER TABLE applications ADD COLUMN `$column` $definition");
+            }
+        } catch (Throwable $e) {
+            error_log('Job application schema: ' . $e->getMessage());
+        }
+    }
+
+    try {
+        $stmt = $pdo->query('SHOW COLUMNS FROM applications WHERE Field = ' . $pdo->quote('education_level'));
+        $row = $stmt ? $stmt->fetch() : false;
+        $type = is_array($row) ? (string) ($row['Type'] ?? '') : '';
+        if (is_array($row) && strtoupper((string) $row['Null']) === 'NO' && preg_match('/^[a-z0-9(),\' _-]+$/i', $type)) {
+            $pdo->exec('ALTER TABLE applications MODIFY `education_level` ' . $type . ' NULL DEFAULT NULL');
+        }
+    } catch (Throwable $e) {
+        error_log('Job application schema: ' . $e->getMessage());
+    }
+
+    $nullable = [
+        'availability_date' => 'DATE NULL DEFAULT NULL',
+        'interviewer_comment' => 'TEXT NULL DEFAULT NULL',
+    ];
+    foreach ($nullable as $column => $definition) {
+        try {
+            $stmt = $pdo->query('SHOW COLUMNS FROM applications WHERE Field = ' . $pdo->quote($column));
+            $row = $stmt ? $stmt->fetch() : null;
+            if ($row && strtoupper((string) $row['Null']) === 'NO') {
+                $pdo->exec("ALTER TABLE applications MODIFY `$column` $definition");
+            }
+        } catch (Throwable $e) {
+            error_log('Job application schema: ' . $e->getMessage());
+        }
+    }
+}
+
+function job_application_fallback_value(array $column) {
+    $type = strtolower((string) ($column['Type'] ?? ''));
+    if (strpos($type, 'timestamp') === 0 || strpos($type, 'datetime') === 0) {
+        return date('Y-m-d H:i:s');
+    }
+    if (strpos($type, 'date') === 0) {
+        return date('Y-m-d');
+    }
+    if (strpos($type, 'enum(') === 0 && preg_match("/^enum\\('((?:[^']|'')*)'/", $type, $match)) {
+        return str_replace("''", "'", $match[1]);
+    }
+    if (preg_match('/int|decimal|float|double|bit|year/', $type)) {
+        return 0;
+    }
+    return '';
+}
+
+function job_application_blank_is_text(array $column) {
+    $type = strtolower((string) ($column['Type'] ?? ''));
+    return strpos($type, 'char') !== false
+        || strpos($type, 'text') !== false
+        || strpos($type, 'blob') !== false
+        || strpos($type, 'json') === 0;
+}
+
+function job_application_insert(PDO $pdo, array $values) {
+    job_application_ensure_storage($pdo);
+
+    $existing = [];
+    foreach ($pdo->query('SHOW COLUMNS FROM applications') as $column) {
+        $existing[$column['Field']] = $column;
+    }
+
+    $columns = [];
+    $bound = [];
+    foreach ($values as $column => $value) {
+        if (!isset($existing[$column])) {
+            error_log('Job application skipped missing column: ' . $column);
+            continue;
+        }
+        $columns[] = $column;
+        if ($value === '' && !job_application_blank_is_text($existing[$column])) {
+            $nullable = strtoupper((string) ($existing[$column]['Null'] ?? '')) === 'YES';
+            $value = $nullable ? null : job_application_fallback_value($existing[$column]);
+        }
+        $bound[] = $value;
+    }
+
+    foreach ($existing as $name => $column) {
+        if (in_array($name, $columns, true) || stripos((string) $column['Extra'], 'auto_increment') !== false) {
+            continue;
+        }
+        $extra = (string) $column['Extra'];
+        $hasDefault = $column['Default'] !== null
+            || stripos($extra, 'DEFAULT_GENERATED') !== false
+            || stripos($extra, 'CURRENT_TIMESTAMP') !== false;
+        if (strtoupper((string) $column['Null']) === 'NO' && !$hasDefault) {
+            $columns[] = $name;
+            $bound[] = job_application_fallback_value($column);
+        }
+    }
+
+    $quoted = array_map(function ($column) {
+        return '`' . str_replace('`', '', $column) . '`';
+    }, $columns);
+    $placeholders = implode(', ', array_fill(0, count($bound), '?'));
+    $stmt = $pdo->prepare('INSERT INTO applications (' . implode(', ', $quoted) . ') VALUES (' . $placeholders . ')');
+    $stmt->execute($bound);
+}
+
 function job_application_profile_error(array $profile) {
     foreach ($profile as $value) {
         if ($value === '') {
@@ -294,7 +427,10 @@ function sendJobApplicationNotification($job_id, $name, $email, $phone, $ic_numb
     
     // Send email to both job application emails
     foreach ($job_emails as $email_address) {
-        mail($email_address, $subject, $message, $headers);
+        $previousTimeout = ini_get('default_socket_timeout');
+        ini_set('default_socket_timeout', '5');
+        @mail($email_address, $subject, $message, $headers);
+        ini_set('default_socket_timeout', (string) $previousTimeout);
     }
 }
 
@@ -358,7 +494,10 @@ function sendJobApplicationConfirmation($job_id, $name, $email) {
     $headers .= 'From: "' . str_replace('"', '', FROM_NAME) . '" <' . FROM_EMAIL . ">\r\n";
     $headers .= "Reply-To: " . JOB_APPLICATION_EMAIL . "\r\n";
 
-    mail($email, $subject, $message, $headers);
+    $previousTimeout = ini_get('default_socket_timeout');
+    ini_set('default_socket_timeout', '5');
+    @mail($email, $subject, $message, $headers);
+    ini_set('default_socket_timeout', (string) $previousTimeout);
 }
 
 // Get job details if job_id is provided
@@ -468,6 +607,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
         
         // Collect detailed application information (always collect, but only validate when without resume)
         $education_level = trim($_POST['education_level'] ?? '');
+        if ($education_level === '') {
+            $education_level = null;
+        }
         $education_details = trim($_POST['education_details'] ?? '');
         
         // References
@@ -515,6 +657,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
         $expected_salary = trim($_POST['expected_salary'] ?? '');
         $availability_date = trim($_POST['availability_date'] ?? '');
         $additional_notes = trim($_POST['additional_notes'] ?? '');
+        // Strict SQL mode rejects '' for DATE. The date sits in the optional detailed section, so resume applications submit it blank.
+        if ($availability_date === '') {
+            $availability_date = null;
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $availability_date)
+            || !checkdate((int) substr($availability_date, 5, 2), (int) substr($availability_date, 8, 2), (int) substr($availability_date, 0, 4))) {
+            $error = 'Please enter a valid availability date.';
+        }
         
         // Validation for required fields when without resume
         if ($application_type === 'without_resume' && empty($error)) {
@@ -535,40 +684,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
         
         if (empty($error)) {
             try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO applications (job_id, name, email, phone, ic_number,
-                    address, state, city, age, weight, height, gender, race, nationality, marital_status, religion,
-                    smoker, convicted_of_crime, willing_to_relocate, own_transportation, having_relative_in_company,
-                    able_to_work_shift, current_health_medication,
-                    application_type, resume_path, cover_letter_path, 
-                    education_level, education_details, 
-                    reference1_name, reference1_position, reference1_company, reference1_phone, reference1_email,
-                    reference2_name, reference2_position, reference2_company, reference2_phone, reference2_email,
-                    reference3_name, reference3_position, reference3_company, reference3_phone, reference3_email,
-                    employment1_company, employment1_position, employment1_duration, employment1_description,
-                    employment2_company, employment2_position, employment2_duration, employment2_description,
-                    employment3_company, employment3_position, employment3_duration, employment3_description,
-                    technical_skills, soft_skills, certifications, languages,
-                    expected_salary, availability_date, additional_notes, status) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
-                    $job_id, $name, $email, $phone, $ic_number,
-                    $profile['address'], $profile['state'], $profile['city'], (int) $profile['age'],
-                    $profile['weight'], $profile['height'], $profile['gender'], $profile['race'], $profile['nationality'],
-                    $profile['marital_status'], $profile['religion'], $profile['smoker'], $profile['convicted_of_crime'],
-                    $profile['willing_to_relocate'], $profile['own_transportation'], $profile['having_relative_in_company'],
-                    $profile['able_to_work_shift'], $profile['current_health_medication'],
-                    $application_type, $resume_path, $cover_letter_path,
-                    $education_level, $education_details,
-                    $reference1_name, $reference1_position, $reference1_company, $reference1_phone, $reference1_email,
-                    $reference2_name, $reference2_position, $reference2_company, $reference2_phone, $reference2_email,
-                    $reference3_name, $reference3_position, $reference3_company, $reference3_phone, $reference3_email,
-                    $employment1_company, $employment1_position, $employment1_duration, $employment1_description,
-                    $employment2_company, $employment2_position, $employment2_duration, $employment2_description,
-                    $employment3_company, $employment3_position, $employment3_duration, $employment3_description,
-                    $technical_skills, $soft_skills, $certifications, $languages,
-                    $expected_salary, $availability_date, $additional_notes, 'pending'
+                // DECIMAL(5,1) rejects a second decimal place when strict mode is on.
+                $profile['weight'] = number_format((float) $profile['weight'], 1, '.', '');
+                $profile['height'] = number_format((float) $profile['height'], 1, '.', '');
+
+                job_application_insert($pdo, [
+                    'job_id' => $job_id,
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'ic_number' => $ic_number,
+                    'address' => $profile['address'],
+                    'state' => $profile['state'],
+                    'city' => $profile['city'],
+                    'age' => (int) $profile['age'],
+                    'weight' => $profile['weight'],
+                    'height' => $profile['height'],
+                    'gender' => $profile['gender'],
+                    'race' => $profile['race'],
+                    'nationality' => $profile['nationality'],
+                    'marital_status' => $profile['marital_status'],
+                    'religion' => $profile['religion'],
+                    'smoker' => $profile['smoker'],
+                    'convicted_of_crime' => $profile['convicted_of_crime'],
+                    'willing_to_relocate' => $profile['willing_to_relocate'],
+                    'own_transportation' => $profile['own_transportation'],
+                    'having_relative_in_company' => $profile['having_relative_in_company'],
+                    'able_to_work_shift' => $profile['able_to_work_shift'],
+                    'current_health_medication' => $profile['current_health_medication'],
+                    'application_type' => $application_type,
+                    'resume_path' => $resume_path,
+                    'cover_letter_path' => $cover_letter_path,
+                    'education_level' => $education_level,
+                    'education_details' => $education_details,
+                    'reference1_name' => $reference1_name,
+                    'reference1_position' => $reference1_position,
+                    'reference1_company' => $reference1_company,
+                    'reference1_phone' => $reference1_phone,
+                    'reference1_email' => $reference1_email,
+                    'reference2_name' => $reference2_name,
+                    'reference2_position' => $reference2_position,
+                    'reference2_company' => $reference2_company,
+                    'reference2_phone' => $reference2_phone,
+                    'reference2_email' => $reference2_email,
+                    'reference3_name' => $reference3_name,
+                    'reference3_position' => $reference3_position,
+                    'reference3_company' => $reference3_company,
+                    'reference3_phone' => $reference3_phone,
+                    'reference3_email' => $reference3_email,
+                    'employment1_company' => $employment1_company,
+                    'employment1_position' => $employment1_position,
+                    'employment1_duration' => $employment1_duration,
+                    'employment1_description' => $employment1_description,
+                    'employment2_company' => $employment2_company,
+                    'employment2_position' => $employment2_position,
+                    'employment2_duration' => $employment2_duration,
+                    'employment2_description' => $employment2_description,
+                    'employment3_company' => $employment3_company,
+                    'employment3_position' => $employment3_position,
+                    'employment3_duration' => $employment3_duration,
+                    'employment3_description' => $employment3_description,
+                    'technical_skills' => $technical_skills,
+                    'soft_skills' => $soft_skills,
+                    'certifications' => $certifications,
+                    'languages' => $languages,
+                    'expected_salary' => $expected_salary,
+                    'availability_date' => $availability_date,
+                    'additional_notes' => $additional_notes,
+                    'status' => 'pending',
+                    'created_at' => date('Y-m-d H:i:s'),
                 ]);
                 
                 // Try to send email notification (don't let email errors stop the process)
@@ -586,6 +770,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
                 exit;
                 
             } catch (PDOException $e) {
+                error_log('Job application insert failed: ' . $e->getMessage());
                 $error = "Error submitting application. Please try again.";
             }
         }
@@ -954,7 +1139,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
                                     <div class="input-wrapper">
                                         <i class="fas fa-briefcase"></i>
                                         <?php if ($job): ?>
-                                            <input type="text" value="<?php echo htmlspecialchars($job['title']); ?> - <?php echo htmlspecialchars($job['company_name']); ?>" readonly>
+                                            <input type="text" id="job_select" value="<?php echo htmlspecialchars($job['title']); ?> - <?php echo htmlspecialchars($job['company_name']); ?>" readonly>
                                         <?php else: ?>
                                             <select id="job_select" name="job_id" required>
                                                 <option value="">Choose a position to apply for...</option>
