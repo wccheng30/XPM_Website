@@ -15,7 +15,7 @@ require_once 'includes/form-prefill.php';
 
 // Helper function to safely display prices
 function formatPrice($price) {
-    if (is_numeric($price)) {
+    if (is_numeric($price)) {           
         return 'RM ' . number_format($price, 0);
     } else {
         return htmlspecialchars($price);
@@ -202,12 +202,7 @@ function sendRegistrationConfirmation($programme_id, $name, $email) {
     </html>
     ";
 
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= 'From: "' . str_replace('"', '', FROM_NAME) . '" <' . FROM_EMAIL . ">\r\n";
-    $headers .= "Reply-To: " . PROGRAMME_REGISTRATION_EMAIL . "\r\n";
-
-    mail($email, $subject, $message, $headers);
+    return xpm_send_mail($email, $subject, $message, PROGRAMME_REGISTRATION_EMAIL);
 }
 
 // Get programme details if programme_id is provided
@@ -345,15 +340,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error_message === '') {
                 $additional_notes
             ]);
             
-            $success_message = "Registration submitted successfully! We'll contact you soon with programme details. A confirmation was sent to your email.";
-            
+            $confirmSent = false;
             // Send email notification to admin and a confirmation to the registrant
             try {
                 sendRegistrationNotification($programme_id, $name, $email, $phone, $ic_number, $company, $position, $billing_address, $billing_contact_no, $vehicle_type, $vehicle_type_other, $plate_number, $payment_method, $how_did_you_hear, $how_did_you_hear_other, $spicy_preference, $allergies, $allergies_other, $dietary_preference, $dietary_restrictions, $interested_programs, $interested_programs_other, $additional_notes);
-                sendRegistrationConfirmation($programme_id, $name, $email);
+                $confirmSent = sendRegistrationConfirmation($programme_id, $name, $email);
             } catch (Exception $emailError) {
                 error_log("Registration email failed: " . $emailError->getMessage());
             }
+
+            $success_message = $confirmSent
+                ? "Registration submitted successfully! We'll contact you soon with programme details. A confirmation was sent to your email."
+                : "Registration submitted successfully! We'll contact you soon with programme details. The confirmation email could not be sent.";
             
             // Clear form data
             $_POST = [];
@@ -503,6 +501,7 @@ $xpm_prefilled = $pdo ? xpm_apply_account_prefill($pdo, 'programme') : false;
                             <h3>Need help?</h3>
                             <p>Questions about the programme or HRDF claims? Reach our team directly.</p>
                             <a href="tel:+60167721113"><i class="fas fa-phone"></i> 016 772 1113</a>
+                            <a href="tel:+60167723555"><i class="fas fa-phone"></i> 016 772 3555</a>
                             <a href="mailto:hr@xpresspointservices.com"><i class="fas fa-envelope"></i> hr@xpresspointservices.com</a>
                         </div>
                     </aside>

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Founder section (#initiator) – the only soft-purple area of the site.
+   Founder section (#initiator).
    All lavender styling is scoped under #initiator.
    ========================================================================== */
 
@@ -16,7 +16,7 @@
     overflow: hidden;
     isolation: isolate;
     color: var(--f-ink);
-    background: linear-gradient(180deg, var(--color-bg-soft) 0%, var(--f-bg) 12%, var(--lavender-100) 55%, var(--f-bg) 88%, var(--color-bg-soft) 100%);
+    background: var(--purple-100);
 }
 
 /* ---------- Background layers ---------- */
@@ -164,7 +164,7 @@
 }
 
 #initiator .founder-title span {
-    background: linear-gradient(100deg, var(--lavender-700), var(--lavender-500), var(--lavender-700));
+    background: linear-gradient(100deg, var(--lavender-900), var(--lavender-700), var(--lavender-900));
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -179,7 +179,6 @@
 #initiator .founder-subtitle {
     font-size: var(--fs-md);
     color: var(--f-strong);
-    opacity: 0.85;
 }
 
 /* ---------- Layout ---------- */
@@ -368,7 +367,7 @@
     height: 44px;
     border-radius: var(--r-md);
     color: var(--c-white);
-    background: linear-gradient(135deg, var(--lavender-500), var(--lavender-700));
+    background: linear-gradient(135deg, var(--lavender-700), var(--lavender-900));
 }
 
 #initiator .story-header h3 {

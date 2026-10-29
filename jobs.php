@@ -22,6 +22,27 @@ if ($pdo) {
 } else {
     error_log("Database connection failed");
 }
+
+function job_level_label($level) {
+    $level = (string) $level;
+    $predefined_levels = ['entry', 'mid', 'senior', 'executive'];
+    if (in_array(strtolower($level), $predefined_levels, true)) {
+        return ucfirst($level) . ' Level';
+    }
+    return $level;
+}
+
+function job_badge_class($label) {
+    $key = strtolower(trim((string) $label));
+    if ($key === 'new') {
+        return 'tag-new';
+    }
+    $level_labels = ['entry level', 'mid-level', 'mid level', 'fresh graduate', 'senior level', 'executive level'];
+    if (in_array($key, $level_labels, true)) {
+        return 'tag-level';
+    }
+    return 'tag-meta';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,13 +53,15 @@ if ($pdo) {
     <meta name="keywords" content="job opportunities, careers, employment, HR jobs, professional positions">
     <meta name="author" content="Xpress Point Management">
     <title>Career Opportunities - Xpress Point Management</title>
-    <?php include 'partials/site-head.php'; ?>
+    <?php $xpm_page_styles = ['pages/jobs.css']; include 'partials/site-head.php'; ?>
 </head>
-<body>
+<body class="page-jobs">
     <?php $xpm_active = 'careers'; include 'partials/site-nav.php'; ?>
 
     <main id="main">
-        <header class="page-hero">
+        <header class="page-hero jobs-hero">
+            <span class="jobs-orb jobs-orb-lg" aria-hidden="true"></span>
+            <span class="jobs-orb jobs-orb-sm" aria-hidden="true"></span>
             <div class="container">
                 <span class="eyebrow" data-reveal><i class="fas fa-briefcase"></i> Career Opportunities</span>
                 <h1 data-split>Find your next career move.</h1>
@@ -65,18 +88,39 @@ if ($pdo) {
             <?php if (!empty($jobs)): ?>
                 <div class="listing-grid" data-reveal-stagger>
                     <?php foreach ($jobs as $index => $job): ?>
-                    <article class="listing-card">
-                        <?php if (!empty($job['poster_image'])): ?>
-                        <div class="listing-media is-logo">
-                            <img src="<?php echo htmlspecialchars($job['poster_image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($job['title']); ?> Logo"
-                                 class="job-logo-img" loading="lazy">
-                        </div>
-                        <?php endif; ?>
-
+                    <article class="listing-card job-card">
                         <div class="listing-top">
-                            <span class="icon-box"><i class="<?php echo htmlspecialchars($job['job_icon'] ?? 'fas fa-briefcase'); ?>"></i></span>
-                            <span class="badge"><?php echo htmlspecialchars($job['job_badge'] ?? $job['type']); ?></span>
+                            <?php if (!empty($job['poster_image'])): ?>
+                            <span class="job-mark">
+                                <img src="<?php echo htmlspecialchars($job['poster_image']); ?>"
+                                     alt="<?php echo htmlspecialchars($job['title']); ?> Logo"
+                                     class="job-logo-img" loading="lazy">
+                            </span>
+                            <?php else:
+                                $job_mark_source = trim((string) ($job['company_name'] ?? ''));
+                                if ($job_mark_source === '') {
+                                    $job_mark_source = trim((string) ($job['title'] ?? ''));
+                                }
+                                if ($job_mark_source !== '') {
+                                    $job_initial = function_exists('mb_substr')
+                                        ? mb_substr($job_mark_source, 0, 1, 'UTF-8')
+                                        : substr($job_mark_source, 0, 1);
+                                    $job_initial = function_exists('mb_strtoupper')
+                                        ? mb_strtoupper($job_initial)
+                                        : strtoupper($job_initial);
+                                } else {
+                                    $job_initial = '';
+                                }
+                            ?>
+                            <span class="job-initial" aria-hidden="true"><?php echo htmlspecialchars($job_initial); ?></span>
+                            <?php endif; ?>
+                            <div class="job-tags">
+                                <?php $job_badge_label = (string) ($job['job_badge'] ?? $job['type']); ?>
+                                <span class="badge <?php echo job_badge_class($job_badge_label); ?>"><?php echo htmlspecialchars($job_badge_label); ?></span>
+                                <?php if (!empty($job['experience_level'])): ?>
+                                <span class="badge tag-level"><?php echo htmlspecialchars(job_level_label($job['experience_level'])); ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
 
                         <div class="listing-body">
@@ -117,25 +161,6 @@ if ($pdo) {
                                     <span>Hours to be confirmed</span>
                                 </div>
                                 <?php endif; ?>
-                                <?php if (!empty($job['experience_level'])): ?>
-                                <div class="detail-item">
-                                    <i class="fas fa-user-tie"></i>
-                                    <span>
-                                        <?php 
-                                        $level = htmlspecialchars($job['experience_level']);
-                                        
-                                        // Check if it's a predefined level that needs "Level" suffix
-                                        $predefined_levels = ['entry', 'mid', 'senior', 'executive'];
-                                        if (in_array(strtolower($level), $predefined_levels)) {
-                                            echo ucfirst($level) . ' Level';
-                                        } else {
-                                            // For custom levels, display as is
-                                            echo $level;
-                                        }
-                                        ?>
-                                    </span>
-                                </div>
-                                <?php endif; ?>
                             </div>
 
                             <?php if (!empty($job['requirements'])): ?>
@@ -171,7 +196,7 @@ if ($pdo) {
                             <div class="price-block">
                                 <?php if (!empty($job['salary_range'])): ?>
                                     <span class="price-label">Salary</span>
-                                    <span class="price-amount price-amount-sm"><?php echo htmlspecialchars($job['salary_range']); ?></span>
+                                    <span class="price-amount price-amount-sm is-salary"><?php echo htmlspecialchars($job['salary_range']); ?></span>
                                 <?php else: ?>
                                     <span class="price-label">Posted</span>
                                     <span class="price-amount price-amount-sm"><?php echo date('M j, Y', strtotime($job['created_at'])); ?></span>
@@ -198,7 +223,7 @@ if ($pdo) {
             </div>
         </section>
 
-        <section class="section section-alt">
+        <section class="section jobs-band">
             <div class="container">
                 <div class="cta-band" data-reveal>
                     <div>

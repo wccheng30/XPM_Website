@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'avatar'
         }
         if ($file['error'] !== UPLOAD_ERR_OK || !isset($allowed[$type])) {
             $cardError['avatar'] = 'Upload a JPG, PNG, GIF, or WebP photo.';
-        } elseif ($file['size'] > 2 * 1024 * 1024) {
-            $cardError['avatar'] = 'Photo must be 2 MB or smaller.';
+        } elseif ($file['size'] > 5 * 1024 * 1024) {
+            $cardError['avatar'] = 'Photo must be 5 MB or smaller.';
         } else {
             $dir = __DIR__ . '/assets/images/avatars';
             if (!is_dir($dir)) {

@@ -34,21 +34,21 @@
             '.xpm-dialog[hidden]{display:none}',
             '.xpm-dialog-backdrop{position:absolute;inset:0;background:rgba(30,35,40,.55)}',
             '.xpm-dialog-card{position:relative;width:min(100%,420px);padding:1.75rem 1.5rem 1.4rem;text-align:center;background:#fff;border:1px solid #ececec;border-radius:16px;box-shadow:0 30px 70px -20px rgba(0,0,0,.22);font-family:Inter,system-ui,sans-serif}',
-            '.xpm-dialog-icon{display:grid;place-items:center;width:3rem;height:3rem;margin:0 auto 1rem;color:#F03000;background:#FDECE6;border-radius:999px;font-size:1.1rem}',
+            '.xpm-dialog-icon{display:grid;place-items:center;width:3rem;height:3rem;margin:0 auto 1rem;color:#B31B01;background:#F8EEEB;border-radius:999px;font-size:1.1rem}',
             '.xpm-dialog-card h2{margin:0 0 .45rem;font-family:Poppins,Inter,sans-serif;font-size:1.35rem;font-weight:600;line-height:1.25;color:#1E2328}',
             '.xpm-dialog-card p{margin:0 0 1.35rem;font-size:.95rem;line-height:1.55;color:#4E575E;white-space:pre-line}',
             '.xpm-dialog-card p[hidden],.xpm-dialog-field[hidden],.xpm-dialog-cancel[hidden]{display:none}',
             '.xpm-dialog-field-label{display:block;margin:0 0 .35rem;font-size:.85rem;font-weight:600;color:#1E2328;text-align:left}',
             '.xpm-dialog-field-label[hidden]{display:none}',
             '.xpm-dialog-field{display:block;width:100%;margin:0 0 1.2rem;min-height:44px;padding:.65rem .8rem;font:inherit;font-size:.95rem;color:#1E2328;background:#fff;border:1px solid #d9d9db;border-radius:10px}',
-            '.xpm-dialog-field:focus{outline:none;border-color:#D42400;box-shadow:0 0 0 4px rgba(212,36,0,.16)}',
+            '.xpm-dialog-field:focus{outline:none;border-color:#B31B01;box-shadow:0 0 0 4px rgba(179,27,1,.16)}',
             '.xpm-dialog-actions{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}',
             '.xpm-dialog-confirm,.xpm-dialog-cancel{min-height:44px;padding:.65rem 1.1rem;font:inherit;font-size:.95rem;font-weight:600;border-radius:10px;cursor:pointer}',
-            '.xpm-dialog-confirm{color:#fff;background:#D42400;border:1px solid #D42400}',
-            '.xpm-dialog-confirm:hover{background:#9C1301;border-color:#9C1301}',
+            '.xpm-dialog-confirm{color:#fff;background:#B31B01;border:1px solid #B31B01}',
+            '.xpm-dialog-confirm:hover{background:#8E1400;border-color:#8E1400}',
             '.xpm-dialog-cancel{color:#1E2328;background:transparent;border:1px solid #d9d9db}',
             '.xpm-dialog-cancel:hover{border-color:#1E2328}',
-            '.xpm-dialog-confirm:focus-visible,.xpm-dialog-cancel:focus-visible,.xpm-dialog-field:focus-visible{outline:2px solid #5E3F8F;outline-offset:2px;box-shadow:none}'
+            '.xpm-dialog-confirm:focus-visible,.xpm-dialog-cancel:focus-visible,.xpm-dialog-field:focus-visible{outline:2px solid #1F6A6E;outline-offset:2px;box-shadow:none}'
         ].join('');
         document.head.appendChild(style);
 

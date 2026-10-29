@@ -71,8 +71,8 @@ if (!empty($job['requirements'])) {
     }
 }
 
-// Format description with better structure
-$description = $job['description'];
+// Format description lines for display. Leading hyphens are list markers, not content.
+$description_lines = preg_split("/\r\n|\r|\n/", (string) $job['description']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,11 +83,13 @@ $description = $job['description'];
     <meta name="description" content="<?php echo htmlspecialchars(substr($job['description'], 0, 160)); ?>">
     <?php $xpm_page_styles = ['pages/job-detail.css']; include 'partials/site-head.php'; ?>
 </head>
-<body>
+<body class="page-job-detail">
     <?php $xpm_active = 'careers'; include 'partials/site-nav.php'; ?>
 
     <main id="main">
-        <header class="page-hero">
+        <header class="page-hero job-hero-banner">
+            <span class="job-orb job-orb-lg" aria-hidden="true"></span>
+            <span class="job-orb job-orb-sm" aria-hidden="true"></span>
             <div class="container">
                 <nav class="breadcrumb" aria-label="Breadcrumb" data-reveal="fade">
                     <a href="index.html">Home</a><i class="fas fa-chevron-right"></i>
@@ -95,27 +97,35 @@ $description = $job['description'];
                     <span><?php echo htmlspecialchars($job['title']); ?></span>
                 </nav>
                 <div class="job-hero">
-                    <div>
-                        <?php if (!empty($job['company_name'])): ?>
-                        <span class="eyebrow" data-reveal><i class="fas fa-building"></i> <?php echo htmlspecialchars($job['company_name']); ?></span>
+                    <div class="job-hero-identity">
+                        <?php if (!empty($job['poster_image'])): ?>
+                        <span class="job-hero-mark">
+                            <img src="<?php echo htmlspecialchars($job['poster_image']); ?>"
+                                 alt="<?php echo htmlspecialchars($job['company_name']); ?> Logo">
+                        </span>
                         <?php endif; ?>
-                        <h1 data-split><?php echo htmlspecialchars($job['title']); ?></h1>
-                        <div class="job-hero-meta" data-reveal-stagger="fade">
-                            <span class="tag"><i class="fas fa-location-dot"></i> <?php echo htmlspecialchars($job['location']); ?></span>
-                            <span class="tag"><i class="fas fa-clock"></i> <?php echo htmlspecialchars($job['type']); ?></span>
-                            <?php if (!empty($job['salary_range'])): ?>
-                            <span class="tag"><i class="fas fa-wallet"></i> <?php echo htmlspecialchars($job['salary_range']); ?></span>
+                        <div>
+                            <?php if (!empty($job['company_name'])): ?>
+                            <span class="eyebrow" data-reveal><i class="fas fa-building"></i> <?php echo htmlspecialchars($job['company_name']); ?></span>
                             <?php endif; ?>
-                            <?php if (!empty($job['experience_level'])): ?>
-                            <span class="tag"><i class="fas fa-user-tie"></i> <?php echo htmlspecialchars($job['experience_level']); ?></span>
-                            <?php endif; ?>
+                            <h1 data-split><?php echo htmlspecialchars($job['title']); ?></h1>
+                            <div class="job-hero-meta" data-reveal-stagger="fade">
+                                <span class="tag"><i class="fas fa-location-dot"></i> <?php echo htmlspecialchars($job['location']); ?></span>
+                                <span class="tag"><i class="fas fa-clock"></i> <?php echo htmlspecialchars($job['type']); ?></span>
+                                <?php if (!empty($job['salary_range'])): ?>
+                                <span class="tag is-salary"><i class="fas fa-wallet"></i> <?php echo htmlspecialchars($job['salary_range']); ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($job['experience_level'])): ?>
+                                <span class="tag"><i class="fas fa-user-tie"></i> <?php echo htmlspecialchars($job['experience_level']); ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <div class="job-hero-actions" data-reveal="right">
                         <a href="job-application.php?job_id=<?php echo $job['id']; ?>" class="btn btn-primary btn-lg">
                             Apply now <i class="fas fa-arrow-right"></i>
                         </a>
-                        <a href="jobs.php" class="btn btn-ghost">
+                        <a href="jobs.php" class="btn btn-outline">
                             <i class="fas fa-arrow-left"></i> All jobs
                         </a>
                     </div>
@@ -123,7 +133,7 @@ $description = $job['description'];
             </div>
         </header>
 
-        <section class="section">
+        <section class="section job-detail-section">
             <div class="container job-layout">
                 <div class="job-main">
                     <div class="job-facts" data-reveal-stagger>
@@ -171,9 +181,22 @@ $description = $job['description'];
 
                     <article class="job-block" data-reveal>
                         <h2>About the role</h2>
-                        <div class="job-description">
-                            <?php echo nl2br(htmlspecialchars($job['description'])); ?>
-                        </div>
+                        <ul class="job-description">
+                            <?php foreach ($description_lines as $description_line): ?>
+                            <?php
+                                $description_line = trim($description_line);
+                                if ($description_line === '') {
+                                    continue;
+                                }
+                                $description_line = preg_replace('/^[-]+\s*/', '', $description_line);
+                                $description_line = trim((string) $description_line);
+                                if ($description_line === '') {
+                                    continue;
+                                }
+                            ?>
+                            <li><?php echo htmlspecialchars($description_line); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
                     </article>
 
                     <?php if (!empty($requirements_array)): ?>
@@ -182,7 +205,7 @@ $description = $job['description'];
                         <ol class="requirements" data-reveal-stagger="fade">
                             <?php foreach ($requirements_array as $index => $requirement): ?>
                             <li>
-                                <span class="requirement-number"><?php echo str_pad($index + 1, 2, '0', STR_PAD_LEFT); ?></span>
+                                <span class="requirement-number" aria-hidden="true"><?php echo str_pad($index + 1, 2, '0', STR_PAD_LEFT); ?></span>
                                 <span><?php echo htmlspecialchars($requirement); ?></span>
                             </li>
                             <?php endforeach; ?>
@@ -201,13 +224,25 @@ $description = $job['description'];
                         <?php endif; ?>
                         <h3>Job highlights</h3>
                         <dl class="summary-list">
-                            <div><dt>Job type</dt><dd><?php echo htmlspecialchars($job['type']); ?></dd></div>
-                            <div><dt>Location</dt><dd><?php echo htmlspecialchars($job['location']); ?></dd></div>
+                            <div>
+                                <span class="summary-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                                <div><dt>Job type</dt><dd><?php echo htmlspecialchars($job['type']); ?></dd></div>
+                            </div>
+                            <div>
+                                <span class="summary-icon" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                                <div><dt>Location</dt><dd><?php echo htmlspecialchars($job['location']); ?></dd></div>
+                            </div>
                             <?php if (!empty($job['salary_range'])): ?>
-                            <div><dt>Salary</dt><dd><?php echo htmlspecialchars($job['salary_range']); ?></dd></div>
+                            <div>
+                                <span class="summary-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+                                <div><dt>Salary</dt><dd><?php echo htmlspecialchars($job['salary_range']); ?></dd></div>
+                            </div>
                             <?php endif; ?>
                             <?php if (!empty($job['experience_level'])): ?>
-                            <div><dt>Experience</dt><dd><?php echo htmlspecialchars($job['experience_level']); ?></dd></div>
+                            <div>
+                                <span class="summary-icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+                                <div><dt>Experience</dt><dd><?php echo htmlspecialchars($job['experience_level']); ?></dd></div>
+                            </div>
                             <?php endif; ?>
                         </dl>
                         <a href="job-application.php?job_id=<?php echo $job['id']; ?>" class="btn btn-primary btn-block">
@@ -215,12 +250,13 @@ $description = $job['description'];
                         </a>
                     </div>
 
-                    <div class="card card-flat" data-reveal="right">
+                    <div class="card job-questions" data-reveal="right">
                         <h3>Questions?</h3>
                         <ul class="contact-lines">
                             <li><i class="fas fa-envelope"></i><a href="mailto:hr@xpresspointservices.com">hr@xpresspointservices.com</a></li>
-                            <li><i class="fas fa-phone"></i><a href="tel:+60167721113">+60 16-772 1113</a></li>
-                            <li><i class="fas fa-clock"></i><span>We reply within 24 hours</span></li>
+                            <li><i class="fas fa-phone"></i><a href="tel:+60167721113">016 772 1113</a></li>
+                            <li><i class="fas fa-phone"></i><a href="tel:+60167723555">016 772 3555</a></li>
+                            <li><i class="fas fa-clock"></i><span class="job-reply">We reply within 24 hours</span></li>
                         </ul>
                     </div>
                 </aside>
@@ -228,7 +264,7 @@ $description = $job['description'];
         </section>
 
         <?php if (!empty($related_jobs)): ?>
-        <section class="section section-alt">
+        <section class="section section-alt related-section">
             <div class="container">
                 <div class="section-header align-left" data-reveal>
                     <span class="eyebrow"><i class="fas fa-briefcase"></i> Keep exploring</span>
@@ -250,6 +286,12 @@ $description = $job['description'];
         </section>
         <?php endif; ?>
     </main>
+
+    <div class="job-apply-bar">
+        <a href="job-application.php?job_id=<?php echo $job['id']; ?>" class="btn btn-primary">
+            Apply now <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
 
     <?php include 'partials/site-footer.php'; ?>
 

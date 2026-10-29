@@ -23,6 +23,24 @@ function getDisplayPrice($programme, $priceKey = 'price') {
     return $programme[$priceKey];
 }
 
+function programme_chip_class($label) {
+    $key = strtolower(trim((string) $label));
+    $key = rtrim($key, "!. ");
+    if ($key === 'popular') {
+        return 'tag-popular';
+    }
+    if ($key === 'free') {
+        return 'tag-free';
+    }
+    if ($key === 'training programme') {
+        return 'tag-training';
+    }
+    if ($key === 'webinar') {
+        return 'tag-webinar';
+    }
+    return 'tag-default';
+}
+
 $pdo = get_db_connection();
 $programmes = [];
 $programmes_by_month = [];
@@ -130,11 +148,13 @@ if ($pdo) {
     <title>Training Programmes - Xpress Point Management Services</title>
     <?php $xpm_page_styles = ['pages/programmes.css']; include 'partials/site-head.php'; ?>
 </head>
-<body>
+<body class="page-programmes">
     <?php $xpm_active = 'programmes'; include 'partials/site-nav.php'; ?>
 
     <main id="main">
-        <header class="page-hero">
+        <header class="page-hero programme-hero">
+            <span class="programme-orb programme-orb-lg" aria-hidden="true"></span>
+            <span class="programme-orb programme-orb-sm" aria-hidden="true"></span>
             <div class="container">
                 <span class="eyebrow" data-reveal><i class="fas fa-graduation-cap"></i> HRD Corp Registered Training Provider</span>
                 <h1 data-split>Professional training programmes.</h1>
@@ -172,8 +192,9 @@ if ($pdo) {
                 <?php endforeach; ?>
             </div>
             <?php if (!empty($programmes_by_month)): ?>
+                <?php $month_index = 0; ?>
                 <?php foreach ($programmes_by_month as $month_key => $month_data): ?>
-                <div class="month-block">
+                <div class="month-block<?php echo $month_index % 2 === 1 ? ' is-tint' : ''; ?>">
                     <div class="month-header" data-reveal="fade">
                         <h2><?php echo htmlspecialchars($month_data['month_name']); ?></h2>
                         <span class="month-count"><?php echo count($month_data['programmes']); ?> programme<?php echo count($month_data['programmes']) === 1 ? '' : 's'; ?></span>
@@ -197,8 +218,14 @@ if ($pdo) {
 
                             <div class="listing-top">
                                 <span class="icon-box"><i class="<?php echo htmlspecialchars($programme['programme_icon'] ?? 'fas fa-graduation-cap'); ?>"></i></span>
-                                <span class="badge"><?php echo htmlspecialchars((($programme['programme_type'] ?? 'training') === 'webinar') ? 'Webinar' : 'Training Programme'); ?></span>
-                                <span class="badge"><?php echo htmlspecialchars($programme['programme_badge'] ?? $programme['category']); ?></span>
+                                <?php
+                                    $type_name = (($programme['programme_type'] ?? 'training') === 'webinar') ? 'Webinar' : 'Training Programme';
+                                    $extra_badge = trim((string) ($programme['programme_badge'] ?? $programme['category'] ?? ''));
+                                ?>
+                                <span class="badge <?php echo programme_chip_class($type_name); ?>"><?php echo htmlspecialchars($type_name); ?></span>
+                                <?php if ($extra_badge !== '' && strcasecmp($extra_badge, $type_name) !== 0): ?>
+                                <span class="badge <?php echo programme_chip_class($extra_badge); ?>"><?php echo htmlspecialchars($extra_badge); ?></span>
+                                <?php endif; ?>
                             </div>
 
                             <div class="listing-body">
@@ -253,8 +280,8 @@ if ($pdo) {
                                         <i class="fas fa-users"></i>
                                         <span>Max <?php echo htmlspecialchars($programme['max_participants'] ?? 25); ?> participants</span>
                                     </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-certificate"></i>
+                                    <div class="detail-item detail-cert">
+                                        <i class="fas fa-check" aria-hidden="true"></i>
                                         <span><?php echo htmlspecialchars($programme['certification'] ?? 'HRD Corp Certified'); ?></span>
                                     </div>
                                 </div>
@@ -294,24 +321,33 @@ if ($pdo) {
                                     <?php endif; ?>
                                     <?php $sst_note = programme_sst_note($programme); ?>
                                     <?php if ($sst_note !== ''): ?>
-                                        <span class="price-note"><?php echo htmlspecialchars($sst_note); ?></span>
+                                        <span class="price-note text-muted"><?php echo htmlspecialchars($sst_note); ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <?php if (programme_registration_is_open($programme)): ?>
-                                    <a href="programme-registration.php?programme_id=<?php echo $programme['id']; ?>" class="btn btn-primary btn-sm">
-                                        Register <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                <?php else: ?>
-                                    <span class="btn btn-disabled btn-sm" aria-disabled="true">
-                                        <i class="fas fa-lock"></i>
-                                        <?php echo isset($programme['registration_status']) && $programme['registration_status'] === 'closed' ? 'Registration Closed' : 'Registration Full'; ?>
-                                    </span>
-                                <?php endif; ?>
+                                <div class="listing-actions">
+                                    <?php if (!empty($programme['poster_image'])): ?>
+                                    <button type="button" class="poster-link"
+                                        data-poster-src="<?php echo htmlspecialchars($programme['poster_image']); ?>"
+                                        data-poster-secondary="<?php echo !empty($programme['poster_image_2']) ? htmlspecialchars($programme['poster_image_2']) : ''; ?>"
+                                        data-poster-title="<?php echo htmlspecialchars($programme['title']); ?>">View poster</button>
+                                    <?php endif; ?>
+                                    <?php if (programme_registration_is_open($programme)): ?>
+                                        <a href="programme-registration.php?programme_id=<?php echo $programme['id']; ?>" class="btn btn-primary btn-sm">
+                                            Register <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="btn btn-disabled btn-sm" aria-disabled="true">
+                                            <i class="fas fa-lock"></i>
+                                            <?php echo isset($programme['registration_status']) && $programme['registration_status'] === 'closed' ? 'Registration Closed' : 'Registration Full'; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </article>
                         <?php endforeach; ?>
                     </div>
                 </div>
+                <?php $month_index++; ?>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="empty-state" data-reveal>

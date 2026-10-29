@@ -20,7 +20,7 @@ body {
     font-size: var(--fs-base);
     line-height: var(--lh-body);
     color: var(--c-text);
-    background: var(--color-bg-soft);
+    background: var(--c-white);
     overflow-x: hidden;
     overflow-x: clip;
     -webkit-font-smoothing: antialiased;
@@ -114,17 +114,14 @@ strong {
 .section {
     position: relative;
     padding-block: var(--section-y);
-    background: transparent;
 }
 
 .section-alt {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 42%),
-        var(--color-bg-wash);
+    background: var(--c-surface);
 }
 
 .section + .section:not(.section-alt):not(.founder-visionary) {
-    border-top: 1px solid transparent;
+    border-top: 1px solid var(--c-border);
 }
 
 .grid {

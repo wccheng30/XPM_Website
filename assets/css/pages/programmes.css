@@ -1,15 +1,13 @@
 /* Programmes page */
+body.page-programmes {
+    --text-muted: var(--c-text-3);
+}
+
 .programme-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
     margin-bottom: var(--sp-6);
-}
-
-.programme-filters .btn.is-active {
-    background: var(--c-charcoal);
-    color: #fff;
-    border-color: var(--c-charcoal);
 }
 
 .programme-listing .listing-media img {
@@ -61,9 +59,7 @@
     padding: var(--sp-4);
     background: var(--c-white);
     border: 1px solid var(--c-border);
-    border-top: 3px solid var(--color-accent);
     border-radius: var(--r-lg);
-    box-shadow: var(--sh-xs);
     transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
 
@@ -94,4 +90,394 @@
 .pum-trainer p {
     font-size: 0.875rem;
     margin-bottom: 0.4rem;
+}
+
+/* ---------- Hero ---------- */
+body.page-programmes .programme-hero {
+    background: linear-gradient(100deg, var(--cream) 0%, var(--cream) 46%, var(--purple-100) 76%);
+    border-bottom: 0;
+}
+
+body.page-programmes .programme-hero::after {
+    content: none;
+}
+
+.programme-orb {
+    position: absolute;
+    z-index: 0;
+    display: block;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.programme-orb-lg {
+    width: min(420px, 52vw);
+    aspect-ratio: 1;
+    top: -18%;
+    right: -8%;
+    background: var(--purple-200);
+    filter: blur(28px);
+}
+
+.programme-orb-sm {
+    width: min(240px, 36vw);
+    aspect-ratio: 1;
+    bottom: -22%;
+    left: -6%;
+    background: var(--brand-teal);
+    filter: blur(24px);
+    opacity: 0.85;
+}
+
+body.page-programmes .programme-hero .eyebrow {
+    color: var(--purple-700);
+    background: var(--purple-200);
+}
+
+body.page-programmes .programme-hero .eyebrow i {
+    color: var(--purple-700);
+}
+
+body.page-programmes .programme-hero h1 {
+    color: var(--purple-700);
+}
+
+body.page-programmes .programme-hero .stat-value {
+    color: var(--purple-700);
+}
+
+body.page-programmes .programme-hero .stat-value::after {
+    content: "";
+    display: block;
+    width: 1.75rem;
+    height: 3px;
+    margin-top: 0.45rem;
+    background: var(--brand-teal);
+    border-radius: var(--r-pill);
+}
+
+/* ---------- Filters ---------- */
+body.page-programmes .programme-filters .btn {
+    --btn-bg: var(--c-white);
+    --btn-fg: var(--purple-700);
+    --btn-bd: var(--purple-200);
+    border-width: 1px;
+    box-shadow: none;
+}
+
+body.page-programmes .programme-filters .btn:hover {
+    --btn-bg: var(--purple-100);
+    --btn-fg: var(--purple-700);
+    --btn-bd: var(--purple-200);
+    box-shadow: none;
+}
+
+body.page-programmes .programme-filters .btn.is-active,
+body.page-programmes .programme-filters .btn.is-active:hover {
+    --btn-bg: var(--purple-700);
+    --btn-fg: var(--c-white);
+    --btn-bd: var(--purple-700);
+    box-shadow: none;
+}
+
+/* ---------- Months ---------- */
+body.page-programmes #programme {
+    overflow-x: clip;
+    padding-bottom: 0;
+}
+
+body.page-programmes .month-block {
+    position: relative;
+    padding-block: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+body.page-programmes .month-block + .month-block {
+    margin-top: 0;
+}
+
+body.page-programmes .month-block::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    background: var(--c-white);
+    pointer-events: none;
+}
+
+body.page-programmes .month-block.is-tint::before {
+    background: var(--purple-100);
+}
+
+body.page-programmes .month-block > * {
+    position: relative;
+    z-index: 1;
+}
+
+body.page-programmes .month-header::after {
+    content: none;
+}
+
+body.page-programmes .month-header h2 {
+    color: var(--purple-700);
+    padding-bottom: 0.15rem;
+    border-bottom: 3px solid var(--brand-teal);
+}
+
+body.page-programmes .month-header .month-count {
+    padding: 0.28rem 0.75rem;
+    color: var(--purple-700);
+    background: var(--purple-200);
+    border-radius: var(--r-pill);
+    font-weight: 600;
+}
+
+/* ---------- Cards ---------- */
+body.page-programmes .programme-listing {
+    background: var(--c-white);
+    border: 1px solid var(--purple-200);
+    box-shadow: 0 10px 24px -14px rgba(74, 36, 102, 0.10);
+}
+
+body.page-programmes .programme-listing::after {
+    content: "";
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--brand-teal);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur) var(--ease-out);
+    pointer-events: none;
+}
+
+body.page-programmes .programme-listing:hover {
+    transform: translateY(-5px);
+    border-color: var(--purple-200);
+    box-shadow: 0 18px 34px -16px rgba(74, 36, 102, 0.16);
+}
+
+body.page-programmes .programme-listing:hover::after {
+    transform: scaleX(1);
+}
+
+body.page-programmes .programme-listing .listing-media-hint {
+    display: none;
+}
+
+body.page-programmes .programme-listing .listing-top {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+body.page-programmes .programme-listing .listing-top .badge:first-of-type {
+    margin-left: auto;
+}
+
+body.page-programmes .programme-listing .icon-box,
+body.page-programmes .programme-listing:hover .listing-top .icon-box {
+    background: var(--purple-100);
+    color: var(--purple-700);
+    border-color: transparent;
+    transform: none;
+}
+
+body.page-programmes .programme-listing .badge {
+    border: 0;
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+body.page-programmes .tag-training {
+    color: var(--purple-700);
+    background: var(--purple-200);
+}
+
+body.page-programmes .tag-default {
+    color: var(--purple-700);
+    background: var(--purple-100);
+}
+
+body.page-programmes .tag-webinar {
+    color: var(--purple-700);
+    background: var(--purple-100);
+}
+
+body.page-programmes .tag-popular {
+    color: var(--brand-red);
+    background: var(--blush);
+}
+
+body.page-programmes .tag-free {
+    color: var(--teal-600);
+    background: var(--brand-teal);
+    text-transform: uppercase;
+}
+
+body.page-programmes .programme-listing .meta-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+body.page-programmes .programme-listing .detail-item {
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    padding: 0.28rem 0.65rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--purple-700);
+    background: var(--purple-100);
+    border-radius: var(--r-pill);
+}
+
+body.page-programmes .programme-listing .detail-item i {
+    width: auto;
+    margin-top: 0;
+    font-size: 0.72rem;
+    color: var(--purple-700);
+}
+
+body.page-programmes .programme-listing .detail-cert {
+    flex-basis: 100%;
+    width: fit-content;
+    color: var(--teal-600);
+    background: color-mix(in srgb, var(--brand-teal) 32%, var(--c-white));
+}
+
+body.page-programmes .programme-listing .detail-cert i {
+    color: var(--teal-600);
+}
+
+body.page-programmes .programme-listing .listing-footer {
+    align-items: center;
+    background: var(--c-white);
+    border-top-color: var(--purple-200);
+}
+
+body.page-programmes .programme-listing .listing-actions {
+    align-items: center;
+}
+
+body.page-programmes .programme-listing .price-amount {
+    color: var(--purple-700);
+    font-weight: 700;
+}
+
+body.page-programmes .programme-listing .price-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+body.page-programmes .poster-link {
+    padding: 0;
+    color: var(--purple-500);
+    background: none;
+    border: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+body.page-programmes .poster-link:hover {
+    color: var(--purple-500);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+body.page-programmes .programme-listing .btn-primary {
+    --btn-bg: var(--brand-red);
+    --btn-fg: var(--c-white);
+    --btn-bd: var(--brand-red);
+    box-shadow: 0 10px 22px -12px rgba(179, 27, 1, 0.45);
+}
+
+body.page-programmes .programme-listing .btn-primary:hover {
+    --btn-bg: var(--c-red-hover);
+    --btn-bd: var(--c-red-hover);
+    box-shadow: 0 14px 26px -12px rgba(179, 27, 1, 0.4);
+}
+
+/* ---------- Power Up Mentor ---------- */
+body.page-programmes .pum-section {
+    background: var(--purple-700);
+    color: var(--c-white);
+    border-top: 0;
+}
+
+body.page-programmes .pum-section .section-title,
+body.page-programmes .pum-section .lead {
+    color: var(--c-white);
+}
+
+body.page-programmes .pum-section .eyebrow {
+    color: var(--purple-700);
+    background: var(--c-white);
+}
+
+body.page-programmes .pum-section .eyebrow i {
+    color: var(--purple-700);
+}
+
+body.page-programmes .pum-logo {
+    display: inline-block;
+    padding: 0.5rem 1.15rem 0.35rem;
+    background: var(--c-white);
+    border-radius: var(--r-pill);
+}
+
+body.page-programmes .pum-trainer {
+    color: var(--c-text);
+    border-color: transparent;
+    box-shadow: 0 10px 24px -14px rgba(30, 20, 60, 0.28);
+}
+
+body.page-programmes .pum-trainer h4 {
+    color: var(--purple-700);
+}
+
+body.page-programmes .pum-trainer .tag {
+    color: var(--purple-700);
+    background: var(--purple-100);
+    border-color: transparent;
+}
+
+body.page-programmes .pum-section .btn-primary,
+body.page-programmes .pum-section .btn-primary:hover {
+    --btn-bg: var(--c-white);
+    --btn-fg: var(--purple-700);
+    --btn-bd: var(--c-white);
+    box-shadow: 0 10px 22px -14px rgba(30, 20, 60, 0.35);
+}
+
+body.page-programmes .pum-section .btn-primary:hover {
+    --btn-bg: var(--cream);
+    --btn-bd: var(--cream);
+}
+
+/* ---------- Poster modal ---------- */
+body.page-programmes .poster-modal-overlay {
+    background: color-mix(in srgb, var(--purple-700) 85%, transparent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+/* ---------- Footer, same treatment as the homepage ---------- */
+body.page-programmes .footer {
+    background: var(--purple-700);
+    color: rgba(255, 255, 255, 0.82);
+    border-top: 0;
+}
+
+body.page-programmes .footer .footer-section h4,
+body.page-programmes .footer .footer-section li i {
+    color: var(--brand-teal);
 }

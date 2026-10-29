@@ -269,7 +269,6 @@ if ($schedule !== '' && !in_array($schedule, ['in_person', 'online', 'hybrid'], 
                 }
                 form_file($field, $field, $meta[0], [
                     'accept' => 'image/*',
-                    'extra' => 'onchange="handleFileUpload(this)"',
                     'hint' => $meta[1],
                     'before' => $before,
                     'preview_id' => $field . '_preview',

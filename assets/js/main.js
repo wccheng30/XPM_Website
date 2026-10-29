@@ -1191,13 +1191,13 @@ class PosterModal {
     }
 
     addPosterClickHandlers() {
-        document.querySelectorAll('.programme-poster-img').forEach((img) => {
-            img.addEventListener('click', (e) => {
+        document.querySelectorAll('.programme-poster-img, .poster-link').forEach((el) => {
+            el.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const primary = img.dataset.posterSrc || img.getAttribute('src');
-                const secondary = img.dataset.posterSecondary || '';
-                const title = img.dataset.posterTitle || (img.alt || 'Programme Poster').replace(/ Poster$/i, '');
+                const primary = el.dataset.posterSrc || el.getAttribute('src');
+                const secondary = el.dataset.posterSecondary || '';
+                const title = el.dataset.posterTitle || (el.alt || 'Programme Poster').replace(/ Poster$/i, '');
                 this.open(primary, title, secondary);
             });
         });

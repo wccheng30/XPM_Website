@@ -1,3 +1,21 @@
+<?php
+require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/homepage.php';
+
+$homepageTestimonials = [];
+$homepageLogoRows = [];
+$homepageDb = get_db_connection();
+if ($homepageDb) {
+    try {
+        $homepageTestimonials = $homepageDb->query('SELECT author_name, author_role, highlight, quote, photo_path FROM testimonials ORDER BY display_order ASC, id ASC')->fetchAll();
+        $homepageLogos = $homepageDb->query('SELECT image_path FROM client_logos ORDER BY display_order ASC, id ASC')->fetchAll();
+        $homepageLogoRows = xpm_logo_rows($homepageLogos);
+    } catch (Throwable $e) {
+        $homepageTestimonials = [];
+        $homepageLogoRows = [];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,12 +31,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/xpm-tokens.css?v=20261020-1">
-    <link rel="stylesheet" href="assets/css/xpm-base.css?v=20261020-1">
-    <link rel="stylesheet" href="assets/css/xpm-components.css?v=20261020-1">
-    <link rel="stylesheet" href="assets/css/xpm-motion.css?v=20261020-1">
-    <link rel="stylesheet" href="assets/css/pages/home.css?v=20261020-1">
-    <link rel="stylesheet" href="assets/css/pages/founder.css?v=20261020-1">
+    <link rel="stylesheet" href="assets/css/xpm-tokens.css?v=20261020-3">
+    <link rel="stylesheet" href="assets/css/xpm-base.css?v=20261008-2">
+    <link rel="stylesheet" href="assets/css/xpm-components.css?v=20261020-4">
+    <link rel="stylesheet" href="assets/css/xpm-motion.css?v=20261016-1">
+    <link rel="stylesheet" href="assets/css/pages/home.css?v=20261020-6">
+    <link rel="stylesheet" href="assets/css/pages/founder.css?v=20261020-6">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
 </head>
 <body>
@@ -91,6 +109,7 @@
             <p class="slideshow-hint" id="slideshow-hint" hidden>Swipe to see more</p>
             <p class="sr-only" id="slideshow-status" aria-live="polite"></p>
         </div>
+        <svg class="section-curve curve-cream" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Hero ================= -->
@@ -122,6 +141,8 @@
             </div>
 
             <div class="hero-visual" aria-hidden="true">
+                <span class="hero-orb hero-orb-lg"></span>
+                <span class="hero-orb hero-orb-sm"></span>
                 <div class="hero-card hero-card-main" data-reveal="scale">
                     <div class="hero-card-head">
                         <span class="icon-box"><i class="fas fa-rocket"></i></span>
@@ -146,6 +167,7 @@
                 <li><i class="fas fa-scale-balanced"></i> Compliance Assured</li>
             </ul>
         </div>
+        <svg class="section-curve curve-white curve-flip" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= About ================= -->
@@ -252,6 +274,7 @@
                 </aside>
             </div>
         </div>
+        <svg class="section-curve curve-purple-100" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Founder (soft purple) ================= -->
@@ -410,6 +433,7 @@
                 </div>
             </div>
         </div>
+        <svg class="section-curve curve-cream curve-flip" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Services ================= -->
@@ -513,10 +537,11 @@
                 </div>
             </div>
         </div>
+        <svg class="section-curve curve-white" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Facilities ================= -->
-    <section id="facilities" class="section section-alt facilities">
+    <section id="facilities" class="section facilities">
         <div class="container">
             <div class="section-header" data-reveal>
                 <span class="eyebrow"><i class="fas fa-building"></i> Our spaces</span>
@@ -588,6 +613,7 @@
                 <a href="my-bookings.php" class="btn btn-outline btn-sm">Manage my bookings</a>
             </div>
         </div>
+        <svg class="section-curve curve-purple-700 curve-flip" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Testimonials ================= -->
@@ -607,60 +633,33 @@
             </div>
 
             <div class="testimonial-grid">
+                <?php foreach ($homepageTestimonials as $item): ?>
+                    <?php
+                    $photo = xpm_public_image($item['photo_path'] ?? '');
+                    $highlight = trim((string) ($item['highlight'] ?? ''));
+                    $quote = trim((string) ($item['quote'] ?? ''));
+                    $name = trim((string) ($item['author_name'] ?? ''));
+                    $role = trim((string) ($item['author_role'] ?? ''));
+                    if ($quote === '' && $highlight === '') {
+                        continue;
+                    }
+                    ?>
                 <figure class="testimonial-card">
                     <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>The best organiser.</strong> Comfortable training center and the organizer for 3-day training, good training rooms and facilities.</blockquote>
+                    <blockquote><?php if ($highlight !== ''): ?><strong><?php echo htmlspecialchars($highlight, ENT_QUOTES, 'UTF-8'); ?></strong> <?php endif; ?><?php echo nl2br(htmlspecialchars($quote, ENT_QUOTES, 'UTF-8'), false); ?></blockquote>
                     <figcaption>
-                        <img src="assets/images/Anonymous1.jpg" alt="" loading="lazy">
-                        <div><strong>Zam Haji Daud</strong><span>Operations Manager, Rosa Malacca</span></div>
+                        <?php if ($photo !== ''): ?><img src="<?php echo htmlspecialchars($photo, ENT_QUOTES, 'UTF-8'); ?>" alt="" loading="lazy"><?php endif; ?>
+                        <div><strong><?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?></strong><?php if ($role !== ''): ?><span><?php echo htmlspecialchars($role, ENT_QUOTES, 'UTF-8'); ?></span><?php endif; ?></div>
                     </figcaption>
                 </figure>
-                <figure class="testimonial-card">
-                    <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>Real HR cases and solutions.</strong> Icol is the best trainer, her classes provide valuable knowledge and allow exploration of real HR cases and solutions.</blockquote>
-                    <figcaption>
-                        <img src="assets/images/Anonymous2.jpeg" alt="" loading="lazy">
-                        <div><strong>Liaw Lee Yen</strong><span>Asst. HR Manager, Allied Precision Technologies Sdn Bhd</span></div>
-                    </figcaption>
-                </figure>
-                <figure class="testimonial-card">
-                    <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>Gained so much.</strong> A company that provides highly professional human resource management services and imparts HR knowledge. Comfortable learning environment and support from the founder and team in handling work challenges.</blockquote>
-                    <figcaption>
-                        <img src="assets/images/Anonymous3.jpeg" alt="" loading="lazy">
-                        <div><strong>Tan Geok Chin</strong><span>HR Manager, Yihin Glass &amp; Aluminium Sdn Bhd</span></div>
-                    </figcaption>
-                </figure>
-                <figure class="testimonial-card">
-                    <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>Informative &amp; useful!</strong> Informative and useful training applicable to most SME companies, specifically praising professional trainer Ms iCoL for providing solutions.</blockquote>
-                    <figcaption>
-                        <img src="assets/images/Anonymous4.jpeg" alt="" loading="lazy">
-                        <div><strong>Lim Geok Hong</strong><span>HR Manager, ARC Autos (M) Sdn Bhd</span></div>
-                    </figcaption>
-                </figure>
-                <figure class="testimonial-card">
-                    <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>Highly recommended.</strong> Strongly recommends Ms iCol for providing practical and up-to-date advice and feedback, which improved the skills and knowledge in the full spectrum of HR functions.</blockquote>
-                    <figcaption>
-                        <img src="assets/images/Anonymous5.jpg" alt="" loading="lazy">
-                        <div><strong>Hwei Loo Low</strong><span>Mentee, Mentoring Program</span></div>
-                    </figcaption>
-                </figure>
-                <figure class="testimonial-card">
-                    <div class="stars" aria-label="5 out of 5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                    <blockquote><strong>A valuable partner.</strong> Xpress Point Management has been a valuable partner for their business and highly recommends their services to those looking to improve their HR.</blockquote>
-                    <figcaption>
-                        <img src="assets/images/Anonymous6.jpeg" alt="" loading="lazy">
-                        <div><strong>Eric Heng</strong><span>Director, Hot Engineering (M) Sdn Bhd</span></div>
-                    </figcaption>
-                </figure>
+                <?php endforeach; ?>
             </div>
         </div>
+        <svg class="section-curve curve-white" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Careers ================= -->
-    <section id="career-opportunities" class="section section-alt career-opportunities">
+    <section id="career-opportunities" class="section career-opportunities">
         <div class="container">
             <div class="cta-band careers-band" data-reveal>
                 <div>
@@ -697,90 +696,30 @@
             </div>
         </div>
 
+        <?php if ($homepageLogoRows): ?>
         <div class="marquee" data-reveal="fade" aria-label="Our valued clients">
-            <div class="marquee-row">
+            <?php
+            $homepageRowClasses = ['', 'marquee-reverse', 'marquee-slow'];
+            foreach ($homepageLogoRows as $rowIndex => $row):
+                $rowClass = $homepageRowClasses[$rowIndex] ?? '';
+            ?>
+            <div class="marquee-row<?php echo $rowClass !== '' ? ' ' . $rowClass : ''; ?>">
                 <div class="marquee-track">
-                    <img src="assets/images/clients/client-1.png" alt="Client 1" loading="lazy">
-                    <img src="assets/images/clients/client-2.png" alt="Client 2" loading="lazy">
-                    <img src="assets/images/clients/client-3.png" alt="Client 3" loading="lazy">
-                    <img src="assets/images/clients/client-4.png" alt="Client 4" loading="lazy">
-                    <img src="assets/images/clients/client-5.png" alt="Client 5" loading="lazy">
-                    <img src="assets/images/clients/client-6.png" alt="Client 6" loading="lazy">
-                    <img src="assets/images/clients/client-7.png" alt="Client 7" loading="lazy">
-                    <img src="assets/images/clients/client-8.png" alt="Client 8" loading="lazy">
-                    <img src="assets/images/clients/client-9.png" alt="Client 9" loading="lazy">
-                    <img src="assets/images/clients/client-10.png" alt="Client 10" loading="lazy">
-                    <img src="assets/images/clients/client-11.png" alt="Client 11" loading="lazy">
-                    <img src="assets/images/clients/client-12.png" alt="Client 12" loading="lazy">
-                    <img src="assets/images/clients/client-1.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-2.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-3.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-4.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-5.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-6.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-7.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-8.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-9.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-10.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-11.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-12.png" alt="" aria-hidden="true" loading="lazy">
+                    <?php foreach ([false, true] as $duplicate): ?>
+                        <?php foreach ($row as $logoPath): ?>
+                    <img src="<?php echo htmlspecialchars($logoPath, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo $duplicate ? '' : 'Client logo'; ?>"<?php echo $duplicate ? ' aria-hidden="true"' : ''; ?> loading="lazy">
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <div class="marquee-row marquee-reverse">
-                <div class="marquee-track">
-                    <img src="assets/images/clients/client-13.png" alt="Client 13" loading="lazy">
-                    <img src="assets/images/clients/client-14.png" alt="Client 14" loading="lazy">
-                    <img src="assets/images/clients/client-15.png" alt="Client 15" loading="lazy">
-                    <img src="assets/images/clients/client-16.png" alt="Client 16" loading="lazy">
-                    <img src="assets/images/clients/client-17.png" alt="Client 17" loading="lazy">
-                    <img src="assets/images/clients/client-18.png" alt="Client 18" loading="lazy">
-                    <img src="assets/images/clients/client-19.png" alt="Client 19" loading="lazy">
-                    <img src="assets/images/clients/client-20.png" alt="Client 20" loading="lazy">
-                    <img src="assets/images/clients/client-21.png" alt="Client 21" loading="lazy">
-                    <img src="assets/images/clients/client-22.png" alt="Client 22" loading="lazy">
-                    <img src="assets/images/clients/client-23.png" alt="Client 23" loading="lazy">
-                    <img src="assets/images/clients/client-24.png" alt="Client 24" loading="lazy">
-                    <img src="assets/images/clients/client-13.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-14.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-15.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-16.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-17.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-18.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-19.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-20.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-21.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-22.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-23.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-24.png" alt="" aria-hidden="true" loading="lazy">
-                </div>
-            </div>
-            <div class="marquee-row marquee-slow">
-                <div class="marquee-track">
-                    <img src="assets/images/clients/client-25.png" alt="Client 25" loading="lazy">
-                    <img src="assets/images/clients/client-26.png" alt="Client 26" loading="lazy">
-                    <img src="assets/images/clients/client-27.png" alt="Client 27" loading="lazy">
-                    <img src="assets/images/clients/client-28.png" alt="Client 28" loading="lazy">
-                    <img src="assets/images/clients/client-29.png" alt="Client 29" loading="lazy">
-                    <img src="assets/images/clients/client-30.png" alt="Client 30" loading="lazy">
-                    <img src="assets/images/clients/client-31.png" alt="Client 31" loading="lazy">
-                    <img src="assets/images/clients/client-32.png" alt="Client 32" loading="lazy">
-                    <img src="assets/images/clients/client-33.png" alt="Client 33" loading="lazy">
-                    <img src="assets/images/clients/client-25.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-26.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-27.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-28.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-29.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-30.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-31.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-32.png" alt="" aria-hidden="true" loading="lazy">
-                    <img src="assets/images/clients/client-33.png" alt="" aria-hidden="true" loading="lazy">
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
+        <svg class="section-curve curve-blush curve-flip" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     <!-- ================= Contact ================= -->
-    <section id="contact" class="section section-alt contact">
+    <section id="contact" class="section contact">
         <div class="container">
             <div class="section-header" data-reveal>
                 <span class="eyebrow"><i class="fas fa-envelope"></i> Get in touch</span>
@@ -913,6 +852,7 @@
                 </div>
             </div>
         </div>
+        <svg class="section-curve curve-purple-700" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0,40 C240,80 420,8 720,32 C1020,56 1200,8 1440,36 L1440,80 L0,80 Z"/></svg>
     </section>
 
     </main>

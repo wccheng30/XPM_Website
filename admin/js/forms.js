@@ -19,6 +19,155 @@ window.xpmSetIcon = function (root, className) {
     use.setAttribute('href', prefix + '#' + match[1]);
 };
 
+function isImageFileInput(input) {
+    if (!input || input.type !== 'file') {
+        return false;
+    }
+    return (input.getAttribute('accept') || '').toLowerCase().indexOf('image') !== -1;
+}
+
+function previewSlotFor(input) {
+    var field = input.closest('.form-field, .form-group') || input.parentElement;
+    var slot = field && field.querySelector('.file-preview-slot');
+    if (slot) {
+        return slot;
+    }
+    slot = document.createElement('div');
+    slot.className = 'file-preview-slot';
+    var anchor = input.closest('.file-control') || input;
+    if (anchor.parentElement) {
+        anchor.parentElement.insertBefore(slot, anchor.nextSibling);
+    }
+    return slot;
+}
+
+function resizedDataUrl(file, maxEdge) {
+    return new Promise(function (resolve) {
+        var url = URL.createObjectURL(file);
+        var image = new Image();
+        image.onload = function () {
+            var longest = Math.max(image.width, image.height) || 1;
+            var scale = Math.min(1, maxEdge / longest);
+            var width = Math.max(1, Math.round(image.width * scale));
+            var height = Math.max(1, Math.round(image.height * scale));
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        image.onerror = function () {
+            URL.revokeObjectURL(url);
+            resolve('');
+        };
+        image.src = url;
+    });
+}
+
+function syncChosenFileName(input) {
+    var name = input.parentElement && input.parentElement.querySelector('[data-file-name]');
+    if (!name) {
+        return;
+    }
+    var chosen = input.files ? input.files.length : 0;
+    if (!chosen) {
+        name.textContent = 'No file chosen';
+    } else if (chosen === 1) {
+        name.textContent = input.files[0].name;
+    } else {
+        name.textContent = chosen + ' files chosen';
+    }
+}
+
+function previewRemoveButton(file) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'file-preview-remove';
+    button.setAttribute('aria-label', 'Remove ' + (file.name || 'image'));
+    var sprite = window.XPM_ICON_SPRITE || '';
+    if (sprite) {
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'icon');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttribute('href', sprite + '#times');
+        svg.appendChild(use);
+        button.appendChild(svg);
+    } else {
+        button.textContent = '\u00d7';
+    }
+    return button;
+}
+
+function removeChosenImage(input, file) {
+    var kept = [];
+    var list = input.files ? Array.prototype.slice.call(input.files) : [];
+    list.forEach(function (item) {
+        if (item !== file) {
+            kept.push(item);
+        }
+    });
+    if (kept.length) {
+        try {
+            var transfer = new DataTransfer();
+            kept.forEach(function (item) {
+                transfer.items.add(item);
+            });
+            input.files = transfer.files;
+        } catch (error) {
+            input.value = '';
+        }
+    } else {
+        input.value = '';
+    }
+    syncChosenFileName(input);
+    showImagePreviews(input);
+}
+
+function showImagePreviews(input) {
+    var slot = previewSlotFor(input);
+    var token = (input._previewToken || 0) + 1;
+    input._previewToken = token;
+    slot.replaceChildren();
+    var files = [];
+    if (input.files) {
+        for (var i = 0; i < input.files.length; i++) {
+            if ((input.files[i].type || '').indexOf('image/') === 0) {
+                files.push(input.files[i]);
+            }
+        }
+    }
+    files.forEach(function (file) {
+        resizedDataUrl(file, 320).then(function (url) {
+            if (!url || input._previewToken !== token) {
+                return;
+            }
+            var item = document.createElement('div');
+            item.className = 'file-preview-item';
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            var button = previewRemoveButton(file);
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                removeChosenImage(input, file);
+            });
+            item.appendChild(img);
+            item.appendChild(button);
+            slot.appendChild(item);
+        });
+    });
+}
+
+document.addEventListener('change', function (event) {
+    if (isImageFileInput(event.target)) {
+        showImagePreviews(event.target);
+    }
+});
+
 (function () {
     function described(el) {
         return (el.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
@@ -115,10 +264,7 @@ window.xpmSetIcon = function (root, className) {
             window.xpmFormDirty = true;
             var input = event.target;
             if (input && input.type === 'file') {
-                var name = input.parentElement && input.parentElement.querySelector('[data-file-name]');
-                if (name) {
-                    name.textContent = (input.files && input.files[0]) ? input.files[0].name : 'No file chosen';
-                }
+                syncChosenFileName(input);
             }
         });
         form.addEventListener('submit', function (event) {

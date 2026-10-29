@@ -324,7 +324,16 @@ function job_application_profile_error(array $profile) {
 
 // Handle success message from redirect
 if (isset($_GET['success']) && $_GET['success'] == '1') {
-    $success = "Your application has been submitted successfully! We'll review it and get back to you soon. A confirmation was sent to your email.";
+    if (($_GET['mailed'] ?? '') === '0') {
+        $success = "Your application has been submitted successfully! We'll review it and get back to you soon. The confirmation email could not be sent.";
+        $mailReason = trim((string) ($_SESSION['xpm_mail_error'] ?? $_GET['mail_error'] ?? ''));
+        unset($_SESSION['xpm_mail_error']);
+        if ($mailReason !== '') {
+            $success .= ' ' . $mailReason;
+        }
+    } else {
+        $success = "Your application has been submitted successfully! We'll review it and get back to you soon. A confirmation was sent to your email.";
+    }
     // Clear any existing error messages when showing success
     $error = '';
 }
@@ -336,14 +345,14 @@ function sendJobApplicationNotification($job_id, $name, $email, $phone, $ic_numb
     
     // Get job details
     global $pdo;
-    $stmt = $pdo->prepare("SELECT title, company_name, location, employment_type FROM jobs WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT title, company_name, location, type FROM jobs WHERE id = ?");
     $stmt->execute([$job_id]);
     $job = $stmt->fetch();
     
     $job_title = $job ? $job['title'] : 'Unknown Position';
     $company_name = $job ? $job['company_name'] : 'Unknown Company';
     $location = $job ? $job['location'] : 'N/A';
-    $employment_type = $job ? $job['employment_type'] : 'N/A';
+    $employment_type = $job ? ($job['type'] ?? 'N/A') : 'N/A';
     
     $subject = "New Job Application - " . $job_title . " at " . $company_name;
     
@@ -420,17 +429,9 @@ function sendJobApplicationNotification($job_id, $name, $email, $phone, $ic_numb
     </html>
     ";
     
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: " . FROM_EMAIL . "\r\n";
-    $headers .= "Reply-To: " . $email . "\r\n";
-    
-    // Send email to both job application emails
+    // Notify both recruitment inboxes. Failures here must not block the applicant confirmation.
     foreach ($job_emails as $email_address) {
-        $previousTimeout = ini_get('default_socket_timeout');
-        ini_set('default_socket_timeout', '5');
-        @mail($email_address, $subject, $message, $headers);
-        ini_set('default_socket_timeout', (string) $previousTimeout);
+        xpm_send_mail($email_address, $subject, $message, $email);
     }
 }
 
@@ -489,15 +490,7 @@ function sendJobApplicationConfirmation($job_id, $name, $email) {
     </html>
     ";
 
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= 'From: "' . str_replace('"', '', FROM_NAME) . '" <' . FROM_EMAIL . ">\r\n";
-    $headers .= "Reply-To: " . JOB_APPLICATION_EMAIL . "\r\n";
-
-    $previousTimeout = ini_get('default_socket_timeout');
-    ini_set('default_socket_timeout', '5');
-    @mail($email, $subject, $message, $headers);
-    ini_set('default_socket_timeout', (string) $previousTimeout);
+    return xpm_send_mail($email, $subject, $message, JOB_APPLICATION_EMAIL);
 }
 
 // Get job details if job_id is provided
@@ -756,16 +749,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $xpm_guest) {
                 ]);
                 
                 // Try to send email notification (don't let email errors stop the process)
+                $confirmSent = false;
+                $mailFailure = '';
                 try {
                     sendJobApplicationNotification($job_id, $name, $email, $phone, $ic_number, $resume_path, $cover_letter_path, $profile);
-                    sendJobApplicationConfirmation($job_id, $name, $email);
-                } catch (Exception $emailError) {
-                    // Log email error but don't stop the process
-                    error_log("Email notification failed: " . $emailError->getMessage());
+                } catch (Throwable $emailError) {
+                    $mailFailure = $emailError->getMessage();
+                    error_log('Job notification email failed: ' . $mailFailure);
+                }
+                try {
+                    $confirmSent = sendJobApplicationConfirmation($job_id, $name, $email);
+                } catch (Throwable $emailError) {
+                    $mailFailure = $emailError->getMessage();
+                    error_log('Job confirmation email failed: ' . $mailFailure);
                 }
                 
                 // Redirect to prevent form resubmission and show success message
                 $redirect_url = $_SERVER['PHP_SELF'] . "?success=1&job_id=" . $job_id;
+                if (!$confirmSent) {
+                    $redirect_url .= '&mailed=0';
+                    $mailReason = function_exists('xpm_last_mail_error') ? xpm_last_mail_error() : '';
+                    if ($mailReason === '') {
+                        $mailReason = $mailFailure !== '' ? $mailFailure : 'The mailer returned no details.';
+                    }
+                    $_SESSION['xpm_mail_error'] = substr($mailReason, 0, 240);
+                }
                 header("Location: " . $redirect_url);
                 exit;
                 

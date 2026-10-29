@@ -96,6 +96,7 @@ if (!empty($trainer['credentials'])) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <?php include_once __DIR__ . '/includes/theme-boot.php'; ?>
     <link rel="stylesheet" href="<?php echo admin_asset('admin.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo admin_asset('css/forms.css'); ?>">
 </head>
 <body data-motion="admin">
     <?php include_once 'includes/header.php'; renderAdminHeader('My profile', 'fas fa-id-badge'); ?>
@@ -136,6 +137,7 @@ if (!empty($trainer['credentials'])) {
                             <p><img src="../<?php echo htmlspecialchars($trainer['image_path']); ?>" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:8px;"></p>
                         <?php endif; ?>
                         <input type="file" id="image" name="image" accept="image/*" class="form-control">
+                        <div class="file-preview-slot" id="image_preview"></div>
                     </div>
                     <div class="form-group">
                         <label for="description">Description</label>
@@ -156,5 +158,6 @@ if (!empty($trainer['credentials'])) {
             </div>
         </div>
     </div>
+    <script defer src="<?php echo admin_asset('js/forms.js'); ?>"></script>
 </body>
 </html>

@@ -169,26 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         }, 5000);
-        
-        // Image preview
-        document.getElementById('image').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    // Create preview if it doesn't exist
-                    let preview = document.getElementById('image-preview');
-                    if (!preview) {
-                        preview = document.createElement('div');
-                        preview.id = 'image-preview';
-                        preview.style.cssText = 'margin-top: 10px; text-align: center;';
-                        e.target.parentNode.appendChild(preview);
-                    }
-                    preview.innerHTML = '<img src="' + e.target.result + '" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
     </script>
         <script defer src="<?php echo admin_asset('../assets/js/leave-guard.js'); ?>"></script>
     <script defer src="<?php echo admin_asset('js/forms.js'); ?>"></script>

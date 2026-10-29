@@ -267,8 +267,10 @@ function form_file(string $id, string $name, string $label, array $opts = []): v
     echo '<span class="file-control-button">Choose file</span>';
     echo '<span class="file-name" data-file-name>No file chosen</span>';
     echo '</label>';
-    if (!empty($opts['preview_id'])) {
-        echo '<div id="' . form_h($opts['preview_id']) . '" class="file-preview-slot"></div>';
+    $accept = (string) ($opts['accept'] ?? '');
+    if (!empty($opts['preview_id']) || stripos($accept, 'image') !== false) {
+        $slotId = (string) ($opts['preview_id'] ?? ($id . '_preview'));
+        echo '<div id="' . form_h($slotId) . '" class="file-preview-slot"></div>';
     }
     form_messages($id, $hint, $error);
     echo '</div>';

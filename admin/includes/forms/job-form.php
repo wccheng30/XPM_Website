@@ -117,7 +117,6 @@ $type_options[] = ['value' => 'custom', 'label' => 'Custom type', 'selected' => 
             }
             form_file('poster_image', 'poster_image', 'Company logo', [
                 'accept' => 'image/*',
-                'extra' => 'onchange="previewJobLogo(this)"',
                 'hint' => 'Shown with the job. Recommended 200×200px. PNG, JPG, GIF, or WebP.',
                 'before' => $logo_before,
                 'preview_id' => 'poster_image_preview',

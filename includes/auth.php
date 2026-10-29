@@ -327,7 +327,7 @@ function csrf_guard() {
 
 function auth_remove_managed_image($relative) {
     $relative = str_replace('\\', '/', (string) $relative);
-    if (!preg_match('#^assets/images/(logos|trainers|programmes)/[A-Za-z0-9._-]+$#', $relative)) {
+    if (!preg_match('#^assets/images/(logos|trainers|programmes|testimonials|clients)/[A-Za-z0-9._-]+$#', $relative)) {
         return;
     }
     $full = dirname(__DIR__) . '/' . $relative;
@@ -385,7 +385,7 @@ function auth_save_image(array $file, $relativeDir, $prefix = 'upload') {
         return ['ok' => false, 'error' => 'The file contents do not match an allowed image type.', 'path' => ''];
     }
     $relativeDir = trim(str_replace('\\', '/', (string) $relativeDir), '/');
-    if (!preg_match('#^assets/images/(logos|trainers|programmes)$#', $relativeDir)) {
+    if (!preg_match('#^assets/images/(logos|trainers|programmes|testimonials|clients)$#', $relativeDir)) {
         return ['ok' => false, 'error' => 'That upload folder is not allowed.', 'path' => ''];
     }
     $directory = dirname(__DIR__) . '/' . $relativeDir;
@@ -399,6 +399,19 @@ function auth_save_image(array $file, $relativeDir, $prefix = 'upload') {
         return ['ok' => false, 'error' => 'The file could not be saved.', 'path' => ''];
     }
     return ['ok' => true, 'error' => '', 'path' => $relativeDir . '/' . $filename];
+}
+
+function auth_remove_uploaded_image($relative, $prefix) {
+    $relative = str_replace('\\', '/', (string) $relative);
+    $prefix = preg_replace('/[^a-z0-9_-]/', '', strtolower((string) $prefix));
+    if ($prefix === '') {
+        return;
+    }
+    $pattern = '#^assets/images/(testimonials|clients)/' . preg_quote($prefix, '#') . '_[a-f0-9]{16}\.(jpg|jpeg|png|gif|webp)$#';
+    if (!preg_match($pattern, $relative)) {
+        return;
+    }
+    auth_remove_managed_image($relative);
 }
 
 function auth_remove_stored_file($relative, $prefix) {

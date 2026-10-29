@@ -31,12 +31,15 @@ function renderAdminNavigation($current_page = '') {
             'trainers' => ['url' => 'trainers.php', 'icon' => 'fas fa-user-tie', 'label' => 'Trainers'],
             'facilities' => ['url' => 'facilities.php', 'icon' => 'fas fa-building', 'label' => 'Facilities'],
             'contacts' => ['url' => 'contacts.php', 'icon' => 'fas fa-users', 'label' => 'Contacts'],
+            'testimonials' => ['url' => 'testimonials.php', 'icon' => 'fas fa-comments', 'label' => 'Testimonials'],
+            'portfolio' => ['url' => 'portfolio.php', 'icon' => 'fas fa-building', 'label' => 'Portfolio'],
         ];
         $groups = [
             'Overview' => ['dashboard'],
             'Recruitment' => ['jobs', 'applications', 'blacklist'],
             'Training' => ['programmes', 'registrations', 'trainers', 'facilities'],
             'Clients' => ['contacts'],
+            'Website' => ['testimonials', 'portfolio'],
         ];
         if ($role === 'admin') {
             $nav_items['users'] = [

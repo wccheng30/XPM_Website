@@ -1,0 +1,331 @@
+/* Jobs page */
+body.page-jobs .jobs-hero {
+    background: linear-gradient(100deg, var(--cream) 0%, var(--cream) 46%, var(--purple-100) 76%);
+    border-bottom: 0;
+}
+
+body.page-jobs .jobs-hero::after {
+    content: none;
+}
+
+.jobs-orb {
+    position: absolute;
+    z-index: 0;
+    display: block;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.jobs-orb-lg {
+    width: min(420px, 52vw);
+    aspect-ratio: 1;
+    top: -18%;
+    right: -8%;
+    background: var(--purple-200);
+    filter: blur(28px);
+}
+
+.jobs-orb-sm {
+    width: min(240px, 36vw);
+    aspect-ratio: 1;
+    bottom: -22%;
+    left: -6%;
+    background: var(--brand-teal);
+    filter: blur(24px);
+    opacity: 0.85;
+}
+
+body.page-jobs .jobs-hero .eyebrow {
+    color: var(--purple-700);
+    background: var(--purple-200);
+}
+
+body.page-jobs .jobs-hero .eyebrow i {
+    color: var(--purple-700);
+}
+
+body.page-jobs .jobs-hero h1 {
+    color: var(--purple-700);
+}
+
+body.page-jobs .jobs-hero .stat-value {
+    color: var(--purple-700);
+}
+
+body.page-jobs .jobs-hero .stat-value::after {
+    content: "";
+    display: block;
+    width: 1.75rem;
+    height: 3px;
+    margin-top: 0.45rem;
+    background: var(--brand-teal);
+    border-radius: var(--r-pill);
+}
+
+/* ---------- List ---------- */
+body.page-jobs #jobs {
+    background: var(--purple-100);
+}
+
+body.page-jobs #jobs .listing-grid {
+    gap: 1rem;
+}
+
+body.page-jobs .job-card {
+    background: var(--c-white);
+    border: 1px solid var(--purple-200);
+    border-radius: var(--r-lg);
+    box-shadow: 0 10px 24px -14px rgba(74, 36, 102, 0.10);
+}
+
+body.page-jobs .job-card::after {
+    content: "";
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--brand-teal);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur) var(--ease-out);
+    pointer-events: none;
+}
+
+body.page-jobs .job-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--purple-200);
+    box-shadow: 0 18px 34px -16px rgba(74, 36, 102, 0.16);
+}
+
+body.page-jobs .job-card:hover::after {
+    transform: scaleX(1);
+}
+
+body.page-jobs .job-card .listing-top {
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.9rem 0.9rem 0;
+}
+
+.job-mark,
+.job-initial {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+}
+
+.job-mark {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: var(--c-white);
+    border: 1px solid var(--purple-200);
+    border-radius: 12px;
+}
+
+.job-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 5px;
+}
+
+.job-initial {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--purple-200);
+    color: var(--purple-700);
+    font-family: var(--font-head);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+body.page-jobs .job-card .badge {
+    border: 0;
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+body.page-jobs .tag-new {
+    color: var(--brand-red);
+    background: var(--blush);
+}
+
+body.page-jobs .tag-level {
+    color: var(--purple-700);
+    background: var(--purple-200);
+}
+
+body.page-jobs .tag-meta {
+    color: var(--purple-700);
+    background: var(--purple-100);
+}
+
+body.page-jobs .job-card .listing-body {
+    gap: 0.75rem;
+    padding: 0.85rem 0.9rem 0.9rem;
+}
+
+body.page-jobs .job-card .listing-sub {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--purple-500);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: none;
+    font-variant-caps: all-small-caps;
+}
+
+body.page-jobs .job-card .listing-body h3 {
+    color: var(--purple-700);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+body.page-jobs .job-card .listing-desc {
+    font-size: 0.84rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+body.page-jobs .job-card .meta-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+body.page-jobs .job-card .detail-item {
+    align-items: center;
+    gap: 0.3rem;
+    max-width: 100%;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: var(--purple-700);
+    background: var(--purple-100);
+    border-radius: var(--r-pill);
+}
+
+body.page-jobs .job-card .detail-item i {
+    width: auto;
+    margin-top: 0;
+    font-size: 0.68rem;
+    color: var(--purple-700);
+}
+
+body.page-jobs .job-card .listing-label {
+    color: var(--teal-600);
+}
+
+body.page-jobs .job-card .skill-tag {
+    padding: 0.15rem 0.5rem;
+    color: var(--purple-700);
+    background: var(--c-white);
+    border-color: var(--purple-200);
+    font-size: 0.68rem;
+}
+
+body.page-jobs .job-card .listing-footer {
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--c-white);
+    border-top-color: var(--purple-200);
+}
+
+body.page-jobs .job-card .listing-actions {
+    align-items: center;
+}
+
+body.page-jobs .job-card .price-amount {
+    color: var(--purple-700);
+    font-weight: 700;
+}
+
+body.page-jobs .job-card .is-salary {
+    background-image: linear-gradient(var(--brand-teal), var(--brand-teal));
+    background-repeat: no-repeat;
+    background-size: 100% 0.28em;
+    background-position: 0 92%;
+}
+
+body.page-jobs .job-card .btn-primary {
+    --btn-bg: var(--brand-red);
+    --btn-fg: var(--c-white);
+    --btn-bd: var(--brand-red);
+    box-shadow: 0 8px 18px -12px rgba(179, 27, 1, 0.45);
+}
+
+body.page-jobs .job-card .btn-primary:hover {
+    --btn-bg: var(--c-red-hover);
+    --btn-bd: var(--c-red-hover);
+}
+
+body.page-jobs .job-card .btn-outline {
+    --btn-bg: var(--c-white);
+    --btn-fg: var(--purple-700);
+    --btn-bd: var(--purple-700);
+    border-width: 2px;
+    box-shadow: none;
+}
+
+body.page-jobs .job-card .btn-outline:hover {
+    --btn-bg: var(--purple-700);
+    --btn-fg: var(--c-white);
+    --btn-bd: var(--purple-700);
+    box-shadow: none;
+}
+
+/* ---------- Hiring banner ---------- */
+body.page-jobs .jobs-band {
+    background: var(--purple-100);
+    border-top: 0;
+}
+
+body.page-jobs .cta-band {
+    color: var(--c-white);
+    background: linear-gradient(115deg, var(--purple-700) 0%, var(--teal-600) 100%);
+}
+
+body.page-jobs .cta-band h2,
+body.page-jobs .cta-band p {
+    color: var(--c-white);
+}
+
+body.page-jobs .cta-band .btn-primary,
+body.page-jobs .cta-band .btn-primary:hover {
+    --btn-bg: var(--c-white);
+    --btn-fg: var(--purple-700);
+    --btn-bd: var(--c-white);
+    box-shadow: 0 10px 22px -14px rgba(30, 20, 60, 0.35);
+}
+
+body.page-jobs .cta-band .btn-primary:hover {
+    --btn-bg: var(--cream);
+    --btn-bd: var(--cream);
+}
+
+/* ---------- Footer, same treatment as the homepage ---------- */
+body.page-jobs .footer {
+    background: var(--purple-700);
+    color: rgba(255, 255, 255, 0.82);
+    border-top: 0;
+}
+
+body.page-jobs .footer .footer-section h4,
+body.page-jobs .footer .footer-section li i {
+    color: var(--brand-teal);
+}

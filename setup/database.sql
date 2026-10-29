@@ -313,6 +313,29 @@ CREATE TABLE IF NOT EXISTS blacklist (
     reason TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ===== HOMEPAGE TESTIMONIALS =====
+CREATE TABLE IF NOT EXISTS testimonials (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    author_name VARCHAR(255) NOT NULL,
+    author_role VARCHAR(255) NOT NULL DEFAULT '',
+    highlight VARCHAR(255) NOT NULL DEFAULT '',
+    quote TEXT NOT NULL,
+    photo_path VARCHAR(500) NOT NULL DEFAULT '',
+    display_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_testimonials_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== HOMEPAGE CLIENT LOGOS =====
+CREATE TABLE IF NOT EXISTS client_logos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_path VARCHAR(500) NOT NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_client_logos_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Create indexes for better performance
 CREATE INDEX idx_bookings_date ON bookings(booking_date);
 CREATE INDEX idx_bookings_facility ON bookings(facility_type);
@@ -326,6 +349,58 @@ INSERT INTO clients (name, company, position, testimonial, rating, is_featured) 
 ('Lisa Rodriguez', 'StartupXYZ', 'Chief People Officer', 'Their HR Analytics program gave us the tools to make data-driven decisions. We can now clearly demonstrate HR\'s impact on business outcomes.', 5, 1),
 ('David Thompson', 'Healthcare Plus', 'HR Manager', 'The compliance training was comprehensive and practical. It helped us avoid potential legal issues and improved our workplace safety record.', 4, 0),
 ('Emily Wilson', 'Financial Services Co.', 'Talent Acquisition Lead', 'The recruitment training provided us with innovative sourcing strategies that reduced our time-to-hire by 30%.', 5, 0);
+
+-- Starting homepage content. Skipped when the tables already have rows.
+INSERT INTO testimonials (author_name, author_role, highlight, quote, photo_path, display_order)
+SELECT seed.author_name, seed.author_role, seed.highlight, seed.quote, seed.photo_path, seed.display_order
+FROM (
+    SELECT 'Zam Haji Daud' AS author_name, 'Operations Manager, Rosa Malacca' AS author_role, 'The best organiser.' AS highlight, 'Comfortable training center and the organizer for 3-day training, good training rooms and facilities.' AS quote, 'assets/images/Anonymous1.jpg' AS photo_path, 1 AS display_order
+    UNION ALL SELECT 'Liaw Lee Yen', 'Asst. HR Manager, Allied Precision Technologies Sdn Bhd', 'Real HR cases and solutions.', 'Icol is the best trainer, her classes provide valuable knowledge and allow exploration of real HR cases and solutions.', 'assets/images/Anonymous2.jpeg', 2
+    UNION ALL SELECT 'Tan Geok Chin', 'HR Manager, Yihin Glass & Aluminium Sdn Bhd', 'Gained so much.', 'A company that provides highly professional human resource management services and imparts HR knowledge. Comfortable learning environment and support from the founder and team in handling work challenges.', 'assets/images/Anonymous3.jpeg', 3
+    UNION ALL SELECT 'Lim Geok Hong', 'HR Manager, ARC Autos (M) Sdn Bhd', 'Informative & useful!', 'Informative and useful training applicable to most SME companies, specifically praising professional trainer Ms iCoL for providing solutions.', 'assets/images/Anonymous4.jpeg', 4
+    UNION ALL SELECT 'Hwei Loo Low', 'Mentee, Mentoring Program', 'Highly recommended.', 'Strongly recommends Ms iCol for providing practical and up-to-date advice and feedback, which improved the skills and knowledge in the full spectrum of HR functions.', 'assets/images/HweiLoo.jpeg', 5
+    UNION ALL SELECT 'Eric Heng', 'Director, Hot Engineering (M) Sdn Bhd', 'A valuable partner.', 'Xpress Point Management has been a valuable partner for their business and highly recommends their services to those looking to improve their HR.', 'assets/images/Anonymous6.jpeg', 6
+) AS seed
+WHERE NOT EXISTS (SELECT 1 FROM testimonials);
+
+INSERT INTO client_logos (image_path, display_order)
+SELECT seed.image_path, seed.display_order
+FROM (
+    SELECT 'assets/images/clients/client-1.png' AS image_path, 1 AS display_order
+    UNION ALL SELECT 'assets/images/clients/client-2.png', 2
+    UNION ALL SELECT 'assets/images/clients/client-3.png', 3
+    UNION ALL SELECT 'assets/images/clients/client-4.png', 4
+    UNION ALL SELECT 'assets/images/clients/client-5.png', 5
+    UNION ALL SELECT 'assets/images/clients/client-6.png', 6
+    UNION ALL SELECT 'assets/images/clients/client-7.png', 7
+    UNION ALL SELECT 'assets/images/clients/client-8.png', 8
+    UNION ALL SELECT 'assets/images/clients/client-9.png', 9
+    UNION ALL SELECT 'assets/images/clients/client-10.png', 10
+    UNION ALL SELECT 'assets/images/clients/client-11.png', 11
+    UNION ALL SELECT 'assets/images/clients/client-12.png', 12
+    UNION ALL SELECT 'assets/images/clients/client-13.png', 13
+    UNION ALL SELECT 'assets/images/clients/client-14.png', 14
+    UNION ALL SELECT 'assets/images/clients/client-15.png', 15
+    UNION ALL SELECT 'assets/images/clients/client-16.png', 16
+    UNION ALL SELECT 'assets/images/clients/client-17.png', 17
+    UNION ALL SELECT 'assets/images/clients/client-18.png', 18
+    UNION ALL SELECT 'assets/images/clients/client-19.png', 19
+    UNION ALL SELECT 'assets/images/clients/client-20.png', 20
+    UNION ALL SELECT 'assets/images/clients/client-21.png', 21
+    UNION ALL SELECT 'assets/images/clients/client-22.png', 22
+    UNION ALL SELECT 'assets/images/clients/client-23.png', 23
+    UNION ALL SELECT 'assets/images/clients/client-24.png', 24
+    UNION ALL SELECT 'assets/images/clients/client-25.png', 25
+    UNION ALL SELECT 'assets/images/clients/client-26.png', 26
+    UNION ALL SELECT 'assets/images/clients/client-27.png', 27
+    UNION ALL SELECT 'assets/images/clients/client-28.png', 28
+    UNION ALL SELECT 'assets/images/clients/client-29.png', 29
+    UNION ALL SELECT 'assets/images/clients/client-30.png', 30
+    UNION ALL SELECT 'assets/images/clients/client-31.png', 31
+    UNION ALL SELECT 'assets/images/clients/client-32.png', 32
+    UNION ALL SELECT 'assets/images/clients/client-33.png', 33
+) AS seed
+WHERE NOT EXISTS (SELECT 1 FROM client_logos);
 
 -- ===== INDEXES FOR PERFORMANCE =====
 CREATE INDEX idx_contacts_created_at ON contacts(created_at);
@@ -380,4 +455,8 @@ SELECT 'bookings', COUNT(*) FROM bookings
 UNION ALL
 SELECT 'trainers', COUNT(*) FROM trainers
 UNION ALL
-SELECT 'blacklist', COUNT(*) FROM blacklist;
+SELECT 'blacklist', COUNT(*) FROM blacklist
+UNION ALL
+SELECT 'testimonials', COUNT(*) FROM testimonials
+UNION ALL
+SELECT 'client_logos', COUNT(*) FROM client_logos;

@@ -1,6 +1,9 @@
 # Do not list folder contents when no index file exists.
 Options -Indexes
 
+# The homepage is PHP so testimonials and the portfolio can load from the database.
+DirectoryIndex index.php
+
 # Block hidden files (.git, .env, .htaccess) when requested directly.
 <FilesMatch "^\.">
     <IfModule mod_authz_core.c>
@@ -33,6 +36,7 @@ Options -Indexes
 # Private folders. PHP include/require still works; only browser requests are blocked.
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteRule ^index\.html$ index.php [L,QSA]
     RewriteRule ^(\.git|setup|includes|config|vendor)(/|$) - [F,L]
 </IfModule>
 

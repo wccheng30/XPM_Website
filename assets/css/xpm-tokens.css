@@ -1,53 +1,34 @@
 /* ==========================================================================
    XPM Design Tokens
-   Logo red for actions, warm purple for surfaces, aqua for small accents.
+   Charcoal structure, red actions, teal detail.
    Lavender tokens are reserved for #initiator and must stay as they are.
    ========================================================================== */
 :root {
-    /* Brand — sampled from assets/images/XPMLogo.png */
-    --color-primary: #F03000;
-    --color-primary-fill: #D42400;
-    --color-primary-dark: #9C1301;
-    --color-primary-on-dark: #FFD0C2;
-    --color-primary-soft: #FDECE6;
-    --color-gray: #848082;
-    --color-accent: #B9E1E2;
-    --color-accent-ink: #1F6A6E;
-    --color-accent-soft: #E5F6F6;
-    --color-secondary: #9B7BC9;
-    --color-secondary-deep: #5E3F8F;
-    --color-bg-soft: #F3EDFA;
-    --color-bg-wash: #E6D9F4;
-    --color-bg-lavender: #D9C8F0;
-    --color-text: #1E2328;
-    --color-black: #000000;
-    --color-hero-start: #3F2A66;
-    --gradient-brand: linear-gradient(125deg, #3F2A66 0%, #5E3F8F 48%, #9C1301 100%);
-
-    /* Legacy aliases — existing rules follow these */
-    --c-red: var(--color-primary);
-    --c-red-hover: var(--color-primary-dark);
-    --c-red-soft: var(--color-primary-soft);
-    --c-teal: var(--color-accent);
-    --c-teal-deep: var(--color-accent-ink);
-    --c-teal-soft: var(--color-accent-soft);
-    --c-charcoal: var(--color-text);
+    /* Brand — sampled from the logo */
+    --c-red: #B31B01;
+    --c-red-hover: #8E1400;
+    --c-red-soft: #F8EEEB;
+    --c-teal: #B8E0E0;
+    --c-teal-deep: #1F6A6E;
+    --c-teal-soft: #F3FAFA;
+    --c-charcoal: #1E2328;
 
     /* Neutrals */
     --c-white: #ffffff;
-    --c-surface: var(--color-bg-wash);
-    --c-surface-2: #EFE4FA;
-    --c-surface-3: var(--color-bg-lavender);
-    --c-border: #E0D0F0;
-    --c-border-strong: #CDB6E4;
-    --c-text: var(--color-text);
+    --c-surface: #fafafa;
+    --c-surface-2: #f4f4f5;
+    --c-surface-3: #ededee;
+    --c-border: #ececec;
+    --c-border-strong: #d9d9db;
+    --c-text: var(--c-charcoal);
+    --text: var(--c-text);
     --c-text-2: #4E575E;
-    --c-text-3: #565F66;
-    --c-accent: var(--color-primary-fill);
-    --c-accent-hover: var(--color-primary-dark);
+    --c-text-3: #6A737A;
+    --c-accent: var(--c-red);
+    --c-accent-hover: var(--c-red-hover);
     --c-accent-contrast: #ffffff;
-    --c-focus: rgba(94, 63, 143, 0.28);
-    --c-overlay: rgba(63, 42, 102, 0.55);
+    --c-focus: rgba(31, 106, 110, 0.22);
+    --c-overlay: rgba(30, 35, 40, 0.55);
 
     /* Semantic (muted so they sit quietly on white) */
     --c-success: #15803d;
@@ -67,6 +48,17 @@
     --lavender-500: #9b84d6;
     --lavender-700: #6b58a8;
     --lavender-900: #3f3370;
+
+    /* Homepage section washes — purple, teal, cream */
+    --cream: #FBF6EE;
+    --blush: #F8E6E1;
+    --purple-100: var(--lavender-100);
+    --purple-200: var(--lavender-200);
+    --purple-500: #6454A0;
+    --purple-700: #43367A;
+    --brand-red: var(--c-red);
+    --brand-teal: #5EBEBE;
+    --teal-600: #1A7370;
 
     /* Typography */
     --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -107,17 +99,16 @@
     --r-pill: 999px;
 
     /* Shadows */
-    --sh-xs: 0 1px 2px rgba(94, 63, 143, 0.06);
-    --sh-sm: 0 1px 3px rgba(94, 63, 143, 0.08), 0 1px 2px rgba(30, 35, 40, 0.04);
-    --sh-md: 0 8px 20px -8px rgba(94, 63, 143, 0.22), 0 2px 6px -2px rgba(156, 19, 1, 0.06);
-    --sh-lg: 0 18px 40px -14px rgba(94, 63, 143, 0.32), 0 6px 16px -8px rgba(156, 19, 1, 0.08);
-    --sh-xl: 0 30px 70px -20px rgba(63, 42, 102, 0.34);
-    --sh-glow: 0 16px 36px -12px rgba(94, 63, 143, 0.38), 0 8px 18px -10px rgba(212, 36, 0, 0.18);
+    --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-md: 0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
+    --sh-lg: 0 18px 40px -12px rgba(0, 0, 0, 0.14);
+    --sh-xl: 0 30px 70px -20px rgba(0, 0, 0, 0.22);
 
     /* Motion */
     --ease-out: cubic-bezier(.22, 1, .36, 1);
     --ease-in-out: cubic-bezier(.65, 0, .35, 1);
-    --dur-fast: 200ms;
+    --dur-fast: 150ms;
     --dur: 300ms;
     --dur-slow: 600ms;
     --dur-slower: 900ms;
