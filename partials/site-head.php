@@ -15,6 +15,7 @@ $xpm_page_styles = isset($xpm_page_styles) && is_array($xpm_page_styles) ? $xpm_
     <link rel="stylesheet" href="assets/css/xpm-base.css?v=<?php echo $xpm_asset_version; ?>">
     <link rel="stylesheet" href="assets/css/xpm-components.css?v=<?php echo $xpm_asset_version; ?>">
     <link rel="stylesheet" href="assets/css/xpm-motion.css?v=<?php echo $xpm_asset_version; ?>">
+    <link rel="stylesheet" href="assets/css/glow-cursor.css?v=20261030-2">
 <?php foreach ($xpm_page_styles as $xpm_style): ?>
     <link rel="stylesheet" href="assets/css/<?php echo htmlspecialchars($xpm_style); ?>?v=<?php echo $xpm_asset_version; ?>">
 <?php endforeach; ?>

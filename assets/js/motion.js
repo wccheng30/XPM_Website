@@ -5,6 +5,8 @@
 (function () {
     'use strict';
 
+    if (window.__xpmMotion) return;
+
     var root = document.documentElement;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var isAdmin = document.body && document.body.getAttribute('data-motion') === 'admin';
@@ -430,125 +432,6 @@
         });
     }
 
-    function initPixelMagnet() {
-        if (reduceMotion) return;
-        if (!window.matchMedia('(pointer: fine)').matches) return;
-        if (!document.body) return;
-
-        var canvas = document.createElement('canvas');
-        canvas.className = 'pixel-magnet';
-        canvas.setAttribute('aria-hidden', 'true');
-        canvas.style.position = 'fixed';
-        canvas.style.inset = '0';
-        canvas.style.zIndex = '1500';
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.pointerEvents = 'none';
-        document.body.appendChild(canvas);
-        var ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        var count = 25;
-        var seed = 1;
-        function nextRand() {
-            seed = (seed * 16807) % 2147483647;
-            return (seed - 1) / 2147483646;
-        }
-
-        var squares = [];
-        var i;
-        for (i = 0; i < count; i++) {
-            squares.push({
-                angle: nextRand() * Math.PI * 2,
-                orbit: 0.28 + nextRand() * 0.72,
-                size: (0.45 + nextRand() * 1.5) * 0.5,
-                progress: nextRand(),
-                rate: (0.45 + nextRand() * 0.55) * 2
-            });
-        }
-
-        var pointer = { x: 0, y: 0, speed: 0, seen: false };
-        var focus = { x: 0, y: 0 };
-        var strength = 0;
-        var running = true;
-        var last = 0;
-
-        function resize() {
-            var dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = Math.max(1, Math.round(window.innerWidth * dpr));
-            canvas.height = Math.max(1, Math.round(window.innerHeight * dpr));
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-
-        window.addEventListener('pointermove', function (e) {
-            if (e.pointerType && e.pointerType !== 'mouse') return;
-            var dx = e.clientX - pointer.x;
-            var dy = e.clientY - pointer.y;
-            if (!pointer.seen) {
-                focus.x = e.clientX;
-                focus.y = e.clientY;
-                dx = 0;
-                dy = 0;
-                pointer.seen = true;
-            }
-            pointer.x = e.clientX;
-            pointer.y = e.clientY;
-            pointer.speed = Math.hypot(dx, dy);
-        }, { passive: true });
-
-        document.addEventListener('visibilitychange', function () {
-            running = !document.hidden;
-            if (running) requestAnimationFrame(frame);
-        });
-        window.addEventListener('resize', resize);
-
-        function frame(now) {
-            if (!running) return;
-            var dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
-            last = now;
-
-            var width = window.innerWidth;
-            var height = window.innerHeight;
-            var half = height * 0.5;
-            var grid = Math.max(6, Math.round(Math.min(width, height) / 100));
-            var target = Math.min(1, pointer.speed / 16);
-            strength = target > strength ? target : strength * Math.exp(-1.2 * dt);
-            pointer.speed *= Math.exp(-6 * dt);
-
-            var follow = 1 - Math.exp(-10.5 * dt);
-            if (pointer.seen) {
-                focus.x += (pointer.x - focus.x) * follow;
-                focus.y += (pointer.y - focus.y) * follow;
-            }
-
-            ctx.clearRect(0, 0, width, height);
-            if (pointer.seen && strength > 0.02) {
-                var hot = Math.min(1, target);
-                var gray = Math.round(138 - hot * 121);
-                squares.forEach(function (square) {
-                    square.progress -= square.rate * dt;
-                    if (square.progress <= 0) square.progress += 1;
-                    var pull = square.progress * square.progress;
-                    var radius = half * square.orbit * pull;
-                    var x = focus.x + Math.cos(square.angle) * radius;
-                    var y = focus.y + Math.sin(square.angle) * radius;
-                    x = Math.round(x / grid) * grid;
-                    y = Math.round(y / grid) * grid;
-                    var alpha = strength * Math.min(1, square.progress * 4);
-                    if (alpha < 0.03) return;
-                    var size = grid * square.size;
-                    ctx.globalAlpha = alpha;
-                    ctx.fillStyle = 'rgb(' + gray + ',' + gray + ',' + gray + ')';
-                    ctx.fillRect(x - size / 2, y - size / 2, size, size);
-                });
-                ctx.globalAlpha = 1;
-            }
-            requestAnimationFrame(frame);
-        }
-
-        resize();
-        requestAnimationFrame(frame);
-    }
 
     ready(function () {
         initNavToggleKeys();
@@ -560,7 +443,6 @@
         initPageTransitions();
         initToc();
         initAdmin();
-        initPixelMagnet();
         // main.js adds .scroll-reveal on DOMContentLoaded; run after it
         setTimeout(staggerMainReveal, 0);
     });

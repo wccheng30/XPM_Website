@@ -68,8 +68,11 @@ $xpm_asset_version = isset($xpm_asset_version) ? $xpm_asset_version : '20261005-
         </div>
     </footer>
 
+    <?php include __DIR__ . '/glow-cursor.php'; ?>
+
 <?php if ($xpm_load_main_js): ?>
     <script src="assets/js/main.js?v=<?php echo $xpm_asset_version; ?>"></script>
 <?php endif; ?>
-    <script src="assets/js/motion.js?v=<?php echo $xpm_asset_version; ?>"></script>
+    <script src="assets/js/motion.js?v=20261030-4"></script>
     <script src="assets/js/xpm-dialog.js?v=20261006-5"></script>
+    <script src="assets/js/glow-cursor.js?v=20261030-2"></script>

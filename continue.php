@@ -123,6 +123,6 @@ $showAvatar = $avatar !== '' && preg_match('#^assets/images/avatars/[A-Za-z0-9._
         </div>
     </main>
     <?php include 'partials/site-footer.php'; ?>
-    <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/motion.js?v=20261030-4"></script>
 </body>
 </html>

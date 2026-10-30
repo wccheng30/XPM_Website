@@ -37,6 +37,7 @@ if ($homepageDb) {
     <link rel="stylesheet" href="assets/css/xpm-motion.css?v=20261016-1">
     <link rel="stylesheet" href="assets/css/pages/home.css?v=20261020-6">
     <link rel="stylesheet" href="assets/css/pages/founder.css?v=20261020-6">
+    <link rel="stylesheet" href="assets/css/glow-cursor.css?v=20261030-2">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
 </head>
 <body>
@@ -920,8 +921,11 @@ if ($homepageDb) {
         </div> 
     </footer>
 
+    <?php include __DIR__ . '/partials/glow-cursor.php'; ?>
+
     <script src="assets/js/main.js?v=20261016-1"></script>
     <script src="assets/js/nav-account.js?v=20261008-3"></script>
-    <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/motion.js?v=20261030-4"></script>
+    <script src="assets/js/glow-cursor.js?v=20261030-2"></script>
 </body>
 </html>

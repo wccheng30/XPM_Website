@@ -122,7 +122,7 @@ if ($valid && $_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
     </main>
     <?php include 'partials/site-footer.php'; ?>
-    <script src="assets/js/motion.js?v=20261002-10"></script>
+    <script src="assets/js/motion.js?v=20261030-4"></script>
     <script src="assets/js/auth-ui.js?v=20261015-8"></script>
 </body>
 </html>

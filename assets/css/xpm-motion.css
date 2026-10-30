@@ -166,15 +166,6 @@ body.is-leaving .footer {
     animation: xpmPulseRing 1.8s var(--ease-out) infinite;
 }
 
-.pixel-magnet {
-    position: fixed;
-    inset: 0;
-    z-index: 1500;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
 /* Ripple element injected by motion.js on .btn */
 .btn .ripple {
     position: absolute;
