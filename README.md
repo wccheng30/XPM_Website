@@ -8,7 +8,6 @@ This is a custom PHP/MySQL application with:
 - a public site (homepage, training programmes, job portal, facility booking, trainers, legal pages)
 - user accounts (register, log in, reset password, view own bookings)
 - an admin panel for managing content, registrations, applications and bookings
-
 - [About the company](#about-the-company)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
@@ -106,10 +105,10 @@ use a different name, change it in both the SQL file and `database.php`.
 ### Email: `config/email_config.php` and `config/email.local.php`
 
 - `config/email_config.php` holds the non-secret settings: recipient addresses for
-  programme registrations and job applications, the sender name and address, and the
-  SMTP host, port and security mode.
+programme registrations and job applications, the sender name and address, and the
+SMTP host, port and security mode.
 - `config/email.local.php` holds only the mailbox password (`$xpm_smtp_pass`).
-  It is git-ignored. Copy it from `config/email.local.example.php`.
+It is git-ignored. Copy it from `config/email.local.example.php`.
 
 If the password is left empty, the site falls back to PHP's built-in `mail()`.
 
@@ -120,7 +119,7 @@ test submissions do not go to real staff mailboxes.
 
 ## First login and admin accounts
 
-Everyone, including admins, signs in at **`/login.php`**. `/admin/` redirects there
+Everyone, including admins, signs in at `/login.php`. `/admin/` redirects there
 and sends staff to the right dashboard after login.
 
 | Role | Lands on |
@@ -129,20 +128,17 @@ and sends staff to the right dashboard after login.
 | `trainer` | `admin/programmes.php` |
 | `user` | `account.php` |
 
-`setup/database.sql` seeds one account with username **`admin`**. Its password is
+`setup/database.sql` seeds one account with username `admin`. Its password is
 set by a hash stored in that SQL file, so **anyone with access to this repository
 can attempt to guess it.**
 
 Before the site is reachable by anyone else, do one of these:
 
 1. **Replace the hash before importing.** Generate a new one and put it in the
+
    `INSERT INTO users` statement in `setup/database.sql`:
-
-   ```bash
-   php -r "echo password_hash('your-new-strong-password', PASSWORD_DEFAULT), PHP_EOL;"
-   ```
-
 2. **Or change the password immediately after import** via *My profile → Change password*
+
    in the admin panel (`admin/change-password.php`).
 
 Also change the placeholder email (`admin@xpresspoint.com`) on that account.
@@ -216,33 +212,18 @@ or removed if they are not in use.
 ## Development notes
 
 - **Admin CSS:** after editing files in `admin/css/`, rebuild the bundle:
-
   ```bash
   php admin/build-css.php
   ```
-
 - **Exports:** Excel and PDF exports in the admin panel use PhpSpreadsheet and TCPDF.
-  If they fail with a missing `vendor/autoload.php` error, run `composer install`.
-
+If they fail with a missing `vendor/autoload.php` error, run `composer install`.
 - **Timezone:** date handling uses `Asia/Kuala_Lumpur`.
-
 - **Security headers:** `.htaccess` sets a strict Content-Security-Policy. If you add
-  a script, font, image or embed from a new external host, it must be added to the
-  policy there or the browser will block it.
+a script, font, image or embed from a new external host, it must be added to the
+policy there or the browser will block it.
 
 ---
 
-## Deployment checklist
-
-- [ ] `composer install --no-dev` has been run on the server
-- [ ] `includes/database.php` and `config/email.local.php` exist and are **not** web-accessible
-- [ ] Default `admin` password changed and placeholder email updated
-- [ ] HTTPS is enabled
-- [ ] `uploads/resumes/` is writable but not publicly downloadable
-- [ ] Recipient addresses in `config/email_config.php` are correct for this environment
-- [ ] Database and `uploads/` are included in backups
-
----
 
 ## License
 
